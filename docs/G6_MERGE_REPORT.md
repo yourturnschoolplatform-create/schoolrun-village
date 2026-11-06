@@ -6,7 +6,7 @@ Date: 2026-11-07 (Australia/Sydney)
 
 The user confirmed the evidence for G1–G5 and authorised merging `wip/day4-stabilisation` into the main checkpoint. G6 changes documentation and the source merge only: no new application feature, migration, test assertion or database write is performed by this task. **Day 5 is not started by G6.**
 
-The merge SHA is reported in the task handoff (`git rev-list --parents -n 1 main`). Merge acceptance does not convert a failing or absent test to a pass.
+Merge commit: `898da403a51125ca44add057eaf0d576779cd248` (parents `ca0112a578abde0b97bdbf57ef3f2f2dfa039a26` `b4aadfc47746ebbb88f4002c435585c2f1a1afa5`). Merge acceptance does not convert a failing or absent test to a pass.
 
 ## Tracker changes
 

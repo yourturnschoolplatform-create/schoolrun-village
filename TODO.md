@@ -113,7 +113,7 @@ Passing test-project live names:
 
 **G5 — 2026-11-07, DEV.** Preflight ref match `yes`, pooler host `yes`, read-only connection `success`. `npm run db:migrate` skipped `0001`–`0025` (already applied). Catalogue: 33 public tables with RLS, `tables_without_rls=0`, 69 public functions with zero anon EXECUTE, zero SECURITY DEFINER without fixed search_path, unqualified-extension query `[]`. Raw: `docs/evidence/G5_2026-11-07_DEV_MIGRATE.txt`, `docs/evidence/G5_2026-11-07_DEV_DATABASE_EVIDENCE.txt`. DEV live harness NOT RUN (fixture commit without cleanup). Day 4 remains `[~]`.
 
-**G6 — 2026-11-07.** User confirmed G1–G5 evidence. Merged `wip/day4-stabilisation` into `main`. Day 2/3/4 `[x]` sub-items above cite only the named passing live tests; aggregate Day 2/3/4 remain `[~]`. Confirmed G4 failures stay open. No new migration or live rerun. Day 5 is not started by G6. Details: `docs/G6_MERGE_REPORT.md`.
+**G6 — 2026-11-07.** User confirmed G1–G5 evidence. Merged `wip/day4-stabilisation` into `main` at `898da403a51125ca44add057eaf0d576779cd248`. Day 2/3/4 `[x]` sub-items above cite only the named passing live tests; aggregate Day 2/3/4 remain `[~]`. Confirmed G4 failures stay open. No new migration or live rerun. Day 5 is not started by G6. Details: `docs/G6_MERGE_REPORT.md`.
 
 ## [~] Day 5 — ledger, consent, handover, notice, and report
 
