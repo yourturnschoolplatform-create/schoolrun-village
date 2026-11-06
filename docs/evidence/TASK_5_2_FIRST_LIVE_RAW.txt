@@ -1,0 +1,110 @@
+
+ RUN  v3.2.7 /home/ubuntu/yourturn
+
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > beforegrantNULL: accepted partners and prospective backups receive NULL before consent 9746ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > grantReceipt: version one is phone-free and omitted backups default to empty 6233ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > acceptedpartnerSuccess: both accepted partners read only the other consenting membership 10373ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > chosenbackupSuccess: two explicitly chosen verified same-school backups can read the owner 8379ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > deniedReader-unchosen: unchosen unrelated same-school School B and moderator B receive NULL 7780ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > deniedReader-unrelated: unchosen unrelated same-school School B and moderator B receive NULL 8457ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > deniedReader-parentB: unchosen unrelated same-school School B and moderator B receive NULL 7754ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > deniedReader-moderatorB: unchosen unrelated same-school School B and moderator B receive NULL 8445ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > memberArgumentIsNotCallerIdentity: user IDs foreign memberships and unrelated consenting targets cannot spoof access 10964ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > anonymousDenied: anon cannot execute any contact RPC even for a known consent 10065ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > ownerOnlyMetadata: partner and chosen backup cannot SELECT consent or backup snapshots 9880ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > privateSchemaTableDenied: even owner partner and chosen backup cannot directly read or write private phones 23467ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > version1to2Snapshots: regrant supersedes without revocation or cancellation and replaces the chosen backup set 10646ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-empty: non-AU-E164 input rejects generically with no contact side effects 7873ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-local: non-AU-E164 input rejects generically with no contact side effects 8538ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-landline: non-AU-E164 input rejects generically with no contact side effects 7956ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-foreign: non-AU-E164 input rejects generically with no contact side effects 8528ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-short: non-AU-E164 input rejects generically with no contact side effects 7985ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-long: non-AU-E164 input rejects generically with no contact side effects 8568ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-whitespace: non-AU-E164 input rejects generically with no contact side effects 7979ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-null: non-AU-E164 input rejects generically with no contact side effects 8575ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-owner: owner partner foreign pending unknown and user IDs reject without side effects 8509ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-partner: owner partner foreign pending unknown and user IDs reject without side effects 7919ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-parentB: owner partner foreign pending unknown and user IDs reject without side effects 8508ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-moderatorB: owner partner foreign pending unknown and user IDs reject without side effects 8526ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-pending: owner partner foreign pending unknown and user IDs reject without side effects 7868ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-unknown: owner partner foreign pending unknown and user IDs reject without side effects 7969ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-userId: owner partner foreign pending unknown and user IDs reject without side effects 7903ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > tooManyBackups-limit0: school-configured ceiling rejects atomically 9039ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > tooManyBackups-limit1: school-configured ceiling rejects atomically 9040ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > tooManyBackups-limit2: school-configured ceiling rejects atomically 9029ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-unrelated: non-owning or unverified caller cannot grant or revoke another consent 9875ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-parentB: non-owning or unverified caller cannot grant or revoke another consent 9162ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-moderatorB: non-owning or unverified caller cannot grant or revoke another consent 9913ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-pending: non-owning or unverified caller cannot grant or revoke another consent 9187ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-noMembershipUser: non-owning or unverified caller cannot grant or revoke another consent 9153ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-pending_moderator: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 13938ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-suspended: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 13904ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-missingSafety: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 13744ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-missingConsent: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 13896ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-adminSuspended: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 13878ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveBackup: chosen backup loses immediate read access when verified status is suspended 7635ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > proposedDenied: proposed participants and nonparticipants cannot grant or revoke before acceptance 15199ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > nonconsentingPartnerCannotRevokeOwner: accepted partnership alone does not own the other consent 9318ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > revokeLifecycle: latest consent revocation cancels with retained acceptance event partner-only phone-free inbox and immediate NULL both ways 19628ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > idempotentRevoke: repeat owning revocation preserves exact timestamps history event and single inbox row 9499ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noRevival: neither owner may regrant or accept a consent-cancelled swap 14557ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > unchangedLedgerAfterCancel: consent withdrawal preserves immutable completed trip entries and pair counts 11807ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noDirectDML-contact_consents: clients cannot INSERT UPDATE DELETE or TRUNCATE contact metadata history or inbox 26388ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noDirectDML-contact_consent_backups: clients cannot INSERT UPDATE DELETE or TRUNCATE contact metadata history or inbox 26200ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noDirectDML-swap_cancellation_events: clients cannot INSERT UPDATE DELETE or TRUNCATE contact metadata history or inbox 26372ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noDirectDML-swap_contact_notifications: clients cannot INSERT UPDATE DELETE or TRUNCATE contact metadata history or inbox 28047ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > immutableCancellationEvent: privileged UPDATE DELETE and TRUNCATE cannot rewrite cancellation history 9747ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > catalogPrivacy: no public phone columns or views referencing the private phone table and no private client privileges or policies 7039ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > catalogTables: every new table has RLS SELECT-only client grants and exact consent and backup metadata columns 6320ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > catalogFunctions: three contact RPCs have explicit authenticated-only EXECUTE and all five pg_catalog paths with internal execution denied 8206ms
+ × tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > allAllowlistedRPCResponseLeakScan: every allowlisted RPC is actually called in a rollback savepoint with only the scoped dedicated getter exception 60840ms
+   → expected [ { …(2) }, { …(2) }, { …(2) }, …(2) ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > allAllowlistedRPCResponseLeakScan: every allowlisted RPC is actually called in a rollback savepoint with only the scoped dedicated getter exception
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) }, …(2) ] to deeply equal []
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [][39m
+[31m+ [[39m
+[31m+   {[39m
+[31m+     "code": "42702",[39m
+[31m+     "name": "accept_current_consent",[39m
+[31m+   },[39m
+[31m+   {[39m
+[31m+     "code": "P0002",[39m
+[31m+     "name": "claim_household_link_invitation",[39m
+[31m+   },[39m
+[31m+   {[39m
+[31m+     "code": "P0002",[39m
+[31m+     "name": "claim_school_invitation",[39m
+[31m+   },[39m
+[31m+   {[39m
+[31m+     "code": "P0002",[39m
+[31m+     "name": "confirm_household_link",[39m
+[31m+   },[39m
+[31m+   {[39m
+[31m+     "code": "42702",[39m
+[31m+     "name": "refresh_my_availability_instances",[39m
+[31m+   },[39m
+[31m+ ][39m
+
+ ❯ tests/rls/contact-live.test.ts:961:22
+    960|           return;
+    961|         }
+    962|         outcomes.push({ name, outcome: 'success' });
+       |            ^
+    963|         if (call.dedicatedGetter) {
+    964|           // This one explicit exception proves the seeded phone reall…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 56 passed (57)
+   Start at  18:45:54
+   Duration  686.44s (transform 120ms, setup 0ms, collect 141ms, tests 685.95s, environment 0ms, prepare 76ms)
+

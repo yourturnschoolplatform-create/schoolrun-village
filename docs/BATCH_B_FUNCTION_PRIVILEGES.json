@@ -1,0 +1,380 @@
+[
+  {
+    "function": "accept_current_consent(text,integer)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "add_onboarding_child(uuid,text,smallint)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "approve_school_membership(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "audit_global_sensitive_change()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "audit_payload_is_safe(jsonb)",
+    "security_definer": false,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "audit_sensitive_change()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "block_match_user(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "bootstrap_first_admin(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "cancel_availability_instance(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "cancel_availability_pattern(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "claim_household_link_invitation(text)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "claim_school_invitation(text)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "confirm_household_link(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "create_availability_pattern(uuid,text,text,smallint,time without time zone,time without time zone,text,smallint,date)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "create_household_link_invitation()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "create_profile_for_new_auth_user()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "create_school_invitation(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "expand_availability_pattern(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "expire_my_swap_proposals()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "get_accepted_swap_children(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "get_reciprocal_match_candidates(boolean)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "has_current_onboarding_consents(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "is_admin()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "is_approved_school_member(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "is_instructional_school_date(uuid,date)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "is_member(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "is_moderator(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "is_same_household(uuid,uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "is_suburb_area_label(text)",
+    "security_definer": false,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "is_verified_email_user()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "list_my_swaps()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "list_onboarding_school_options()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "list_pending_school_memberships()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "open_school_invitation(text)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "prevent_active_consent_document_mutation()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "prevent_active_swap_leg_cancellation()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "prevent_audit_log_mutation()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "prevent_published_safety_declaration_mutation()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "prevent_published_trust_policy_mutation()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "prevent_schedule_cancellation_mutation()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "propose_reciprocal_swap(uuid,uuid,uuid,uuid,boolean)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "record_email_verified_event()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "record_first_match_viewed()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "redeem_school_invite_code(uuid,text)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "refresh_my_availability_instances()",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "request_household_link(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "school_local_today(uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "set_school_membership_review_state(uuid,text)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "sign_onboarding_safety_declaration(uuid,uuid)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "transition_swap_proposal(uuid,text)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "trust_band_for_score(smallint)",
+    "security_definer": false,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "trust_policy_definition_is_valid(jsonb)",
+    "security_definer": false,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": false
+  },
+  {
+    "function": "update_availability_pattern(uuid,text,text,smallint,time without time zone,time without time zone,text,smallint,date)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  },
+  {
+    "function": "update_onboarding_parent_profile(text)",
+    "security_definer": true,
+    "search_path_set": true,
+    "anon_exec": false,
+    "authenticated_exec": true
+  }
+]

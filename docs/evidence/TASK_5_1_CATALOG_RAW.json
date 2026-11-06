@@ -1,0 +1,95 @@
+{
+  "columns": [
+    {
+      "column_name": "id",
+      "data_type": "uuid"
+    },
+    {
+      "column_name": "school_id",
+      "data_type": "uuid"
+    },
+    {
+      "column_name": "from_membership",
+      "data_type": "uuid"
+    },
+    {
+      "column_name": "to_membership",
+      "data_type": "uuid"
+    },
+    {
+      "column_name": "swap_leg_id",
+      "data_type": "uuid"
+    },
+    {
+      "column_name": "trip_count_delta",
+      "data_type": "integer"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "column_name": "expires_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "column_name": "reminder_due_at",
+      "data_type": "timestamp with time zone"
+    }
+  ],
+  "rls": [
+    {
+      "relname": "swap_ledger_entries",
+      "rls_enabled": true,
+      "policy_count": 1
+    }
+  ],
+  "client_privileges": [
+    {
+      "role": "anon",
+      "can_select": false,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "can_truncate": false
+    },
+    {
+      "role": "authenticated",
+      "can_select": true,
+      "can_insert": false,
+      "can_update": false,
+      "can_delete": false,
+      "can_truncate": false
+    }
+  ],
+  "functions": [
+    {
+      "proname": "get_my_ledger",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "anon_exec": false,
+      "authenticated_exec": true
+    },
+    {
+      "proname": "guard_swap_ledger_entry",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "anon_exec": false,
+      "authenticated_exec": false
+    },
+    {
+      "proname": "record_completed_swap_leg",
+      "security_definer": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "anon_exec": false,
+      "authenticated_exec": false
+    }
+  ],
+  "money_like_public_columns": []
+}

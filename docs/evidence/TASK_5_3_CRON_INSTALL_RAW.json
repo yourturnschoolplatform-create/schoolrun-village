@@ -1,0 +1,30 @@
+{
+  "target": "TEST only",
+  "jobs": [
+    {
+      "jobname": "yourturn-handover-reminder-records",
+      "schedule": "* * * * *",
+      "command": "select public.enqueue_due_handover_reminders();",
+      "active": true
+    }
+  ],
+  "schedulerTables": [
+    {
+      "table_name": "job",
+      "rls": true,
+      "anon_schema_usage": false,
+      "authenticated_schema_usage": false,
+      "anon_table_acl": true,
+      "authenticated_table_acl": true
+    },
+    {
+      "table_name": "job_run_details",
+      "rls": true,
+      "anon_schema_usage": false,
+      "authenticated_schema_usage": false,
+      "anon_table_acl": true,
+      "authenticated_table_acl": true
+    }
+  ],
+  "deliveryImplemented": false
+}

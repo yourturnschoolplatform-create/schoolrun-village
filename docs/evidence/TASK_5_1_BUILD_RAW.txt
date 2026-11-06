@@ -1,0 +1,31 @@
+
+> yourturn@0.1.0 build
+> npm run sync:brand && vite build && tsup server/index.ts --format esm --target node22 --out-dir dist/server --clean
+
+
+> yourturn@0.1.0 sync:brand
+> tsx scripts/sync-static-brand.ts
+
+Synced static brand metadata for YourTurn.
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 81 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/client/index.html                   0.77 kB │ gzip:   0.41 kB
+dist/client/assets/index-BuZp2coV.css   18.74 kB │ gzip:   4.71 kB
+dist/client/assets/index-D07PGqej.js   488.03 kB │ gzip: 139.41 kB
+✓ built in 3.10s
+CLI Building entry: server/index.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Target: node22
+CLI Cleaning output folder
+ESM Build start
+ESM dist/server/index.js 37.34 KB
+ESM ⚡️ Build success in 35ms
+
+> yourturn@0.1.0 check:secrets
+> tsx scripts/check-client-boundary.ts
+
+Credential boundary: PASS (no service-role or migration/test database URL reference in browser, build, or runtime server code).

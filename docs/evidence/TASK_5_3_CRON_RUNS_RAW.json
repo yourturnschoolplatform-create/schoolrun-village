@@ -1,0 +1,12 @@
+{
+  "target": "TEST only",
+  "rows": [
+    {
+      "jobname": "yourturn-handover-reminder-records",
+      "active": true,
+      "status": "succeeded",
+      "start_time": "2026-11-02T19:36:00.125Z",
+      "end_time": "2026-11-02T19:36:00.128Z"
+    }
+  ]
+}

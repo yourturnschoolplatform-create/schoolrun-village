@@ -1,0 +1,5 @@
+export type TrustBand = 'Trusted' | 'Standard' | 'Caution' | 'Restricted' | 'Suspended';
+export function trustBand(score: number): TrustBand { return score >= 85 ? 'Trusted' : score >= 60 ? 'Standard' : score >= 40 ? 'Caution' : score >= 20 ? 'Restricted' : 'Suspended'; }
+export function reciprocalDateAllowed(firstDate: string, reciprocalDate: string, strictDefault: boolean, allowDifferent: boolean, configured: boolean, windowDays: number): boolean { const days = Math.abs((Date.parse(`${reciprocalDate}T00:00:00Z`) - Date.parse(`${firstDate}T00:00:00Z`)) / 86_400_000); return (!strictDefault || firstDate === reciprocalDate || (allowDifferent && configured && days <= windowDays)); }
+export function childRevealAllowed(status: string, participant: boolean): boolean { return status === 'accepted' && participant; }
+export function rankMatch(a: { overlap: number; sameArea: boolean; band: TrustBand }, b: { overlap: number; sameArea: boolean; band: TrustBand }): number { const value = (item: typeof a) => item.overlap + (item.sameArea ? 60 : 0) + ({ Trusted: 40, Standard: 30, Caution: 20, Restricted: 10, Suspended: -100 }[item.band]); return value(b) - value(a); }

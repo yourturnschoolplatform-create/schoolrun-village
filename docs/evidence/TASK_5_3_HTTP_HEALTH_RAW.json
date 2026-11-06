@@ -1,0 +1,20 @@
+[
+  {
+    "path": "/api/health",
+    "status": 200,
+    "cacheControl": "no-store, max-age=0",
+    "contentType": "application/json; charset=utf-8"
+  },
+  {
+    "path": "/manus-routes.json",
+    "status": 200,
+    "cacheControl": "no-cache",
+    "contentType": "application/json"
+  },
+  {
+    "path": "/api/handover/swaps/81000000-0000-4000-8000-000000000001",
+    "status": 401,
+    "cacheControl": "private, no-store, max-age=0",
+    "contentType": "application/json; charset=utf-8"
+  }
+]

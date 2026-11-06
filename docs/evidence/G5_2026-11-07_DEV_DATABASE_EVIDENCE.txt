@@ -1,0 +1,739 @@
+PUBLIC_TABLE_RLS_AND_POLICY_COUNTS
+[
+  {
+    "table_name": "analytics_events",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "audit_logs",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "availability_instances",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "availability_patterns",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "child_profiles",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "consent_acceptances",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "consent_documents",
+    "rls_enabled": true,
+    "policy_count": 2
+  },
+  {
+    "table_name": "contact_consent_backups",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "contact_consents",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "feature_flags",
+    "rls_enabled": true,
+    "policy_count": 2
+  },
+  {
+    "table_name": "household_link_invitations",
+    "rls_enabled": true,
+    "policy_count": 0
+  },
+  {
+    "table_name": "household_links",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "match_blocks",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "profiles",
+    "rls_enabled": true,
+    "policy_count": 2
+  },
+  {
+    "table_name": "role_assignments",
+    "rls_enabled": true,
+    "policy_count": 2
+  },
+  {
+    "table_name": "safety_declaration_versions",
+    "rls_enabled": true,
+    "policy_count": 2
+  },
+  {
+    "table_name": "safety_declarations",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "schedule_cancellation_events",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "school_calendar_periods",
+    "rls_enabled": true,
+    "policy_count": 2
+  },
+  {
+    "table_name": "school_configs",
+    "rls_enabled": true,
+    "policy_count": 2
+  },
+  {
+    "table_name": "school_invitations",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "school_invite_attempts",
+    "rls_enabled": true,
+    "policy_count": 0
+  },
+  {
+    "table_name": "school_invite_codes",
+    "rls_enabled": true,
+    "policy_count": 0
+  },
+  {
+    "table_name": "school_memberships",
+    "rls_enabled": true,
+    "policy_count": 3
+  },
+  {
+    "table_name": "schools",
+    "rls_enabled": true,
+    "policy_count": 2
+  },
+  {
+    "table_name": "swap_cancellation_events",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "swap_contact_notifications",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "swap_ledger_entries",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "swap_leg_confirmations",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "swap_leg_reminders",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "swap_legs",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "swap_proposals",
+    "rls_enabled": true,
+    "policy_count": 1
+  },
+  {
+    "table_name": "trust_policy_versions",
+    "rls_enabled": true,
+    "policy_count": 4
+  }
+]
+
+TABLES_WITHOUT_RLS
+[
+  {
+    "tables_without_rls": 0
+  }
+]
+
+PUBLIC_FUNCTION_PRIVILEGES_AND_SEARCH_PATH
+[
+  {
+    "function_name": "accept_current_consent",
+    "arguments": "p_document_type text, p_version integer",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "add_onboarding_child",
+    "arguments": "p_membership_id uuid, p_nickname text, p_year_level smallint",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "approve_school_membership",
+    "arguments": "p_membership_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "audit_global_sensitive_change",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "audit_payload_is_safe",
+    "arguments": "payload jsonb",
+    "security_definer": false,
+    "search_path": "search_path=public",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "audit_sensitive_change",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "block_match_user",
+    "arguments": "p_blocked uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "bootstrap_first_admin",
+    "arguments": "p_user_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "cancel_availability_instance",
+    "arguments": "p_instance_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "cancel_availability_pattern",
+    "arguments": "p_pattern_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "claim_household_link_invitation",
+    "arguments": "p_token text",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "claim_school_invitation",
+    "arguments": "p_token text",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "confirm_child_arrived",
+    "arguments": "p_leg_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "confirm_household_link",
+    "arguments": "link_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "confirm_pickup_done",
+    "arguments": "p_leg_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "contact_member_is_active",
+    "arguments": "p_member uuid, p_school uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "create_availability_pattern",
+    "arguments": "p_school_id uuid, p_intent text, p_direction text, p_weekday smallint, p_window_start time without time zone, p_window_end time without time zone, p_area_label text, p_capacity smallint, p_starts_on date",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "create_household_link_invitation",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "create_profile_for_new_auth_user",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "create_school_invitation",
+    "arguments": "p_school_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "enqueue_due_handover_reminders",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "expand_availability_pattern",
+    "arguments": "pattern_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "expire_my_swap_proposals",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "get_accepted_swap_children",
+    "arguments": "p_swap uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "get_my_ledger",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "get_reciprocal_match_candidates",
+    "arguments": "p_allow_different_date boolean",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "get_shared_contact",
+    "arguments": "p_swap_id uuid, p_member uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "grant_contact_sharing",
+    "arguments": "p_swap_id uuid, p_mobile_number text, p_chosen_backups uuid[]",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "guard_contact_history",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "guard_handover_history",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "guard_swap_ledger_entry",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "has_current_onboarding_consents",
+    "arguments": "target_user uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "is_admin",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "is_approved_school_member",
+    "arguments": "target_school uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "is_instructional_school_date",
+    "arguments": "target_school uuid, target_date date",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "is_member",
+    "arguments": "target_school uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "is_moderator",
+    "arguments": "target_school uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "is_same_household",
+    "arguments": "first_user uuid, second_user uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "is_suburb_area_label",
+    "arguments": "value text",
+    "security_definer": false,
+    "search_path": "search_path=public",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "is_verified_email_user",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "list_my_swaps",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "list_onboarding_school_options",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "list_pending_school_memberships",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "maybe_record_handover_reminder",
+    "arguments": "p_leg_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "open_school_invitation",
+    "arguments": "p_token text",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "prevent_active_consent_document_mutation",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "prevent_active_swap_leg_cancellation",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "prevent_audit_log_mutation",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "prevent_published_safety_declaration_mutation",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "prevent_published_trust_policy_mutation",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "prevent_schedule_cancellation_mutation",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "propose_reciprocal_swap",
+    "arguments": "p_viewer_need uuid, p_candidate_help uuid, p_candidate_need uuid, p_viewer_help uuid, p_allow_different_date boolean",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "record_completed_swap_leg",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "record_email_verified_event",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "record_first_match_viewed",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "record_leg_confirmation",
+    "arguments": "p_leg_id uuid, p_kind text",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "redeem_school_invite_code",
+    "arguments": "p_school_id uuid, p_code text",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "refresh_my_availability_instances",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "refresh_my_handover_reminders",
+    "arguments": "",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "request_household_link",
+    "arguments": "other_parent uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "revoke_contact_sharing",
+    "arguments": "p_swap_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "school_local_today",
+    "arguments": "target_school uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "set_school_membership_review_state",
+    "arguments": "p_membership_id uuid, p_state text",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "sign_onboarding_safety_declaration",
+    "arguments": "p_membership_id uuid, p_declaration_version_id uuid",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "transition_swap_proposal",
+    "arguments": "p_swap uuid, p_action text",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "trust_band_for_score",
+    "arguments": "score smallint",
+    "security_definer": false,
+    "search_path": "search_path=public",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "trust_policy_definition_is_valid",
+    "arguments": "definition jsonb",
+    "security_definer": false,
+    "search_path": "search_path=public",
+    "anon_execute": false,
+    "authenticated_execute": false
+  },
+  {
+    "function_name": "update_availability_pattern",
+    "arguments": "p_pattern_id uuid, p_intent text, p_direction text, p_weekday smallint, p_window_start time without time zone, p_window_end time without time zone, p_area_label text, p_capacity smallint, p_starts_on date",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog",
+    "anon_execute": false,
+    "authenticated_execute": true
+  },
+  {
+    "function_name": "update_onboarding_parent_profile",
+    "arguments": "p_display_name text",
+    "security_definer": true,
+    "search_path": "search_path=pg_catalog, public, extensions",
+    "anon_execute": false,
+    "authenticated_execute": true
+  }
+]
+
+SECURITY_DEFINER_FUNCTIONS_WITHOUT_FIXED_SEARCH_PATH
+[]
+
+UNQUALIFIED_EXTENSION_QUERY
+[]
+
+DEV_LIVE_RLS_HARNESS: NOT RUN — beforeAll commits fixtures; afterAll only closes the connection; cleanup is not guaranteed.

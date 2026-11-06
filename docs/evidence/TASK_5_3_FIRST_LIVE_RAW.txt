@@ -1,0 +1,320 @@
+
+ RUN  v3.2.7 /home/ubuntu/yourturn
+
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > defaultExpectedArrival: requester school-local date and window end derive the timestamp with no premature facts 4344ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > bothOrders-pickup_done: either first confirmation leaves incomplete and second posts one recipient-to-provider trip 3925ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > bothOrders-child_arrived: either first confirmation leaves incomplete and second posts one recipient-to-provider trip 3941ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > duplicateTaps: identical confirmation timestamps and all side-effect counts survive repeats before and after completion 3869ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-unrelated: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 4199ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-parentB: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 3874ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-moderatorB: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 4198ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-pending: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 4209ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-noMembershipUser: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 4190ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > inactiveParticipant: pending suspended stale-safety and stale-consent participants cannot confirm or read 4204ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > acceptedOnlyAndCorrectRole: wrong participant roles proposed and consent-cancelled legs reject confirmation 4175ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > anonymousDenied: actual anon execution denies every new function and both handover tables 3869ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > readIsolation: School B parent and moderator read only their own leg while unrelated and inactive-school callers see none 3852ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > noDirectDML: participants and School B cannot INSERT UPDATE DELETE TRUNCATE either new table or complete a source leg 4209ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > reminderBoundary-pickup_done: plus29 yields none plus31 yields one correctly targeted immutable reminder 4187ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > reminderBoundary-child_arrived: plus29 yields none plus31 yields one correctly targeted immutable reminder 3900ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > reminderEligibility: zero both cancelled and future arrivals enqueue none and cancellation never deletes an existing reminder 3871ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > serviceSweep: only service may sweep both schools and authenticated School B cannot execute service or internal functions 4178ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > immutableFacts: privileged UPDATE DELETE TRUNCATE of confirmations and reminders raise 55000 without changing facts 3844ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > freezeAfterFirst: expected arrival source identity and first member cannot be rewritten after a single confirmation 3881ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > firstTripAnalytics: both immutable confirmation actors and source school emit once across two completed legs with no caller-supplied identity or clock 4223ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ × tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > completedConsentRevoke: real two-confirmation completion ledger analytics and confirmations survive later consent cancellation 3875ms
+   → Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > catalogTables: exact metadata columns SELECT-only RLS unique leg-kind and no money child or travel tracking fields 5418ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > catalogFunctions: exact signatures explicit role grants allowlist and pg_catalog-only paths expose no identity school or time arguments 4089ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 22 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > defaultExpectedArrival: requester school-local date and window end derive the timestamp with no premature facts
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:315:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > bothOrders-pickup_done: either first confirmation leaves incomplete and second posts one recipient-to-provider trip
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > bothOrders-child_arrived: either first confirmation leaves incomplete and second posts one recipient-to-provider trip
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:332:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > duplicateTaps: identical confirmation timestamps and all side-effect counts survive repeats before and after completion
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:361:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-unrelated: both confirmation RPCs deny School A IDs and refresh cannot reach their facts
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-parentB: both confirmation RPCs deny School A IDs and refresh cannot reach their facts
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-moderatorB: both confirmation RPCs deny School A IDs and refresh cannot reach their facts
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-pending: both confirmation RPCs deny School A IDs and refresh cannot reach their facts
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-noMembershipUser: both confirmation RPCs deny School A IDs and refresh cannot reach their facts
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:381:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > inactiveParticipant: pending suspended stale-safety and stale-consent participants cannot confirm or read
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:397:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > acceptedOnlyAndCorrectRole: wrong participant roles proposed and consent-cancelled legs reject confirmation
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:420:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > anonymousDenied: actual anon execution denies every new function and both handover tables
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:439:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > readIsolation: School B parent and moderator read only their own leg while unrelated and inactive-school callers see none
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:451:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > noDirectDML: participants and School B cannot INSERT UPDATE DELETE TRUNCATE either new table or complete a source leg
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:476:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > reminderBoundary-pickup_done: plus29 yields none plus31 yields one correctly targeted immutable reminder
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > reminderBoundary-child_arrived: plus29 yields none plus31 yields one correctly targeted immutable reminder
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:504:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > reminderEligibility: zero both cancelled and future arrivals enqueue none and cancellation never deletes an existing reminder
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:535:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > serviceSweep: only service may sweep both schools and authenticated School B cannot execute service or internal functions
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:566:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > immutableFacts: privileged UPDATE DELETE TRUNCATE of confirmations and reminders raise 55000 without changing facts
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:606:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > freezeAfterFirst: expected arrival source identity and first member cannot be rewritten after a single confirmation
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:623:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > firstTripAnalytics: both immutable confirmation actors and source school emit once across two completed legs with no caller-supplied identity or clock
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:647:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/22]⎯
+
+ FAIL  tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > completedConsentRevoke: real two-confirmation completion ledger analytics and confirmations survive later consent cancellation
+Error: Handover database operation failed (SQLSTATE 42702); details suppressed.
+ ❯ query tests/rls/handover-live.test.ts:57:27
+     55|       const code = typeof error === 'object' && error !== null && 'cod…
+     56|         ? String(error.code) : 'non-database-error';
+     57|       throw Object.assign(new Error(`Handover database operation faile…
+       |                           ^
+     58|     }
+     59|   }
+ ❯ tests/rls/handover-live.test.ts:198:7
+ ❯ tests/rls/handover-live.test.ts:676:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: '42702' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/22]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  22 failed | 2 passed (24)
+   Start at  19:32:49
+   Duration  99.28s (transform 108ms, setup 0ms, collect 131ms, tests 98.53s, environment 0ms, prepare 324ms)
+

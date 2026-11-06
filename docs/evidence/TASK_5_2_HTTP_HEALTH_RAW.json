@@ -1,0 +1,25 @@
+[
+  {
+    "path": "/api/health",
+    "status": 200,
+    "cache": "no-store, max-age=0"
+  },
+  {
+    "path": "/manus-routes.json",
+    "status": 200,
+    "cache": "no-cache",
+    "body": {
+      "routes": [
+        {
+          "path": "/",
+          "title": "YourTurn foundation"
+        }
+      ]
+    }
+  },
+  {
+    "path": "/api/contacts/notifications",
+    "status": 401,
+    "cache": "private, no-store, max-age=0"
+  }
+]
