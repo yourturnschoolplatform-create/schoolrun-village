@@ -1,0 +1,25 @@
+{
+  "name": "YourTurn",
+  "short_name": "YourTurn",
+  "description": "YourTurn is building a safer, school-scoped way for verified parents to share the school run.",
+  "lang": "en-AU",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f6f1",
+  "theme_color": "#0f5e5a",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

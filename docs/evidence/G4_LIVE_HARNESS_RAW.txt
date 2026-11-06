@@ -1,0 +1,336 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v3.2.7 C:/Users/jayro/Downloads/yourturn
+
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist RPC call coverage > maps every allowlisted function and no extra call 2ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > accept_current_consent 326ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > add_onboarding_child 325ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > approve_school_membership 357ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > blocks School B parent direct reads of School A school and configuration data 726ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > block_match_user 322ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > blocks School B parent direct reads of School A child data 379ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > defaultExpectedArrival: requester school-local date and window end derive the timestamp with no premature facts 1910ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > accepted legs without completed_at create no ledger entries 1963ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > cancel_availability_instance 327ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > cancel_availability_pattern 286ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > allows School B moderator own-school queue scope but blocks School A memberships 680ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > beforegrantNULL: accepted partners and prospective backups receive NULL before consent 2819ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > claim_household_link_invitation 555ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > claim_school_invitation 1559ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > blocks School B users and moderators from School A-only safety declaration versions 1998ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > confirm_household_link 348ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > create_availability_pattern 327ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > create_household_link_invitation 318ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > trusted completion posts exactly once even after an unchanged completion update 3538ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > create_school_invitation 329ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > grantReceipt: version one is phone-free and omitted backups default to empty 2956ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > bothOrders-pickup_done: either first confirmation leaves incomplete and second posts one recipient-to-provider trip 4011ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > expire_my_swap_proposals 311ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > get_accepted_swap_children 315ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > get_my_ledger 315ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > blocks School B parent and moderator reads of School A calendar, patterns, instances, households and cancellation events 2151ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > grant_contact_sharing 314ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > revoke_contact_sharing 358ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > get_shared_contact 322ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > records recipient membership as debtor and helper membership as provider for both participants 2400ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > confirm_pickup_done 337ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > confirm_child_arrived 346ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > acceptedpartnerSuccess: both accepted partners read only the other consenting membership 2892ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > bothOrders-child_arrived: either first confirmation leaves incomplete and second posts one recipient-to-provider trip 2769ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > refresh_my_handover_reminders 373ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > blocks School B parent and moderator mutation attempts against School A Day 3 data 2260ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > get_reciprocal_match_candidates 369ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > list_my_swaps 321ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > list_onboarding_school_options 319ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > list_pending_school_memberships 330ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > open_school_invitation 364ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > has_current_onboarding_consents 306ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > is_admin 301ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > chosenbackupSuccess: two explicitly chosen verified same-school backups can read the owner 2408ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > denies participant UPDATE and DELETE and leaves the owned ledger entry unchanged 3404ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > is_approved_school_member 340ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > is_member 320ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > is_moderator 318ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > duplicateTaps: identical confirmation timestamps and all side-effect counts survive repeats before and after completion 3504ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > is_same_household 341ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > blocks School B parent and moderator reads and writes of School A proposals, legs and blocks 3651ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > is_verified_email_user 317ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > propose_reciprocal_swap 298ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > deniedReader-unchosen: unchosen unrelated same-school School B and moderator B receive NULL 2131ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > record_email_verified_event 328ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > does not expose household status to a third party or allow public internal expansion RPCs 748ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > denies authenticated INSERT and TRUNCATE rather than exposing raw ledger writes 2173ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > denies anon execute on every public function and every public table privilege 283ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > record_first_match_viewed 543ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > requires a current school-specific declaration rather than accepting an older global declaration 443ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > redeem_school_invite_code 339ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > refresh_my_availability_instances 323ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > request_household_link 314ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > denies direct analytics writes and invite code/hash queries to browser-authenticated users 681ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > school_local_today 342ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > denies School B moderator direct membership mutation outside the audited review RPC 387ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-unrelated: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 3047ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > set_school_membership_review_state 348ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > blocks a verified same-school third party from another membership pair directly and through the RPC 2136ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > deniedReader-unrelated: unchosen unrelated same-school School B and moderator B receive NULL 2416ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > sign_onboarding_safety_declaration 347ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > transition_swap_proposal 333ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > update_availability_pattern 333ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > update_onboarding_parent_profile 331ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > C1 creates school invitations only for the intended moderator or admin and school scope 1869ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > guard_swap_ledger_entry 303ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > record_completed_swap_leg 327ms
+ × tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > C3 expires only the caller own expired proposal with privileged read-back 488ms
+   → expected [ { …(2) }, { …(2) }, { …(2) } ] to deeply equal [ { …(2) }, { …(2) }, { …(2) } ]
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > guard_contact_history 295ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > deniedReader-parentB: unchosen unrelated same-school School B and moderator B receive NULL 2303ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > C4 derives analytics actor and school from auth.uid and denies anon 526ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > contact_member_is_active 309ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-parentB: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 3022ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > blocks School B parentB from School A rows and RPC data while allowing their own pair 2726ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > guard_handover_history 359ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > record_leg_confirmation 322ms
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > maybe_record_handover_reminder 318ms
+ × tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > G1 invitation and code RPCs handle valid, invalid, expired and cross-school calls without resolution errors 918ms
+   → new row for relation "school_invitations" violates check constraint "school_invitations_check"
+ ✓ tests/rls/rpc-smoke.test.ts > allowlist-driven authenticated RPC smoke > enqueue_due_handover_reminders 326ms
+ ✓ tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > leaves published trust policy unchanged after authenticated mutation attempt 463ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > deniedReader-moderatorB: unchosen unrelated same-school School B and moderator B receive NULL 2134ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > blocks School B moderatorB from School A rows and RPC data while allowing their own pair 2350ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-moderatorB: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 2875ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > school invitation token is at least 16 bytes and only its hash is stored 500ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > open valid token returns opened and records opened status 672ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > open invalid token returns unavailable without a resolution error 289ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > household invitation token is at least 16 bytes and only its hash is stored 469ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > open expired token returns unavailable 449ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > claim school invitation creates a pending membership for a valid token 630ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > expired school invitation and expired invite code are rejected 1054ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > blocks a pending nonparticipant and returns empty arrays for a caller with no membership 2214ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > memberArgumentIsNotCallerIdentity: user IDs foreign memberships and unrelated consenting targets cannot spoof access 3131ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > claim school invitation rejects an invalid token 420ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > invite code use limit stops a second redemption 740ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > claim school invitation rejects an expired token 711ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-pending: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 2859ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > redeem valid invite code creates a pending membership 614ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > hides an existing participant ledger when their membership becomes pending_moderator 2320ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > five failed attempts are kept and the next attempt is rate limited 1767ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > redeem rejects an invalid code 974ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > attempts older than 15 minutes do not count toward the rate limit 481ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > anonymousDenied: anon cannot execute any contact RPC even for a known consent 2814ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > redeem rejects an expired code and creates no membership 560ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > claim household invitation confirms the link for a valid token 632ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > C2 household invitation is scoped to the caller school 947ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > claim household invitation rejects an invalid token 459ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > hides an existing participant ledger when their membership becomes rejected 2071ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > wrongCaller-noMembershipUser: both confirmation RPCs deny School A IDs and refresh cannot reach their facts 3398ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > C2 a school B user cannot claim a school A household invitation 948ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > claim household invitation rejects an expired token 579ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > C3 expire_my_swap_proposals changes only the caller expired proposals 586ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > school B user cannot claim a school A household invitation 742ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > ownerOnlyMetadata: partner and chosen backup cannot SELECT consent or backup snapshots 2653ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > school B user cannot claim a school A invitation already joined by someone else 1119ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > hides an existing participant ledger when their membership becomes suspended 2513ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > school B user cannot redeem a school A code into school B 772ms
+ ✓ tests/rls/g3-live.test.ts > G3 invitation scope expiry and analytics attribution > C4 analytics actor and school come from auth.uid and anon is denied 2121ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for schools 2ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for school_configs 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for profiles 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for school_memberships 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for role_assignments 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for audit_logs 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for analytics_events 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for feature_flags 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for trust_policy_versions 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for consent_documents 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for consent_acceptances 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for child_profiles 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for safety_declaration_versions 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for safety_declarations 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for school_invite_codes 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for school_invite_attempts 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for school_invitations 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for household_links 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for household_link_invitations 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for school_calendar_periods 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for availability_patterns 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for availability_instances 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for schedule_cancellation_events 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for match_blocks 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for swap_proposals 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for swap_legs 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for swap_ledger_entries 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for contact_consents 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for contact_consent_backups 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for swap_cancellation_events 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for swap_contact_notifications 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for swap_leg_confirmations 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > enables RLS for swap_leg_reminders 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > provides safe security-definer membership and role helpers 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > makes audit logs append-only with an allowlisted non-personal payload 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > allows only the required IDs-only analytics events and no direct client insert 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > uses explicit child and safety columns rather than a free-form membership declaration 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > protects hashed invite codes, rate-limit history and generic invitation opening 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > makes published trust policy and active consent versions immutable 0ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > commits new enum values before a following migration uses them 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > removes raw membership updates and scopes published safety declarations to the approved school 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > ships two sample Victorian schools and a disabled school switcher 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > protects confirmed household links and preserves a no-same-household matching helper 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > stores only coarse schedule facts, expands four weeks, and emits trusted cancellation inputs 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > keeps internal expansion private and makes one-instance and whole-pattern cancellation distinct 1ms
+ ✓ tests/rls/migration-contract.test.ts > Day 1 through Day 4 RLS migration contract > protects reciprocal candidates, blocks, two-party acceptance and child reveal 5ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > anonymous callers cannot execute the four invitation functions 1442ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > returns no ledger for a verified participant without current safety onboarding 2120ms
+ ✓ tests/rls/invitation-live.test.ts > G1 invitation extension qualification > catalogue paths grants and unqualified extension query 489ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > retains nine-week history with dynamic is_expired but excludes it from active partner counts 2104ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > inactiveParticipant: pending suspended stale-safety and stale-consent participants cannot confirm or read 6850ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > privateSchemaTableDenied: even owner partner and chosen backup cannot directly read or write private phones 6502ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > uses exactly 42 and 56 elapsed UTC days for reminder and expiry in a non-UTC session 1914ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > version1to2Snapshots: regrant supersedes without revocation or cancellation and replaces the chosen backup set 3711ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > nets reverse trips only within the same pair without affecting a different partner 3212ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > acceptedOnlyAndCorrectRole: wrong participant roles proposed and consent-cancelled legs reject confirmation 5635ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-empty: non-AU-E164 input rejects generically with no contact side effects 5591ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > silently expires history without deleting or mutating rows, issuing audits, or changing scores 6138ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > anonymousDenied: actual anon execution denies every new function and both handover tables 8940ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-local: non-AU-E164 input rejects generically with no contact side effects 4853ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > selects the oldest fully onboarded verified school and skips an older ineligible school 5246ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-landline: non-AU-E164 input rejects generically with no contact side effects 2739ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > guard rejects privileged UPDATE DELETE and TRUNCATE with 55000 despite existing grants 2451ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-foreign: non-AU-E164 input rejects generically with no contact side effects 2445ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > rejects a malformed cross-school or unrelated membership pair before uniqueness can mask validation 3077ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > readIsolation: School B parent and moderator read only their own leg while unrelated and inactive-school callers see none 7368ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-short: non-AU-E164 input rejects generically with no contact side effects 3225ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > does not allow a completion to post a ledger entry from a proposed proposal 2394ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-long: non-AU-E164 input rejects generically with no contact side effects 2398ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > does not allow a completion to post a ledger entry from a declined proposal 2281ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-whitespace: non-AU-E164 input rejects generically with no contact side effects 2753ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > preserves completed source completion and identity even against privileged SQL 3962ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidMobile-null: non-AU-E164 input rejects generically with no contact side effects 1973ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-owner: owner partner foreign pending unknown and user IDs reject without side effects 3154ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > denies participant and cross-school client completion writes and authenticated trigger calls 4507ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-partner: owner partner foreign pending unknown and user IDs reject without side effects 2061ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > noDirectDML: participants and School B cannot INSERT UPDATE DELETE TRUNCATE either new table or complete a source leg 14260ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > catalogue confirms SELECT-only RLS, one entry per leg, +1 counts and no monetary public columns 1953ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-parentB: owner partner foreign pending unknown and user IDs reject without side effects 2207ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > restricts RPC execution to its allowlist and all three function search paths to pg_catalog only 1873ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > reminderBoundary-pickup_done: plus29 yields none plus31 yields one correctly targeted immutable reminder 3928ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-moderatorB: owner partner foreign pending unknown and user IDs reject without side effects 2198ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > denies actual anon execution of the ledger RPC and both trigger functions 1720ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-pending: owner partner foreign pending unknown and user IDs reject without side effects 2151ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > reminderBoundary-child_arrived: plus29 yields none plus31 yields one correctly targeted immutable reminder 3845ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-unknown: owner partner foreign pending unknown and user IDs reject without side effects 2125ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > invalidBackup-userId: owner partner foreign pending unknown and user IDs reject without side effects 2067ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > tooManyBackups-limit0: school-configured ceiling rejects atomically 5201ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > reminderEligibility: zero both cancelled and future arrivals enqueue none and cancellation never deletes an existing reminder 8634ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > tooManyBackups-limit1: school-configured ceiling rejects atomically 2218ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > tooManyBackups-limit2: school-configured ceiling rejects atomically 2387ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-unrelated: non-owning or unverified caller cannot grant or revoke another consent 2456ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > serviceSweep: only service may sweep both schools and authenticated School B cannot execute service or internal functions 6330ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-parentB: non-owning or unverified caller cannot grant or revoke another consent 2380ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > immutableFacts: privileged UPDATE DELETE TRUNCATE of confirmations and reminders raise 55000 without changing facts 2801ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-moderatorB: non-owning or unverified caller cannot grant or revoke another consent 2471ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > freezeAfterFirst: expected arrival source identity and first member cannot be rewritten after a single confirmation 3699ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-pending: non-owning or unverified caller cannot grant or revoke another consent 2591ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > firstTripAnalytics: both immutable confirmation actors and source school emit once across two completed legs with no caller-supplied identity or clock 2919ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > wrongCaller-noMembershipUser: non-owning or unverified caller cannot grant or revoke another consent 2457ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > completedConsentRevoke: real two-confirmation completion ledger analytics and confirmations survive later consent cancellation 3091ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-pending_moderator: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 3411ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > catalogTables: exact metadata columns SELECT-only RLS unique leg-kind and no money child or travel tracking fields 4306ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-suspended: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 3761ms
+ ✓ tests/rls/handover-live.test.ts > Task 5.3 live two-party handover and missing-confirmation reminders > catalogFunctions: exact signatures explicit role grants allowlist and pg_catalog-only paths expose no identity school or time arguments 1559ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-missingSafety: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 3553ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-missingConsent: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 3576ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveParticipant-adminSuspended: inactive owners cannot grant or read but retain idempotent withdrawal of their existing consent 4879ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > inactiveBackup: chosen backup loses immediate read access when verified status is suspended 2131ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > proposedDenied: proposed participants and nonparticipants cannot grant or revoke before acceptance 4283ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > nonconsentingPartnerCannotRevokeOwner: accepted partnership alone does not own the other consent 2723ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > revokeLifecycle: latest consent revocation cancels with retained acceptance event partner-only phone-free inbox and immediate NULL both ways 5940ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > idempotentRevoke: repeat owning revocation preserves exact timestamps history event and single inbox row 2563ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noRevival: neither owner may regrant or accept a consent-cancelled swap 4598ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > unchangedLedgerAfterCancel: consent withdrawal preserves immutable completed trip entries and pair counts 4385ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noDirectDML-contact_consents: clients cannot INSERT UPDATE DELETE or TRUNCATE contact metadata history or inbox 7708ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noDirectDML-contact_consent_backups: clients cannot INSERT UPDATE DELETE or TRUNCATE contact metadata history or inbox 7958ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noDirectDML-swap_cancellation_events: clients cannot INSERT UPDATE DELETE or TRUNCATE contact metadata history or inbox 7230ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > noDirectDML-swap_contact_notifications: clients cannot INSERT UPDATE DELETE or TRUNCATE contact metadata history or inbox 7140ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > immutableCancellationEvent: privileged UPDATE DELETE and TRUNCATE cannot rewrite cancellation history 2701ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > catalogPrivacy: no public phone columns or views referencing the private phone table and no private client privileges or policies 2027ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > catalogTables: every new table has RLS SELECT-only client grants and exact consent and backup metadata columns 1662ms
+ ✓ tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > catalogFunctions: three contact RPCs have explicit authenticated-only EXECUTE and all five pg_catalog paths with internal execution denied 2339ms
+stdout | tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > allAllowlistedRPCResponseLeakScan: every allowlisted RPC is actually called in a rollback savepoint with only the scoped dedicated getter exception
+contact RPC privacy scan outcomes [{"name":"accept_current_consent","outcome":"known_legacy_error","code":"42702"},{"name":"add_onboarding_child","outcome":"success","code":null},{"name":"approve_school_membership","outcome":"denied","code":"42501"},{"name":"block_match_user","outcome":"success","code":null},{"name":"cancel_availability_instance","outcome":"denied","code":"55000"},{"name":"cancel_availability_pattern","outcome":"denied","code":"55000"},{"name":"claim_household_link_invitation","outcome":"denied","code":"P0002"},{"name":"claim_school_invitation","outcome":"denied","code":"P0002"},{"name":"confirm_household_link","outcome":"denied","code":"P0002"},{"name":"create_availability_pattern","outcome":"unexpected_error","code":"42702"},{"name":"create_household_link_invitation","outcome":"success","code":null},{"name":"create_school_invitation","outcome":"denied","code":"42501"},{"name":"expire_my_swap_proposals","outcome":"success","code":null},{"name":"get_accepted_swap_children","outcome":"success","code":null},{"name":"get_my_ledger","outcome":"success","code":null},{"name":"grant_contact_sharing","outcome":"success","code":null},{"name":"revoke_contact_sharing","outcome":"success","code":null},{"name":"get_shared_contact","outcome":"success","code":null},{"name":"confirm_pickup_done","outcome":"denied","code":"42501"},{"name":"confirm_child_arrived","outcome":"success","code":null},{"name":"refresh_my_handover_reminders","outcome":"success","code":null},{"name":"get_reciprocal_match_candidates","outcome":"success","code":null},{"name":"list_my_swaps","outcome":"success","code":null},{"name":"list_onboarding_school_options","outcome":"success","code":null},{"name":"list_pending_school_memberships","outcome":"success","code":null},{"name":"open_school_invitation","outcome":"success","code":null},{"name":"has_current_onboarding_consents","outcome":"success","code":null},{"name":"is_admin","outcome":"success","code":null},{"name":"is_approved_school_member","outcome":"success","code":null},{"name":"is_member","outcome":"success","code":null},{"name":"is_moderator","outcome":"success","code":null},{"name":"is_same_household","outcome":"success","code":null},{"name":"is_verified_email_user","outcome":"success","code":null},{"name":"propose_reciprocal_swap","outcome":"denied","code":"42501"},{"name":"record_email_verified_event","outcome":"success","code":null},{"name":"record_first_match_viewed","outcome":"success","code":null},{"name":"redeem_school_invite_code","outcome":"success","code":null},{"name":"refresh_my_availability_instances","outcome":"known_legacy_error","code":"42702"},{"name":"request_household_link","outcome":"success","code":null},{"name":"school_local_today","outcome":"success","code":null},{"name":"set_school_membership_review_state","outcome":"denied","code":"42501"},{"name":"sign_onboarding_safety_declaration","outcome":"denied","code":"22023"},{"name":"transition_swap_proposal","outcome":"denied","code":"42501"},{"name":"update_availability_pattern","outcome":"unexpected_error","code":"23503"},{"name":"update_onboarding_parent_profile","outcome":"success","code":null}]
+
+ × tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > allAllowlistedRPCResponseLeakScan: every allowlisted RPC is actually called in a rollback savepoint with only the scoped dedicated getter exception 18509ms
+   → expected [ { …(2) }, { …(2) } ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/rls/contact-live.test.ts > Task 5.2 live consent-gated private contact sharing > allAllowlistedRPCResponseLeakScan: every allowlisted RPC is actually called in a rollback savepoint with only the scoped dedicated getter exception
+AssertionError: expected [ { …(2) }, { …(2) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "code": "42702",
++     "name": "create_availability_pattern",
++   },
++   {
++     "code": "23503",
++     "name": "update_availability_pattern",
++   },
++ ]
+
+ ❯ tests/rls/contact-live.test.ts:990:22
+    988|     // Safe audit of coverage only: never log RPC response bodies or p…
+    989|     console.info('contact RPC privacy scan outcomes', JSON.stringify(o…
+    990|     expect(failures).toEqual([]);
+       |                      ^
+    991|     expect(outcomes.map((outcome) => outcome.name)).toEqual(names);
+    992|     expect(outcomes.find((outcome) => outcome.name === 'get_shared_con…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > C3 expires only the caller own expired proposal with privileged read-back
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) } ] to deeply equal [ { …(2) }, { …(2) }, { …(2) } ]
+
+- Expected
++ Received
+
+@@ -3,12 +3,12 @@
+      "id": "70000000-0000-0000-0000-000000000010",
+      "status": "expired",
+    },
+    {
+      "id": "70000000-0000-0000-0000-000000000011",
+-     "status": "proposed",
++     "status": "expired",
+    },
+    {
+      "id": "70000000-0000-0000-0000-000000000012",
+-     "status": "proposed",
++     "status": "expired",
+    },
+  ]
+
+ ❯ tests/rls/live-rls.test.ts:208:20
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > G1 invitation and code RPCs handle valid, invalid, expired and cross-school calls without resolution errors
+error: new row for relation "school_invitations" violates check constraint "school_invitations_check"
+ ❯ node_modules/pg/lib/client.js:694:17
+ ❯ tests/rls/live-rls.test.ts:241:7
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { length: 513, severity: 'ERROR', code: '23514', detail: 'Failing row contains (fd19dc44-89b3-4784-9a78-ca5584c0c738, 10000000-0000-0000-0000-000000000001, 20000000-0000-0000-0000-000000000003, 17c7528ef55848b70c020a9192b9af5dad2e16ba41683258f144d45d6629e54e, sent, 2026-11-06 12:25:31.359104+00, null, null, null, null, null, 2026-11-06 12:24:31.359104+00).', hint: undefined, position: undefined, internalPosition: undefined, internalQuery: undefined, where: undefined, schema: 'public', table: 'school_invitations', dataType: undefined, constraint: 'school_invitations_check', file: 'execMain.c', routine: 'ExecConstraints' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed | 6 passed (8)
+      Tests  3 failed | 249 passed (252)
+   Start at  21:25:11
+   Duration  206.66s (transform 236ms, setup 0ms, collect 1.18s, tests 454.91s, environment 1ms, prepare 999ms)
+

@@ -1,0 +1,36 @@
+
+ RUN  v3.2.7 /home/ubuntu/yourturn
+
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > accepted legs without completed_at create no ledger entries 7552ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > trusted completion posts exactly once even after an unchanged completion update 7780ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > records recipient membership as debtor and helper membership as provider for both participants 8968ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > denies participant UPDATE and DELETE and leaves the owned ledger entry unchanged 10804ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > denies authenticated INSERT and TRUNCATE rather than exposing raw ledger writes 8729ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > blocks a verified same-school third party from another membership pair directly and through the RPC 7475ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > blocks School B parentB from School A rows and RPC data while allowing their own pair 9026ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > blocks School B moderatorB from School A rows and RPC data while allowing their own pair 9051ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > blocks a pending nonparticipant and returns empty arrays for a caller with no membership 8967ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > hides an existing participant ledger when their membership becomes pending_moderator 7928ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > hides an existing participant ledger when their membership becomes rejected 8036ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > hides an existing participant ledger when their membership becomes suspended 7993ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > returns no ledger for a verified participant without current safety onboarding 8059ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > retains nine-week history with dynamic is_expired but excludes it from active partner counts 8437ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > uses exactly 42 and 56 elapsed UTC days for reminder and expiry in a non-UTC session 6799ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > nets reverse trips only within the same pair without affecting a different partner 9678ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > silently expires history without deleting or mutating rows, issuing audits, or changing scores 8583ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > selects the oldest fully onboarded verified school and skips an older ineligible school 9637ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > guard rejects privileged UPDATE DELETE and TRUNCATE with 55000 despite existing grants 9000ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > rejects a malformed cross-school or unrelated membership pair before uniqueness can mask validation 8590ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > does not allow a completion to post a ledger entry from a proposed proposal 7215ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > does not allow a completion to post a ledger entry from a declined proposal 7360ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > preserves completed source completion and identity even against privileged SQL 14370ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > denies participant and cross-school client completion writes and authenticated trigger calls 14431ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > catalogue confirms SELECT-only RLS, one entry per leg, +1 counts and no monetary public columns 5886ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > restricts RPC execution to its allowlist and all three function search paths to pg_catalog only 7169ms
+ ✓ tests/rls/ledger-live.test.ts > Task 5.1 live immutable membership-pair ledger > denies actual anon execution of the ledger RPC and both trigger functions 6591ms
+
+ Test Files  1 passed (1)
+      Tests  27 passed (27)
+   Start at  18:25:16
+   Duration  234.85s (transform 92ms, setup 0ms, collect 117ms, tests 234.12s, environment 0ms, prepare 260ms)
+

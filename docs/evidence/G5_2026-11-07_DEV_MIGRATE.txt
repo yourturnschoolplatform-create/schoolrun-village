@@ -1,0 +1,30 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> yourturn@0.1.0 db:migrate
+> tsx scripts/run-migrations.ts --target=development
+
+Skipped 0001_day1_foundation.sql (already applied)
+Skipped 0002_day2_enum_values.sql (already applied)
+Skipped 0003_day2_onboarding_and_hardening.sql (already applied)
+Skipped 0004_day2_sample_pilot_data.sql (already applied)
+Skipped 0005_day2_security_remediation.sql (already applied)
+Skipped 0006_day3_households_schedules_calendar.sql (already applied)
+Skipped 0007_day3_sample_calendar.sql (already applied)
+Skipped 0008_day4_reciprocal_matching_swaps.sql (already applied)
+Skipped 0009_day4_matching_remediation.sql (already applied)
+Skipped 0010_day4_swap_integrity_remediation.sql (already applied)
+Skipped 0011_day4_function_privilege_hardening.sql (already applied)
+Skipped 0012_day4_matching_proposal_grant.sql (already applied)
+Skipped 0013_day4_rls_helper_grants.sql (already applied)
+Skipped 0014_day4_extensions_search_path.sql (already applied)
+Skipped 0015_day4_qualified_invitation_extensions.sql (already applied)
+Skipped 0016_day4_qualified_invitation_claims.sql (already applied)
+Skipped 0017_day4_open_invitation_grant.sql (already applied)
+Skipped 0018_day5_trip_count_ledger.sql (already applied)
+Skipped 0019_day5_contact_consents.sql (already applied)
+Skipped 0020_day5_two_step_handover.sql (already applied)
+Skipped 0021_day5_handover_analytics_lock_order.sql (already applied)
+Skipped 0022_day4_invitation_extension_qualification.sql (already applied)
+Skipped 0023_day4_invite_attempt_rate_limit.sql (already applied)
+Skipped 0024_day4_availability_pattern_qualification.sql (already applied)
+Skipped 0025_day4_availability_pattern_greatest.sql (already applied)

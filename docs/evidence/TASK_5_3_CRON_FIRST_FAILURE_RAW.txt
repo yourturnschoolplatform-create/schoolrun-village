@@ -1,0 +1,5 @@
+
+> yourturn@0.1.0 handover:reminders:install:test
+> tsx scripts/install-handover-reminders-test.ts
+
+TEST reminder schedule installation failed (42501) at protect native metadata job; no connection value logged.

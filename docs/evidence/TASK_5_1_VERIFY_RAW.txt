@@ -1,0 +1,159 @@
+
+> yourturn@0.1.0 verify
+> npm run typecheck && npm run lint && npm run test:unit && npm run test:rls
+
+
+> yourturn@0.1.0 typecheck
+> tsc --noEmit
+
+
+> yourturn@0.1.0 lint
+> eslint . --max-warnings=0
+
+
+> yourturn@0.1.0 test:unit
+> vitest run --config vitest.unit.config.ts
+
+
+ RUN  v3.2.7 /home/ubuntu/yourturn
+
+ ✓ tests/unit/matches-boundary.test.ts (1 test) 8ms
+ ✓ tests/unit/ledger-contract.test.ts (4 tests) 8ms
+ ✓ tests/unit/onboarding-boundary.test.ts (3 tests) 8ms
+ ✓ tests/unit/schedules.test.ts (5 tests) 8ms
+ ✓ tests/unit/foundation.test.ts (6 tests) 11ms
+ ✓ tests/unit/onboarding.test.ts (4 tests) 7ms
+ ✓ tests/unit/schedules-boundary.test.ts (2 tests) 6ms
+ ✓ tests/unit/matching.test.ts (4 tests) 5ms
+ ✓ tests/unit/ics.test.ts (2 tests) 4ms
+
+ Test Files  9 passed (9)
+      Tests  31 passed (31)
+   Start at  18:30:13
+   Duration  1.17s (transform 296ms, setup 0ms, collect 462ms, tests 66ms, environment 2ms, prepare 2.27s)
+
+
+> yourturn@0.1.0 test:rls
+> npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts
+
+
+> yourturn@0.1.0 db:migrate:test
+> tsx scripts/run-migrations.ts --target=rls-test
+
+Skipped 0001_day1_foundation.sql (already applied)
+Skipped 0002_day2_enum_values.sql (already applied)
+Skipped 0003_day2_onboarding_and_hardening.sql (already applied)
+Skipped 0004_day2_sample_pilot_data.sql (already applied)
+Skipped 0005_day2_security_remediation.sql (already applied)
+Skipped 0006_day3_households_schedules_calendar.sql (already applied)
+Skipped 0007_day3_sample_calendar.sql (already applied)
+Skipped 0008_day4_reciprocal_matching_swaps.sql (already applied)
+Skipped 0009_day4_matching_remediation.sql (already applied)
+Skipped 0010_day4_swap_integrity_remediation.sql (already applied)
+Skipped 0011_day4_function_privilege_hardening.sql (already applied)
+Skipped 0012_day4_matching_proposal_grant.sql (already applied)
+Skipped 0013_day4_rls_helper_grants.sql (already applied)
+Skipped 0014_day4_extensions_search_path.sql (already applied)
+Skipped 0015_day4_qualified_invitation_extensions.sql (already applied)
+Skipped 0016_day4_qualified_invitation_claims.sql (already applied)
+Skipped 0017_day4_open_invitation_grant.sql (already applied)
+Skipped 0018_day5_trip_count_ledger.sql (already applied)
+Function allowlist verified: 57 public functions, 39 authenticated entries, 2 internal declarations.
+
+ RUN  v3.2.7 /home/ubuntu/yourturn
+
+ ✓ tests/rls/migration-contract.test.ts (40 tests) 59ms
+ ✓ tests/rls/rpc-smoke.test.ts (1 test) 49706ms
+   ✓ allowlist-driven authenticated RPC smoke > calls every allowlisted RPC without a missing-function or search_path/extension error  48000ms
+ ❯ tests/rls/live-rls.test.ts (17 tests | 2 failed) 67547ms
+   ✓ live two-school Supabase RLS harness > blocks School B parent direct reads of School A school and configuration data  3925ms
+   ✓ live two-school Supabase RLS harness > blocks School B parent direct reads of School A child data  1477ms
+   ✓ live two-school Supabase RLS harness > allows School B moderator own-school queue scope but blocks School A memberships  2702ms
+   ✓ live two-school Supabase RLS harness > blocks School B users and moderators from School A-only safety declaration versions  2690ms
+   ✓ live two-school Supabase RLS harness > blocks School B parent and moderator reads of School A calendar, patterns, instances, households and cancellation events  8082ms
+   ✓ live two-school Supabase RLS harness > blocks School B parent and moderator mutation attempts against School A Day 3 data  8067ms
+   ✓ live two-school Supabase RLS harness > blocks School B parent and moderator reads and writes of School A proposals, legs and blocks  13457ms
+   ✓ live two-school Supabase RLS harness > does not expose household status to a third party or allow public internal expansion RPCs  2689ms
+   ✓ live two-school Supabase RLS harness > denies anon execute on every public function and every public table privilege  343ms
+   ✓ live two-school Supabase RLS harness > requires a current school-specific declaration rather than accepting an older global declaration  1345ms
+   ✓ live two-school Supabase RLS harness > denies direct analytics writes and invite code/hash queries to browser-authenticated users  2693ms
+   ✓ live two-school Supabase RLS harness > denies School B moderator direct membership mutation outside the audited review RPC  1344ms
+   ✓ live two-school Supabase RLS harness > C1 creates school invitations only for the intended moderator or admin and school scope  6730ms
+   × live two-school Supabase RLS harness > C3 expires only the caller own expired proposal with privileged read-back 1528ms
+     → expected [ { …(2) }, { …(2) }, { …(2) } ] to deeply equal [ { …(2) }, { …(2) }, { …(2) } ]
+   ✓ live two-school Supabase RLS harness > C4 derives analytics actor and school from auth.uid and denies anon  2019ms
+   × live two-school Supabase RLS harness > G1 invitation and code RPCs handle valid, invalid, expired and cross-school calls without resolution errors 3194ms
+     → new row for relation "school_invitations" violates check constraint "school_invitations_check"
+   ✓ live two-school Supabase RLS harness > leaves published trust policy unchanged after authenticated mutation attempt  1680ms
+ ✓ tests/rls/ledger-live.test.ts (27 tests) 230779ms
+   ✓ Task 5.1 live immutable membership-pair ledger > accepted legs without completed_at create no ledger entries  7631ms
+   ✓ Task 5.1 live immutable membership-pair ledger > trusted completion posts exactly once even after an unchanged completion update  7248ms
+   ✓ Task 5.1 live immutable membership-pair ledger > records recipient membership as debtor and helper membership as provider for both participants  8268ms
+   ✓ Task 5.1 live immutable membership-pair ledger > denies participant UPDATE and DELETE and leaves the owned ledger entry unchanged  11737ms
+   ✓ Task 5.1 live immutable membership-pair ledger > denies authenticated INSERT and TRUNCATE rather than exposing raw ledger writes  8164ms
+   ✓ Task 5.1 live immutable membership-pair ledger > blocks a verified same-school third party from another membership pair directly and through the RPC  6928ms
+   ✓ Task 5.1 live immutable membership-pair ledger > blocks School B parentB from School A rows and RPC data while allowing their own pair  9106ms
+   ✓ Task 5.1 live immutable membership-pair ledger > blocks School B moderatorB from School A rows and RPC data while allowing their own pair  8500ms
+   ✓ Task 5.1 live immutable membership-pair ledger > blocks a pending nonparticipant and returns empty arrays for a caller with no membership  8287ms
+   ✓ Task 5.1 live immutable membership-pair ledger > hides an existing participant ledger when their membership becomes pending_moderator  8000ms
+   ✓ Task 5.1 live immutable membership-pair ledger > hides an existing participant ledger when their membership becomes rejected  7988ms
+   ✓ Task 5.1 live immutable membership-pair ledger > hides an existing participant ledger when their membership becomes suspended  7455ms
+   ✓ Task 5.1 live immutable membership-pair ledger > returns no ledger for a verified participant without current safety onboarding  7473ms
+   ✓ Task 5.1 live immutable membership-pair ledger > retains nine-week history with dynamic is_expired but excludes it from active partner counts  8395ms
+   ✓ Task 5.1 live immutable membership-pair ledger > uses exactly 42 and 56 elapsed UTC days for reminder and expiry in a non-UTC session  7314ms
+   ✓ Task 5.1 live immutable membership-pair ledger > nets reverse trips only within the same pair without affecting a different partner  10420ms
+   ✓ Task 5.1 live immutable membership-pair ledger > silently expires history without deleting or mutating rows, issuing audits, or changing scores  8667ms
+   ✓ Task 5.1 live immutable membership-pair ledger > selects the oldest fully onboarded verified school and skips an older ineligible school  9660ms
+   ✓ Task 5.1 live immutable membership-pair ledger > guard rejects privileged UPDATE DELETE and TRUNCATE with 55000 despite existing grants  8332ms
+   ✓ Task 5.1 live immutable membership-pair ledger > rejects a malformed cross-school or unrelated membership pair before uniqueness can mask validation  9345ms
+   ✓ Task 5.1 live immutable membership-pair ledger > does not allow a completion to post a ledger entry from a proposed proposal  7306ms
+   ✓ Task 5.1 live immutable membership-pair ledger > does not allow a completion to post a ledger entry from a declined proposal  6759ms
+   ✓ Task 5.1 live immutable membership-pair ledger > preserves completed source completion and identity even against privileged SQL  14388ms
+   ✓ Task 5.1 live immutable membership-pair ledger > denies participant and cross-school client completion writes and authenticated trigger calls  13327ms
+   ✓ Task 5.1 live immutable membership-pair ledger > catalogue confirms SELECT-only RLS, one entry per leg, +1 counts and no monetary public columns  5864ms
+   ✓ Task 5.1 live immutable membership-pair ledger > restricts RPC execution to its allowlist and all three function search paths to pg_catalog only  7133ms
+   ✓ Task 5.1 live immutable membership-pair ledger > denies actual anon execution of the ledger RPC and both trigger functions  7080ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > C3 expires only the caller own expired proposal with privileged read-back
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) } ] to deeply equal [ { …(2) }, { …(2) }, { …(2) } ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -3,12 +3,12 @@[39m
+[2m      "id": "70000000-0000-0000-0000-000000000010",[22m
+[2m      "status": "expired",[22m
+[2m    },[22m
+[2m    {[22m
+[2m      "id": "70000000-0000-0000-0000-000000000011",[22m
+[32m-     "status": "proposed",[39m
+[31m+     "status": "expired",[39m
+[2m    },[22m
+[2m    {[22m
+[2m      "id": "70000000-0000-0000-0000-000000000012",[22m
+[32m-     "status": "proposed",[39m
+[31m+     "status": "expired",[39m
+[2m    },[22m
+[2m  ][22m
+
+ ❯ tests/rls/live-rls.test.ts:208:20
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/rls/live-rls.test.ts > live two-school Supabase RLS harness > G1 invitation and code RPCs handle valid, invalid, expired and cross-school calls without resolution errors
+error: new row for relation "school_invitations" violates check constraint "school_invitations_check"
+ ❯ node_modules/pg/lib/client.js:694:17
+ ❯ tests/rls/live-rls.test.ts:241:7
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  2 failed | 83 passed (85)
+   Start at  18:30:20
+   Duration  231.43s (transform 315ms, setup 0ms, collect 563ms, tests 348.09s, environment 1ms, prepare 680ms)
+

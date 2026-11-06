@@ -1,0 +1,57 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v3.2.7 C:/Users/jayro/Downloads/yourturn
+
+ ✓ tests/unit/schedules.test.ts > Day 3 recurring schedule expansion > expands the next four calendar weeks and skips a holiday 4ms
+ ✓ tests/unit/schedules.test.ts > Day 3 recurring schedule expansion > does not create instances outside configured term periods 0ms
+ ✓ tests/unit/schedules.test.ts > Day 3 recurring schedule expansion > retains the same local time across the Melbourne daylight-saving transition 0ms
+ ✓ tests/unit/schedules.test.ts > Day 3 recurring schedule expansion > supports a moving four-week horizon for an active recurring pattern 0ms
+ ✓ tests/unit/schedules.test.ts > Day 3 recurring schedule expansion > allows a broad suburb label but rejects addresses and coordinate-like values 1ms
+ ✓ tests/unit/onboarding-boundary.test.ts > Day 2 onboarding API security boundary > uses the signed-in request client for ordinary onboarding routes 8ms
+ ✓ tests/unit/onboarding-boundary.test.ts > Day 2 onboarding API security boundary > redacts school IDs before approval and handles void consent/profile RPCs without treating null data as an error 1ms
+ ✓ tests/unit/onboarding-boundary.test.ts > Day 2 onboarding API security boundary > uses an anonymous client only for generic invitation opening and does not return school data 1ms
+ ✓ tests/unit/foundation.test.ts > trust policy defaults > retains all confirmed Day 1 threshold boundaries 2ms
+ ✓ tests/unit/foundation.test.ts > trust policy defaults > returns a band rather than exposing a score interpretation to other parents 0ms
+ ✓ tests/unit/foundation.test.ts > Supabase key boundary > accepts supported browser-safe and server-only key formats without confusing them 1ms
+ ✓ tests/unit/foundation.test.ts > Supabase key boundary > exposes only the explicitly public runtime shape to the browser 0ms
+ ✓ tests/unit/foundation.test.ts > Supabase key boundary > keeps the service-role key reference in the dedicated server admin module only 8ms
+ ✓ tests/unit/foundation.test.ts > PWA cache contract > declares a route manifest and rejects API/auth/cross-origin caching 1ms
+ ✓ tests/unit/contact-api-boundary.test.ts > Task 5.2 contact HTTP response boundary (mock JWT client; not RLS proof) > whitelists grant metadata and never echoes a mobile even if an RPC adds extra fields 94ms
+ ✓ tests/unit/contact-api-boundary.test.ts > Task 5.2 contact HTTP response boundary (mock JWT client; not RLS proof) > returns null for a denied getter without response-body diagnostics 6ms
+ ✓ tests/unit/contact-api-boundary.test.ts > Task 5.2 contact HTTP response boundary (mock JWT client; not RLS proof) > permits a number only in the dedicated shared-contact response field 3ms
+ ✓ tests/unit/contact-api-boundary.test.ts > Task 5.2 contact HTTP response boundary (mock JWT client; not RLS proof) > redacts underlying driver errors rather than logging or returning submitted contact data 9ms
+ ✓ tests/unit/contact-api-boundary.test.ts > Task 5.2 contact HTTP response boundary (mock JWT client; not RLS proof) > renders a fixed phone-free notification DTO even if an upstream message contains a number 16ms
+ ✓ tests/unit/contact-api-boundary.test.ts > Task 5.2 contact HTTP response boundary (mock JWT client; not RLS proof) > requires a valid session before invoking a contact RPC 5ms
+ ✓ tests/unit/contact-api-boundary.test.ts > Task 5.2 contact HTTP response boundary (mock JWT client; not RLS proof) > passes only the swap identifier to withdrawal and preserves its exact terminal state 11ms
+ ✓ tests/unit/handover-api-boundary.test.ts > Task 5.3 handover HTTP boundary (mock JWT; not RLS proof) > passes only the leg ID for pickup, ignoring forged actor school time and completion input 113ms
+ ✓ tests/unit/handover-api-boundary.test.ts > Task 5.3 handover HTTP boundary (mock JWT; not RLS proof) > passes only the leg ID for arrival, ignoring forged actor school time and completion input 11ms
+ ✓ tests/unit/handover-api-boundary.test.ts > Task 5.3 handover HTTP boundary (mock JWT; not RLS proof) > rejects invalid leg identifiers before database RPC execution 30ms
+ ✓ tests/unit/handover-api-boundary.test.ts > Task 5.3 handover HTTP boundary (mock JWT; not RLS proof) > requires authenticated identity before RPC execution 5ms
+ ✓ tests/unit/handover-api-boundary.test.ts > Task 5.3 handover HTTP boundary (mock JWT; not RLS proof) > suppresses database diagnostics and never labels denied confirmation as completion 7ms
+ ✓ tests/unit/schedules-boundary.test.ts > Day 3 schedule API security boundary > uses a request-scoped user JWT client and never a service role 6ms
+ ✓ tests/unit/schedules-boundary.test.ts > Day 3 schedule API security boundary > exports only confirmed personal instances and does not serialize an address or location field 1ms
+ ✓ tests/unit/matches-boundary.test.ts > Day 4 match API boundary > uses user JWT RPCs and has no service role or trust-score response 9ms
+ ✓ tests/unit/ledger-contract.test.ts > Task 5.1 ledger schema contract > restricts stored facts to the non-transferable source pair and integer trips 1ms
+ ✓ tests/unit/ledger-contract.test.ts > Task 5.1 ledger schema contract > adds raising row and truncate guards and revokes all client writes 0ms
+ ✓ tests/unit/ledger-contract.test.ts > Task 5.1 ledger schema contract > uses a caller-derived RPC with pair-only netting and read-time silent expiry 1ms
+ ✓ tests/unit/ledger-contract.test.ts > Task 5.1 ledger schema contract > declares every new function with explicit grants, pg_catalog-only path and allowlist scope 2ms
+ ✓ tests/unit/handover-contract.test.ts > Task 5.3 handover static contract (not live RLS evidence) > orders completion analytics actor keys before conflict handling across different proposals 2ms
+ ✓ tests/unit/handover-contract.test.ts > Task 5.3 handover static contract (not live RLS evidence) > allows only a leg identifier in public confirmation wrappers with fixed kinds 0ms
+ ✓ tests/unit/handover-contract.test.ts > Task 5.3 handover static contract (not live RLS evidence) > restricts reminder records to an overdue accepted leg with exactly one confirmation 0ms
+ ✓ tests/unit/handover-contract.test.ts > Task 5.3 handover static contract (not live RLS evidence) > lists every new function with pg_catalog-only path and grants only the intended browser commands 2ms
+ ✓ tests/unit/onboarding.test.ts > onboarding and schedule state transitions > allows only the explicit onboarding, listing and first-trip IDs-only analytics event names 2ms
+ ✓ tests/unit/onboarding.test.ts > onboarding and schedule state transitions > keeps every pending state on the waiting screen 1ms
+ ✓ tests/unit/onboarding.test.ts > onboarding and schedule state transitions > requires approval, child profile and safety declaration before ready access 0ms
+ ✓ tests/unit/onboarding.test.ts > onboarding and schedule state transitions > continues to block rejected and suspended memberships 0ms
+ ✓ tests/unit/matching.test.ts > Day 4 reciprocal matching rules > keeps same-date reciprocity strict until the user opts into an allowed four-week date 2ms
+ ✓ tests/unit/matching.test.ts > Day 4 reciprocal matching rules > returns only bands, never a numeric trust score 0ms
+ ✓ tests/unit/matching.test.ts > Day 4 reciprocal matching rules > reveals child data only after acceptance to a participant 0ms
+ ✓ tests/unit/matching.test.ts > Day 4 reciprocal matching rules > ranks coarse-area and overlap quality before lower-ranked candidates 0ms
+ ✓ tests/unit/ics.test.ts > confirmed trip ICS export > uses school-local times, escapes text, and omits address-like location data 2ms
+ ✓ tests/unit/ics.test.ts > confirmed trip ICS export > returns a valid empty calendar until a later matching stage creates confirmed trips 0ms
+
+ Test Files  12 passed (12)
+      Tests  47 passed (47)
+   Start at  21:25:08
+   Duration  1.78s (transform 529ms, setup 0ms, collect 2.27s, tests 449ms, environment 2ms, prepare 2.35s)
+
