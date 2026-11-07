@@ -16,6 +16,7 @@ const foundationTables = [
   'email_relay_delivery_policies', 'email_relay_queue', 'email_relay_delivery_events',
   'departure_check_logs', 'retention_purge_runs',
   'running_late_notices',
+  'community_threads', 'community_posts', 'community_comments', 'community_likes',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -35,6 +36,7 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0035_day7_email_relay_queue.sql'), 'utf8'),
   readFile(resolve('db/migrations/0037_day7_retention_purge.sql'), 'utf8'),
   readFile(resolve('db/migrations/0039_day7_running_late_notices.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0040_day8_community_discussion.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -310,6 +312,25 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(late).toMatch(/set search_path = pg_catalog/i);
     expect(late).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds school-scoped community discussion without photos money or child full-name fields', async () => {
+    const community = (await readFile(resolve('db/migrations/0040_day8_community_discussion.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(community).toMatch(/create table public\.community_threads/i);
+    expect(community).toMatch(/create table public\.community_posts/i);
+    expect(community).toMatch(/create table public\.community_comments/i);
+    expect(community).toMatch(/create table public\.community_likes/i);
+    expect(community).toMatch(/alter table public\.community_threads enable row level security/i);
+    expect(community).toMatch(/function public\.create_community_thread/i);
+    expect(community).toMatch(/function public\.create_community_comment/i);
+    expect(community).toMatch(/function public\.toggle_community_like/i);
+    expect(community).toMatch(/function public\.list_community_threads/i);
+    expect(community).toMatch(/community_text_is_allowed/i);
+    expect(community).toMatch(/set search_path = pg_catalog/i);
+    expect(community).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
 });

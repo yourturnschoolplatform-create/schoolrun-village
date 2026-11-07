@@ -185,6 +185,10 @@ Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47
 
 Baseline milestone verification reused the green Day 7 wrap-up gate and re-ran `npm run verify` on TEST at Day 8 start: exit **0**; unit **47/47**; allowlist `132/72/44`; RLS **376/376**. Raw: `docs/evidence/DAY8_START_VERIFY_RAW.txt`. No new migration in this start task. Tasks 8.1–8.3 are open; no Day 8 feature SQL or live suite exists yet at branch open.
 
+## Task 8.1 — school-scoped community discussion — 2026-11-07 (TEST only)
+
+School-scoped discussion threads, posts, comments and likes on TEST. Migration `0040_day8_community_discussion.sql`. Live suite `npm run test:community:live`: **5/5** pass. Raw: `docs/evidence/TASK_8_1_COMMUNITY_LIVE_RAW.txt`. Allowlist after: `145` public / `79` authenticated / `50` internal. Same-school create/list/comment/like; privacy filter denies phones/emails/photos/child full-name phrasing; School B denied School A; direct DML denied; RLS SELECT-only; no amount/price/currency/photo columns. Australian English Community hub UI. DEV not migrated. Tasks 8.2–8.3 and Day 9 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

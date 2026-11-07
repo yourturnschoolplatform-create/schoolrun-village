@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { addDays, dateInPeriod, isSuburbAreaLabel, shortWeekday, type SchoolRunDirection, type ScheduleIntent } from '../../shared/schedules';
 import { scheduleApi, type ScheduleOverview, type SchedulePattern, type SchedulePatternInput } from '../lib/schedule-api';
+import { CommunityHub } from './CommunityHub';
 import { MatchHub } from './MatchHub';
 
-type ViewMode = 'today' | 'calendar' | 'matches';
+type ViewMode = 'today' | 'calendar' | 'matches' | 'community';
 
 type PatternForm = SchedulePatternInput;
 
@@ -198,9 +199,11 @@ export function ScheduleHub({ client, userId, onModeration }: { client: Supabase
         <button role="tab" aria-selected={view === 'today'} className={view === 'today' ? 'schedule-tab schedule-tab--active' : 'schedule-tab'} onClick={() => setView('today')}>Today</button>
         <button role="tab" aria-selected={view === 'calendar'} className={view === 'calendar' ? 'schedule-tab schedule-tab--active' : 'schedule-tab'} onClick={() => setView('calendar')}>Calendar</button>
         <button role="tab" aria-selected={view === 'matches'} className={view === 'matches' ? 'schedule-tab schedule-tab--active' : 'schedule-tab'} onClick={() => setView('matches')}>Matches</button>
+        <button role="tab" aria-selected={view === 'community'} className={view === 'community' ? 'schedule-tab schedule-tab--active' : 'schedule-tab'} onClick={() => setView('community')}>Community</button>
         <button className="text-button" onClick={() => void exportIcs()} disabled={busy}>Export confirmed trips (.ics)</button>
       </div>
 
+      {view === 'community' ? <CommunityHub client={client} onBack={() => setView('today')} /> : <>
       {message && <p className="notice notice--teal" role="status">{message}</p>}
       {!overview && !message && <p className="section-copy">Loading your protected schedule…</p>}
 
@@ -236,6 +239,7 @@ export function ScheduleHub({ client, userId, onModeration }: { client: Supabase
       </div>
 
       {view === 'matches' ? <MatchHub client={client} /> : view === 'today' ? <section className="day-view" aria-labelledby="today-title"><div><p className="eyebrow">{displayDate(start, timezone)}</p><h2 id="today-title">Today’s school-run plan</h2></div>{todayInstances.length ? <ul className="instance-list">{todayInstances.map((instance) => <li key={instance.id}><span className="instance-list__time">{instance.window_start.slice(0, 5)}–{instance.window_end.slice(0, 5)}</span><div><strong>{intentLabel(instance.intent)} · {directionLabel(instance.direction)}</strong><span>{instance.area_label} · {instance.capacity} seat{instance.capacity === 1 ? '' : 's'}</span></div><span className={instance.status === 'cancelled' ? 'instance-status instance-status--cancelled' : 'instance-status'}>{instance.status}</span>{instance.status === 'open' && <button className="text-button" disabled={busy} onClick={() => void cancelInstance(instance.id)}>Cancel this date</button>}</li>)}</ul> : <p className="notice notice--teal">No active school-run listing is planned for today.</p>}</section> : <section className="calendar-view" aria-labelledby="calendar-title"><div className="calendar-view__head"><div><p className="eyebrow">Four-week personal calendar</p><h2 id="calendar-title">Your upcoming dates</h2></div><p>All times are local to {timezone}.</p></div><div className="calendar-list">{days.map((date) => { const holiday = overview?.calendarPeriods.find((period) => period.period_type === 'holiday' && dateInPeriod(date, period)); const instances = overview?.instances.filter((instance) => instance.service_date === date) ?? []; return <article className={holiday ? 'calendar-day calendar-day--holiday' : 'calendar-day'} key={date}><header><time dateTime={date}>{displayDate(date, timezone)}</time>{holiday ? <span>Holiday · {holiday.label}</span> : <span>{instances.length ? `${instances.length} listing${instances.length === 1 ? '' : 's'}` : 'No listing'}</span>}</header>{holiday ? <p>School-run patterns are skipped automatically.</p> : instances.map((instance) => <div className="calendar-instance" key={instance.id}><span>{instance.window_start.slice(0, 5)}–{instance.window_end.slice(0, 5)}</span><strong>{intentLabel(instance.intent)} · {directionLabel(instance.direction)}</strong><small>{instance.area_label} · {instance.capacity} seat{instance.capacity === 1 ? '' : 's'}</small><em className={instance.status === 'cancelled' ? 'instance-status instance-status--cancelled' : 'instance-status'}>{instance.status}</em>{instance.status === 'open' && <button className="text-button" disabled={busy} onClick={() => void cancelInstance(instance.id)}>Cancel this date</button>}</div>)}</article>; })}</div></section>}
+      </>}
     </section>
   );
 }

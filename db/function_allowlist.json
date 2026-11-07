@@ -71,7 +71,14 @@
     {"name":"get_retention_purge_policy","reason":"read 90-day retention targets and preserved tables","callerDerivation":"auth.uid(); no school arguments","schoolScope":"policy metadata only","searchPath":"pg_catalog"},
     {"name":"post_running_late_notice","reason":"helper posts prior running-late notice before pickup window start","callerDerivation":"auth.uid() must be accepted swap helper","schoolScope":"accepted same-school leg; no location payload","searchPath":"pg_catalog"},
     {"name":"get_running_late_notice","reason":"participant reads running-late notice for own accepted leg","callerDerivation":"auth.uid() helper or requester","schoolScope":"own-school participant only","searchPath":"pg_catalog"},
-    {"name":"list_my_running_late_notices","reason":"list running-late notices for caller as poster or leg participant","callerDerivation":"auth.uid(); no arguments","schoolScope":"own membership schools only","searchPath":"pg_catalog"}
+    {"name":"list_my_running_late_notices","reason":"list running-late notices for caller as poster or leg participant","callerDerivation":"auth.uid(); no arguments","schoolScope":"own membership schools only","searchPath":"pg_catalog"},
+    {"name":"create_community_thread","reason":"verified member creates same-school discussion thread with opening post","callerDerivation":"auth.uid() verified membership school","schoolScope":"own school only; privacy-filtered text","searchPath":"pg_catalog"},
+    {"name":"create_community_post","reason":"verified member posts in own-school active thread","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active thread","searchPath":"pg_catalog"},
+    {"name":"create_community_comment","reason":"verified member comments on own-school active post","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active post","searchPath":"pg_catalog"},
+    {"name":"toggle_community_like","reason":"verified member likes or unlikes own-school post or comment","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active target","searchPath":"pg_catalog"},
+    {"name":"list_community_threads","reason":"list active discussion threads for caller school","callerDerivation":"auth.uid(); no school arguments","schoolScope":"own verified school only","searchPath":"pg_catalog"},
+    {"name":"list_community_posts","reason":"list active posts in an own-school thread","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active thread","searchPath":"pg_catalog"},
+    {"name":"list_community_comments","reason":"list active comments on an own-school post","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active post","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -117,6 +124,12 @@
     {"name":"guard_running_late_notices","reason":"trigger-only append-only running-late notices before window start","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
     {"name":"running_late_pickup_window_start","reason":"internal pickup window instant from requester need instance","callerDerivation":"definer helpers only","schoolScope":"leg school timezone","searchPath":"pg_catalog"},
     {"name":"running_late_notice_json","reason":"internal running-late notice projection without location or contact","callerDerivation":"definer RPCs only","schoolScope":"authorised notice row","searchPath":"pg_catalog"},
-    {"name":"post_trust_late_arrival","reason":"trigger-only late pickup trust delta with or without prior notice","callerDerivation":"swap_leg_confirmations pickup_done insert","schoolScope":"helper membership school of confirmed leg","searchPath":"pg_catalog"}
+    {"name":"post_trust_late_arrival","reason":"trigger-only late pickup trust delta with or without prior notice","callerDerivation":"swap_leg_confirmations pickup_done insert","schoolScope":"helper membership school of confirmed leg","searchPath":"pg_catalog"},
+    {"name":"community_text_is_allowed","reason":"internal privacy filter rejecting phones emails photos and child full-name phrasing","callerDerivation":"definer helpers and guards only","schoolScope":"none","searchPath":"pg_catalog"},
+    {"name":"guard_community_discussion","reason":"trigger-only community immutability and unlike GUC gate","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
+    {"name":"community_caller_membership","reason":"internal verified membership derivation for community RPCs","callerDerivation":"definer community RPCs only","schoolScope":"caller verified school","searchPath":"pg_catalog"},
+    {"name":"community_thread_json","reason":"internal thread projection with parent display name only","callerDerivation":"definer RPCs only","schoolScope":"authorised thread","searchPath":"pg_catalog"},
+    {"name":"community_post_json","reason":"internal post projection without nickname phone or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised post","searchPath":"pg_catalog"},
+    {"name":"community_comment_json","reason":"internal comment projection without nickname phone or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised comment","searchPath":"pg_catalog"}
   ]
 }

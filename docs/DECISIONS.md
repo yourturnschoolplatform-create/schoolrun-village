@@ -26,6 +26,8 @@ Email relay is the default. After a swap is accepted, each parent may opt in to 
 
 The item board supports free giveaway/lending only: there is no price field. Restricted items are admin-editable. There is no live location tracking.
 
+School-scoped discussion community content is text-only for verified same-school members. Threads, posts, comments and likes never store photos, phones, emails, addresses, child nicknames, trust scores, or amount/price/currency. A privacy filter rejects phone numbers, email addresses, photo phrasing and child full-name phrasing before insert. Authors appear by parent display name only. Own-school moderation is a later Day 8 task.
+
 ## Technical decisions
 
 Use Vite + React + TypeScript + Tailwind with Express + TypeScript. Supabase Postgres is the only application data store, in Sydney, with Supabase Auth email identity. Apply all migrations from `/db/migrations`. Turn RLS on for every table. Express uses a per-request client bearing the signed-in user JWT. The service-role key appears only in server-only administrative code for bootstrap, scheduled jobs, and notification sending. It is never present in client source, client configuration, static output, or browser payload.

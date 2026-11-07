@@ -303,9 +303,17 @@ Branch: `wip/day8-community` (from Day 7 wrap tip `7dd7e28` on `wip/day7-notices
 - Handover reminder **delivery** (Day 5 residual): recheck live eligibility before send; allow `handover_reminder` through the Day 7 email-relay path for due `swap_leg_reminders` only; no premature delivery.
 - Every new table: RLS + live test. Every new function: explicit grants, `search_path = pg_catalog` only, allowlist entry, cross-school live test. Non-privileged `authenticated` + synthetic JWT claims.
 
-### [ ] Task 8.1 — school-scoped discussion threads
+### [x] Task 8.1 — school-scoped discussion threads
 
-- Persist school-scoped discussion posts and replies with RLS. Participant create/list/read for verified own-school members; School B denied School A; no phone/email/address/nickname/trust score/amount fields in payloads. Explicit grants, pg_catalog-only path, allowlist, live cross-school denial.
+- Persist school-scoped discussion threads, posts, comments and likes with RLS. Verified same-school members create/list/comment/like via RPCs; School B denied School A; privacy filter rejects phones, emails, photo phrasing and child full-name phrasing; no phone/email/address/nickname/trust score/amount/price/currency fields. Direct client DML denied. Explicit grants, pg_catalog-only path, allowlist, live cross-school denial. Australian English UI copy in Community hub.
+
+**Passing live evidence:** `tests/rls/community-live.test.ts`, **5/5** on TEST (`npm run test:community:live`). Raw: `docs/evidence/TASK_8_1_COMMUNITY_LIVE_RAW.txt`. Migration `0040`. Allowlist after: `145` public / `79` authenticated / `50` internal. Exact passing names:
+
+- `createListCommentLike: same-school parents create thread, post, comment and toggle likes`
+- `privacyTextRejected: phones emails photos and child full-name phrasing are denied`
+- `crossSchoolDenials: School B cannot create list read or like School A community content`
+- `noDirectDml: clients cannot insert update delete community tables directly`
+- `catalogAllowlistAndSearchPath: new tables RLS; RPCs allowlisted; no money or photo fields`
 
 ### [ ] Task 8.2 — community moderation
 

@@ -10,7 +10,7 @@ Safety features are never paywalled. The product does not collect or display liv
 
 A user may access only their own verified school’s information. School identity is not a UI filtering convenience: it is an RLS boundary enforced in the database. No client-side state, API query, or analytics event may become a cross-school discovery route.
 
-Child data is limited to nickname and year level. Do not create fields for surnames, dates of birth, photos, school IDs, health details, home addresses, or other child personal information. Phone numbers are not public school-notice data; contact disclosure is a later, versioned, revocable feature.
+Child data is limited to nickname and year level. Do not create fields for surnames, dates of birth, photos, school IDs, health details, home addresses, or other child personal information. Phone numbers are not public school-notice data; contact disclosure is a later, versioned, revocable feature. Community discussion bodies must not accept child full names, photos, phones or emails; they never store nicknames or trust scores either.
 
 Day 3 schedules store only a coarse suburb-level area label, local time windows, weekdays, direction, capacity, school date, and cancellation state. They must not store addresses, street names, coordinates, map pins, route geometry, GPS traces, or household residential details. A household link is a bilateral relationship state, not an address record; matching must later exclude confirmed household pairs.
 

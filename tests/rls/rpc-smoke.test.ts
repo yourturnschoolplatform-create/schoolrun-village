@@ -134,6 +134,19 @@ const calls: Record<string, string> = {
   running_late_pickup_window_start: `select public.running_late_pickup_window_start(null::public.swap_legs)`,
   running_late_notice_json: `select public.running_late_notice_json(null::public.running_late_notices)`,
   post_trust_late_arrival: 'select public.post_trust_late_arrival()',
+  create_community_thread: "select public.create_community_thread('Smoke title', 'Smoke body for school discussion.')",
+  create_community_post: `select public.create_community_post('${instance}'::uuid, 'Smoke post body')`,
+  create_community_comment: `select public.create_community_comment('${instance}'::uuid, 'Smoke comment body')`,
+  toggle_community_like: `select public.toggle_community_like('post', '${instance}'::uuid)`,
+  list_community_threads: 'select public.list_community_threads()',
+  list_community_posts: `select public.list_community_posts('${instance}'::uuid)`,
+  list_community_comments: `select public.list_community_comments('${instance}'::uuid)`,
+  community_text_is_allowed: "select public.community_text_is_allowed('hello')",
+  guard_community_discussion: 'select public.guard_community_discussion()',
+  community_caller_membership: 'select public.community_caller_membership()',
+  community_thread_json: 'select public.community_thread_json(null::public.community_threads)',
+  community_post_json: 'select public.community_post_json(null::public.community_posts)',
+  community_comment_json: 'select public.community_comment_json(null::public.community_comments)',
 };
 
 describe('allowlist RPC call coverage', () => {

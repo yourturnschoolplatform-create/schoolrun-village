@@ -961,6 +961,13 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       post_running_late_notice: { sql: 'select public.post_running_late_notice((select id from public.swap_legs where swap_id=$1::uuid order by id limit 1))', values: [swap.id] },
       get_running_late_notice: { sql: 'select public.get_running_late_notice((select id from public.swap_legs where swap_id=$1::uuid order by id limit 1))', values: [swap.id] },
       list_my_running_late_notices: { sql: 'select public.list_my_running_late_notices()' },
+      create_community_thread: { sql: "select public.create_community_thread('Contact scan title', 'School discussion body without contact details.')" },
+      create_community_post: { sql: 'select public.create_community_post($1::uuid, $2::text)', values: [fixture.schoolA, 'Follow-up post for privacy scan.'] },
+      create_community_comment: { sql: 'select public.create_community_comment($1::uuid, $2::text)', values: [fixture.schoolA, 'Comment for privacy scan.'] },
+      toggle_community_like: { sql: "select public.toggle_community_like('post', $1::uuid)", values: [fixture.schoolA] },
+      list_community_threads: { sql: 'select public.list_community_threads()' },
+      list_community_posts: { sql: 'select public.list_community_posts($1::uuid)', values: [fixture.schoolA] },
+      list_community_comments: { sql: 'select public.list_community_comments($1::uuid)', values: [fixture.schoolA] },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;
