@@ -84,6 +84,21 @@ const calls: Record<string, string> = {
   post_trust_schedule_cancellation: 'select public.post_trust_schedule_cancellation()',
   post_trust_swap_cancellation: 'select public.post_trust_swap_cancellation()',
   post_trust_urgent_cover_for_swap: `select public.post_trust_urgent_cover_for_swap('${swap}'::uuid)`,
+  list_my_trust_cases: 'select public.list_my_trust_cases()',
+  list_school_trust_queue: 'select public.list_school_trust_queue()',
+  report_no_show: `select public.report_no_show('${instance}'::uuid, false)`,
+  dispute_trust_report: `select public.dispute_trust_report('${instance}'::uuid)`,
+  report_false_report: `select public.report_false_report('${instance}'::uuid)`,
+  resolve_trust_report: `select public.resolve_trust_report('${instance}'::uuid, 'confirm')`,
+  place_safety_hold: `select public.place_safety_hold('${north}'::uuid)`,
+  resolve_safety_hold: `select public.resolve_safety_hold('${instance}'::uuid, 'lift')`,
+  file_trust_appeal: `select public.file_trust_appeal('safety_hold', '${instance}'::uuid)`,
+  resolve_trust_appeal: `select public.resolve_trust_appeal('${instance}'::uuid, 'dismiss')`,
+  user_has_active_safety_hold: `select public.user_has_active_safety_hold('${north}'::uuid, '${northSchool}'::uuid)`,
+  guard_trust_trip_penalties: 'select public.guard_trust_trip_penalties()',
+  apply_confirmed_no_show_effects: `select public.apply_confirmed_no_show_effects('${instance}'::uuid)`,
+  apply_confirmed_false_report_effects: `select public.apply_confirmed_false_report_effects('${instance}'::uuid)`,
+  sweep_provisional_trust_reports: 'select public.sweep_provisional_trust_reports()',
 };
 
 describe('allowlist RPC call coverage', () => {

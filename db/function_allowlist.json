@@ -25,8 +25,10 @@
     {"name":"refresh_my_handover_reminders","reason":"create overdue missing-second-confirmation records for caller own accepted trips","callerDerivation":"auth.uid(); no arguments or caller-supplied clock","schoolScope":"own active-school participant legs only; no data returned for another school","searchPath":"pg_catalog"},
     {"name":"get_reciprocal_match_candidates","reason":"list caller candidates","callerDerivation":"auth.uid()","schoolScope":"verified membership"},
     {"name":"list_my_swaps","reason":"list caller swaps","callerDerivation":"auth.uid()","schoolScope":"swap participant"},
+    {"name":"list_my_trust_cases","reason":"caller reads own trust reports holds and appeals without peer scores","callerDerivation":"auth.uid(); no arguments","schoolScope":"reporter/subject/appellant rows only","searchPath":"pg_catalog"},
     {"name":"list_onboarding_school_options","reason":"list onboarding schools","callerDerivation":"auth.uid()","schoolScope":"verified email only"},
     {"name":"list_pending_school_memberships","reason":"moderation queue","callerDerivation":"auth.uid()","schoolScope":"own-school moderator/admin"},
+    {"name":"list_school_trust_queue","reason":"moderator trust case queue","callerDerivation":"auth.uid(); school derived from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
     {"name":"open_school_invitation","reason":"open opaque invitation token","callerDerivation":"token only","schoolScope":"returns no school detail","searchPath":"pg_catalog"},
     {"name":"has_current_onboarding_consents","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"membership input verified internally"},
     {"name":"is_admin","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"global role"},
@@ -46,7 +48,16 @@
     {"name":"sign_onboarding_safety_declaration","reason":"sign caller declaration","callerDerivation":"auth.uid()","schoolScope":"membership ownership"},
     {"name":"transition_swap_proposal","reason":"swap transition","callerDerivation":"auth.uid()","schoolScope":"swap participant"},
     {"name":"update_availability_pattern","reason":"update own schedule","callerDerivation":"auth.uid()","schoolScope":"pattern ownership"},
-    {"name":"update_onboarding_parent_profile","reason":"update caller profile","callerDerivation":"auth.uid()","schoolScope":"caller only"}
+    {"name":"update_onboarding_parent_profile","reason":"update caller profile","callerDerivation":"auth.uid()","schoolScope":"caller only"},
+    {"name":"report_no_show","reason":"file provisional no-show against accepted leg partner","callerDerivation":"auth.uid() as reporter; leg participants only","schoolScope":"accepted same-school swap leg","searchPath":"pg_catalog"},
+    {"name":"dispute_trust_report","reason":"subject disputes provisional report within 24h","callerDerivation":"auth.uid() must be subject","schoolScope":"own school report","searchPath":"pg_catalog"},
+    {"name":"report_false_report","reason":"subject files false-report case against original no-show reporter","callerDerivation":"auth.uid() must be no-show subject","schoolScope":"linked same-school no-show report","searchPath":"pg_catalog"},
+    {"name":"resolve_trust_report","reason":"moderator confirms or rejects provisional/disputed report","callerDerivation":"auth.uid() moderator/admin","schoolScope":"own-school case","searchPath":"pg_catalog"},
+    {"name":"place_safety_hold","reason":"moderator places swap-only safety hold","callerDerivation":"auth.uid() moderator/admin; subject is argument","schoolScope":"verified subject in moderator school","searchPath":"pg_catalog"},
+    {"name":"resolve_safety_hold","reason":"moderator lifts or upholds active safety hold","callerDerivation":"auth.uid() moderator/admin","schoolScope":"own-school hold","searchPath":"pg_catalog"},
+    {"name":"file_trust_appeal","reason":"penalised parent appeals confirmed report or hold within 48h","callerDerivation":"auth.uid() as appellant","schoolScope":"own school target","searchPath":"pg_catalog"},
+    {"name":"resolve_trust_appeal","reason":"moderator upholds or dismisses open appeal","callerDerivation":"auth.uid() moderator/admin","schoolScope":"own-school appeal","searchPath":"pg_catalog"},
+    {"name":"user_has_active_safety_hold","reason":"RLS/helper swap-disable check","callerDerivation":"auth.uid() via matching RPCs","schoolScope":"school-scoped hold lookup","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -67,6 +78,10 @@
     {"name":"post_trust_completed_trip","reason":"trigger-only completed-trip policy posting","callerDerivation":"swap_legs completion trigger","schoolScope":"helper membership school of completed leg","searchPath":"pg_catalog"},
     {"name":"post_trust_schedule_cancellation","reason":"trigger-only schedule cancel policy posting","callerDerivation":"schedule_cancellation_events insert trigger","schoolScope":"owner and cancelled instance school","searchPath":"pg_catalog"},
     {"name":"post_trust_swap_cancellation","reason":"trigger-only consent-revoke cancel policy posting","callerDerivation":"swap_cancellation_events insert trigger","schoolScope":"actor membership school and incomplete legs","searchPath":"pg_catalog"},
-    {"name":"post_trust_urgent_cover_for_swap","reason":"internal urgent-cover eligibility posting on accept","callerDerivation":"transition_swap_proposal accept path only","schoolScope":"accepted same-school legs; household and weekly limits","searchPath":"pg_catalog"}
+    {"name":"post_trust_urgent_cover_for_swap","reason":"internal urgent-cover eligibility posting on accept","callerDerivation":"transition_swap_proposal accept path only","schoolScope":"accepted same-school legs; household and weekly limits","searchPath":"pg_catalog"},
+    {"name":"guard_trust_trip_penalties","reason":"trigger-only append-only no-show trip obligations","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
+    {"name":"apply_confirmed_no_show_effects","reason":"internal confirm path for no-show score and trip penalties","callerDerivation":"resolve/sweep only","schoolScope":"confirmed report school","searchPath":"pg_catalog"},
+    {"name":"apply_confirmed_false_report_effects","reason":"internal confirm path for false-report score delta","callerDerivation":"resolve/sweep only","schoolScope":"confirmed report school","searchPath":"pg_catalog"},
+    {"name":"sweep_provisional_trust_reports","reason":"service/cron undisputed provisional auto-confirm","callerDerivation":"trusted job; anon/authenticated EXECUTE revoked","schoolScope":"server-selected provisional rows past deadline","searchPath":"pg_catalog"}
   ]
 }

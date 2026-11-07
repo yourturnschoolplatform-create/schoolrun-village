@@ -11,6 +11,7 @@ const foundationTables = [
   'schedule_cancellation_events', 'match_blocks', 'swap_proposals', 'swap_legs', 'swap_ledger_entries',
   'contact_consents', 'contact_consent_backups', 'swap_cancellation_events', 'swap_contact_notifications',
   'swap_leg_confirmations', 'swap_leg_reminders', 'trust_score_events',
+  'trust_incident_reports', 'trust_safety_holds', 'trust_appeals', 'trust_trip_penalties',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -25,6 +26,7 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0019_day5_contact_consents.sql'), 'utf8'),
   readFile(resolve('db/migrations/0020_day5_two_step_handover.sql'), 'utf8'),
   readFile(resolve('db/migrations/0027_day6_trust_score_engine.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0032_day6_trust_holds_appeals.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -205,6 +207,25 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(deltas).toMatch(/set search_path = pg_catalog/i);
     expect(deltas).toMatch(/revoke all on function public\.post_trust_urgent_cover_for_swap/i);
     expect(deltas).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds trust holds appeals and no-show workflows with swap-only disable', async () => {
+    const holds = (await readFile(resolve('db/migrations/0032_day6_trust_holds_appeals.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(holds).toMatch(/create table public\.trust_incident_reports/i);
+    expect(holds).toMatch(/create table public\.trust_safety_holds/i);
+    expect(holds).toMatch(/create table public\.trust_appeals/i);
+    expect(holds).toMatch(/create table public\.trust_trip_penalties/i);
+    expect(holds).toMatch(/alter table public\.trust_incident_reports enable row level security/i);
+    expect(holds).toMatch(/function public\.report_no_show/i);
+    expect(holds).toMatch(/function public\.place_safety_hold/i);
+    expect(holds).toMatch(/function public\.file_trust_appeal/i);
+    expect(holds).toMatch(/user_has_active_safety_hold/i);
+    expect(holds).toMatch(/safety hold disables swaps/i);
+    expect(holds).toMatch(/set search_path = pg_catalog/i);
+    expect(holds).not.toMatch(
       /\b(amount|price|currency|money|fee|payment)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });

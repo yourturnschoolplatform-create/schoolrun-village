@@ -143,7 +143,11 @@ Trust score engine + band-only peer exposure on TEST. Migrations `0027_day6_trus
 
 ## Task 6.2 — 2026-11-07 (TEST only)
 
-Policy-driven trust deltas on TEST. Migration `0031_day6_trust_policy_deltas.sql`. Live suite `npm run test:trust-deltas:live`: **6/6** pass. Raw: `docs/evidence/TASK_6_2_TRUST_DELTAS_LIVE_RAW.txt`. Allowlist after: `82` public / `47` authenticated / `19` internal (+8 internal helpers/triggers). Completion +1 to helper; schedule/swap cancel −3/−8 by lead time; urgent cover +3 on accept with 4h window, weekly cap and household exclusion. Cross-school event reads and client `apply_trust_score_delta` denied. Safety-hold / no-show / late-notice remain Task 6.3. DEV not migrated.
+Policy-driven trust deltas on TEST. Migration `0031_day6_trust_policy_deltas.sql`. Live suite `npm run test:trust-deltas:live`: **6/6** pass. Raw: `docs/evidence/TASK_6_2_TRUST_DELTAS_LIVE_RAW.txt`. Allowlist after: `82` public / `47` authenticated / `19` internal (+8 internal helpers/triggers). Completion +1 to helper; schedule/swap cancel −3/−8 by lead time; urgent cover +3 on accept with 4h window, weekly cap and household exclusion. Cross-school event reads and client `apply_trust_score_delta` denied. DEV not migrated.
+
+## Task 6.3 — 2026-11-07 (TEST only)
+
+Trust holds, appeals, no-show/false-report on TEST. Migration `0032_day6_trust_holds_appeals.sql`. Live suite `npm run test:trust-holds:live`: **6/6** pass. Raw: `docs/evidence/TASK_6_3_TRUST_HOLDS_LIVE_RAW.txt`. Allowlist after: `97` public / `58` authenticated / `23` internal. Confirmed no-show −20 (−10 with backup) plus two trip penalties; false-report −15; upheld hold −25 (`reviewed_safety_violation`); active hold blocks swap accept; appeal uplift lifts hold; School B denied School A resolution/reads. Running-late notice store not added. DEV not migrated. Day 7 not started.
 
 ## G4 evidence — 2026-11-06 (TEST only)
 

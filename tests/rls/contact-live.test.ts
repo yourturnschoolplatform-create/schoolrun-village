@@ -936,6 +936,17 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       confirm_pickup_done: { sql: 'select public.confirm_pickup_done((select id from public.swap_legs where swap_id=$1::uuid order by id limit 1))', values: [swap.id] },
       confirm_child_arrived: { sql: 'select public.confirm_child_arrived((select id from public.swap_legs where swap_id=$1::uuid order by id limit 1))', values: [swap.id] },
       refresh_my_handover_reminders: { sql: 'select public.refresh_my_handover_reminders()' },
+      list_my_trust_cases: { sql: 'select public.list_my_trust_cases()' },
+      list_school_trust_queue: { sql: 'select public.list_school_trust_queue()' },
+      report_no_show: { sql: 'select public.report_no_show((select id from public.swap_legs where swap_id=$1::uuid order by id limit 1), false)', values: [swap.id] },
+      dispute_trust_report: { sql: 'select public.dispute_trust_report($1::uuid)', values: [fixture.schoolA] },
+      report_false_report: { sql: 'select public.report_false_report($1::uuid)', values: [fixture.schoolA] },
+      resolve_trust_report: { sql: "select public.resolve_trust_report($1::uuid, 'reject')", values: [fixture.schoolA] },
+      place_safety_hold: { sql: 'select public.place_safety_hold($1::uuid)', values: [fixture.unrelated.userId] },
+      resolve_safety_hold: { sql: "select public.resolve_safety_hold($1::uuid, 'lift')", values: [fixture.schoolA] },
+      file_trust_appeal: { sql: "select public.file_trust_appeal('safety_hold', $1::uuid)", values: [fixture.schoolA] },
+      resolve_trust_appeal: { sql: "select public.resolve_trust_appeal($1::uuid, 'dismiss')", values: [fixture.schoolA] },
+      user_has_active_safety_hold: { sql: 'select public.user_has_active_safety_hold($1::uuid, $2::uuid)', values: [fixture.owner.userId, fixture.schoolA] },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;

@@ -51,7 +51,11 @@ Migrations `0027`–`0030` add append-only `trust_score_events`, internal `apply
 
 ### Task 6.2 — policy-driven deltas
 
-Migration `0031` posts published-policy deltas from completed legs, schedule/swap cancellations, and eligible urgent cover on accept. Triggers and internal helpers only; clients cannot write scores. Late notice, no-show, false-report and safety-hold workflows remain Task 6.3.
+Migration `0031` posts published-policy deltas from completed legs, schedule/swap cancellations, and eligible urgent cover on accept. Triggers and internal helpers only; clients cannot write scores.
+
+### Task 6.3 — holds, appeals, no-show / false-report
+
+Migration `0032` adds `trust_incident_reports`, `trust_safety_holds`, `trust_appeals`, `trust_trip_penalties` with RLS; moderator resolution; swap-only hold guards on match/propose/accept; provisional 24h and appeal 48h windows. Late running-notice posting remains deferred (no notice store).
 
 ## Current scope — Task 5.1
 

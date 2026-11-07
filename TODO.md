@@ -224,6 +224,6 @@ Append-only `trust_score_events`; `apply_trust_score_delta` (internal); `get_my_
 
 Published-policy deltas on completion (+1 helper), schedule/swap cancels (−3/−8 by lead time), urgent cover on accept (+3 with 4h/weekly/household rules). Idempotent once-per-fact. Live **6/6** (`npm run test:trust-deltas:live`). Raw: `docs/evidence/TASK_6_2_TRUST_DELTAS_LIVE_RAW.txt`. Migration `0031`.
 
-### [ ] Task 6.3 — no-show, false-report, safety hold, and appeal
+### [x] Task 6.3 — no-show, false-report, safety hold, and appeal
 
-Provisional no-show and false-report workflows; moderator safety hold; appeal path; append-only audit; live cross-school and role denials. Stop after Day 6 report; wait for **`GO DAY 7`**.
+Provisional no-show/false-report; moderator confirm/reject and 24h sweep; safety hold (swap-only disable); 48h appeals; no-show trip penalties (+2) via `trust_trip_penalties`; append-only audit. Live **6/6** (`npm run test:trust-holds:live`). Raw: `docs/evidence/TASK_6_3_TRUST_HOLDS_LIVE_RAW.txt`. Migration `0032`. Stop after Day 6; wait for **`GO DAY 7`**.
