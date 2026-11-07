@@ -157,6 +157,11 @@ const calls: Record<string, string> = {
   community_apply_status: `select public.community_apply_status('post', '${instance}'::uuid, 'hidden')`,
   community_moderation_queue_item_json: `select public.community_moderation_queue_item_json('post', '${instance}'::uuid, '${instance}'::uuid, 'hidden', 0, now(), null, 'body', 'Name')`,
   community_require_moderator_membership: 'select public.community_require_moderator_membership()',
+  list_my_handover_reminder_deliveries: 'select public.list_my_handover_reminder_deliveries()',
+  deliver_due_handover_reminders: 'select public.deliver_due_handover_reminders(1)',
+  handover_reminder_live_eligibility: `select public.handover_reminder_live_eligibility('${instance}'::uuid)`,
+  handover_reminder_delivery_json: 'select public.handover_reminder_delivery_json(null::public.handover_reminder_deliveries)',
+  guard_handover_reminder_deliveries: 'select public.guard_handover_reminder_deliveries()',
 };
 
 describe('allowlist RPC call coverage', () => {

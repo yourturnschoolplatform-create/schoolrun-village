@@ -4,8 +4,8 @@ import { createServerOnlyAdminClient } from './service-role.js';
  * Server-only outbound email relay transport.
  * Must never be imported by src/. Does not expose SMTP secrets to the client.
  * Actual provider wiring stays environment-bound; this module claims queue rows
- * via service-role RPCs and records delivery outcomes. Day 8 handover reminders
- * are excluded by delivery policy.
+ * via service-role RPCs and records delivery outcomes. Handover reminders are
+ * enqueued only by deliver_due_handover_reminders after live eligibility recheck.
  */
 
 export type ClaimedRelayItem = {
@@ -25,6 +25,12 @@ function renderTemplate(item: ClaimedRelayItem): { subject: string; body: string
     return {
       subject: 'YourTurn swap ended',
       body: 'Contact sharing was withdrawn. This swap has ended.',
+    };
+  }
+  if (item.kind === 'handover_reminder') {
+    return {
+      subject: 'YourTurn handover reminder',
+      body: 'A school pickup handover still needs your confirmation in YourTurn.',
     };
   }
   return {
@@ -56,7 +62,7 @@ export async function processEmailRelayBatch(limit = 10): Promise<{
   let failed = 0;
 
   for (const item of items) {
-    if (!item?.id || item.kind === 'handover_reminder') {
+    if (!item?.id) {
       continue;
     }
     // Touch template rendering so the server path always builds phone-free copy.

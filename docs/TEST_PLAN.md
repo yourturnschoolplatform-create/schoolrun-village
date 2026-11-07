@@ -193,6 +193,10 @@ School-scoped discussion threads, posts, comments and likes on TEST. Migration `
 
 Community reporting, auto-hide after three unique reports, and own-school moderator review on TEST. Migrations `0041_day8_community_moderation.sql`, `0042_day8_community_moderation_guards.sql`, `0043_day8_community_moderation_audit_payload.sql`. Live suite `npm run test:community-moderation:live`: **5/5** pass. Raw: `docs/evidence/TASK_8_2_COMMUNITY_MODERATION_LIVE_RAW.txt`. Allowlist after: `155` public / `84` authenticated / `55` internal. Parents report; third unique report auto-hides; moderator restore/remove/hide/queue; parents cannot forge moderator actions; School B denied School A; direct DML denied; no amount/price/currency/photo columns. DEV not migrated. Task 8.3 and Day 9 not started.
 
+## Task 8.3 — handover reminder delivery — 2026-11-07 (TEST only)
+
+Handover reminder delivery onto the email-relay queue after live eligibility recheck on TEST. Migration `0044_day8_handover_reminder_delivery.sql`. Live suite `npm run test:handover-reminder-delivery:live`: **5/5** pass. Raw: `docs/evidence/TASK_8_3_HANDOVER_REMINDER_DELIVERY_LIVE_RAW.txt`. Allowlist after: `160` public / `85` authenticated / `59` internal. Service `deliver_due_handover_reminders` queues `handover_reminder` only when still eligible; completed/cancelled suppressed; authenticated cannot enqueue/claim/send; School B denied School A delivery reads; direct DML denied; no amount/price/currency columns. DEV not migrated. Aggregate Day 8 and Day 5 residual delivery `[x]`. Day 9 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

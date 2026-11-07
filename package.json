@@ -22,7 +22,7 @@
     "db:migrate": "tsx scripts/run-migrations.ts --target=development",
     "db:migrate:test": "tsx scripts/run-migrations.ts --target=rls-test",
     "check:secrets": "tsx scripts/check-client-boundary.ts",
-    "db:rls:live": "npm run db:migrate:test && vitest run --config vitest.rls.config.ts tests/rls/live-rls.test.ts tests/rls/ledger-live.test.ts tests/rls/contact-live.test.ts tests/rls/handover-live.test.ts tests/rls/trust-live.test.ts tests/rls/trust-deltas-live.test.ts tests/rls/trust-holds-live.test.ts tests/rls/school-notice-live.test.ts tests/rls/email-relay-live.test.ts tests/rls/retention-purge-live.test.ts tests/rls/running-late-live.test.ts tests/rls/community-live.test.ts tests/rls/community-moderation-live.test.ts",
+    "db:rls:live": "npm run db:migrate:test && vitest run --config vitest.rls.config.ts tests/rls/live-rls.test.ts tests/rls/ledger-live.test.ts tests/rls/contact-live.test.ts tests/rls/handover-live.test.ts tests/rls/trust-live.test.ts tests/rls/trust-deltas-live.test.ts tests/rls/trust-holds-live.test.ts tests/rls/school-notice-live.test.ts tests/rls/email-relay-live.test.ts tests/rls/retention-purge-live.test.ts tests/rls/running-late-live.test.ts tests/rls/community-live.test.ts tests/rls/community-moderation-live.test.ts tests/rls/handover-reminder-delivery-live.test.ts",
     "test:ledger:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/ledger-live.test.ts --reporter=verbose",
     "test:contact:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/contact-live.test.ts --reporter=verbose",
     "test:handover:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/handover-live.test.ts --reporter=verbose",
@@ -35,6 +35,7 @@
     "test:running-late:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/running-late-live.test.ts --reporter=verbose",
     "test:community:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/community-live.test.ts --reporter=verbose",
     "test:community-moderation:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/community-moderation-live.test.ts --reporter=verbose",
+    "test:handover-reminder-delivery:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/handover-reminder-delivery-live.test.ts --reporter=verbose",
     "handover:reminders:install:test": "tsx scripts/install-handover-reminders-test.ts"
   },
   "dependencies": {

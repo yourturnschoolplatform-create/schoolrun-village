@@ -59,7 +59,7 @@ Authorised by **TASK DAY 8**. Work branch `wip/day8-community` from Day 7 wrap t
 
 ## Current scope — Day 8
 
-Authorised by **TASK DAY 8**. Work branch `wip/day8-community`. School-scoped discussion threads with own-school moderation, plus Day 5 residual handover reminder delivery via the Day 7 email-relay path after live eligibility recheck. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 8.1–8.2 evidenced; Task 8.3 remains open.
+Authorised by **TASK DAY 8**. Work branch `wip/day8-community`. School-scoped discussion threads with own-school moderation, plus Day 5 residual handover reminder delivery via the Day 7 email-relay path after live eligibility recheck. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 8.1–8.3 evidenced; Day 8 aggregate complete. Day 9 not started.
 
 ### Task 8.1 — school-scoped discussion community
 
@@ -67,7 +67,11 @@ Migration `0040` adds `community_threads`, `community_posts`, `community_comment
 
 ### Task 8.2 — community moderation
 
-Migrations `0041`–`0043` add `community_reports` and append-only `community_moderation_actions`, auto-hide after three unique reports, and moderator hide/restore/remove/queue RPCs. Live **5/5** on TEST. Raw: `docs/evidence/TASK_8_2_COMMUNITY_MODERATION_LIVE_RAW.txt`. Allowlist after: `155` public / `84` authenticated / `55` internal. Task 8.3 and Day 9 not started.
+Migrations `0041`–`0043` add `community_reports` and append-only `community_moderation_actions`, auto-hide after three unique reports, and moderator hide/restore/remove/queue RPCs. Live **5/5** on TEST. Raw: `docs/evidence/TASK_8_2_COMMUNITY_MODERATION_LIVE_RAW.txt`. Allowlist after: `155` public / `84` authenticated / `55` internal.
+
+### Task 8.3 — handover reminder delivery
+
+Migration `0044` adds append-only `handover_reminder_deliveries`, service-only `deliver_due_handover_reminders` with live eligibility recheck, `handover_reminder` enqueue onto email-relay for that path alone, and recipient `list_my_handover_reminder_deliveries`. Live **5/5** on TEST. Raw: `docs/evidence/TASK_8_3_HANDOVER_REMINDER_DELIVERY_LIVE_RAW.txt`. Allowlist after: `160` public / `85` authenticated / `59` internal. Authenticated cannot claim/send or enqueue handover reminders. Day 9 not started.
 
 ## Current scope — Day 7
 

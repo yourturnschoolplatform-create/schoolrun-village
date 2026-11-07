@@ -973,6 +973,7 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       restore_community_content: { sql: "select public.restore_community_content('post', $1::uuid)", values: [fixture.schoolA] },
       remove_community_content: { sql: "select public.remove_community_content('post', $1::uuid)", values: [fixture.schoolA] },
       list_community_moderation_queue: { sql: 'select public.list_community_moderation_queue()' },
+      list_my_handover_reminder_deliveries: { sql: 'select public.list_my_handover_reminder_deliveries()' },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;

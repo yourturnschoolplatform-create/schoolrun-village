@@ -18,6 +18,7 @@ const foundationTables = [
   'running_late_notices',
   'community_threads', 'community_posts', 'community_comments', 'community_likes',
   'community_reports', 'community_moderation_actions',
+  'handover_reminder_deliveries',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -41,6 +42,7 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0041_day8_community_moderation.sql'), 'utf8'),
   readFile(resolve('db/migrations/0042_day8_community_moderation_guards.sql'), 'utf8'),
   readFile(resolve('db/migrations/0043_day8_community_moderation_audit_payload.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0044_day8_handover_reminder_delivery.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -353,6 +355,21 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(moderation).toMatch(/auto_hide|auto-hidden after three unique reports/i);
     expect(moderation).toMatch(/set search_path = pg_catalog/i);
     expect(moderation).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds handover reminder delivery with live eligibility recheck without money fields', async () => {
+    const delivery = (await readFile(resolve('db/migrations/0044_day8_handover_reminder_delivery.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(delivery).toMatch(/create table public\.handover_reminder_deliveries/i);
+    expect(delivery).toMatch(/alter table public\.handover_reminder_deliveries enable row level security/i);
+    expect(delivery).toMatch(/function public\.deliver_due_handover_reminders/i);
+    expect(delivery).toMatch(/function public\.handover_reminder_live_eligibility/i);
+    expect(delivery).toMatch(/function public\.list_my_handover_reminder_deliveries/i);
+    expect(delivery).toMatch(/handover_reminder/i);
+    expect(delivery).toMatch(/set search_path = pg_catalog/i);
+    expect(delivery).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });

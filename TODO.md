@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** Day 8 started on `wip/day8-community` (TEST only). Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 remains `[~]` until handover reminder delivery is evidenced. **Do not start Day 9** until **`GO DAY 9`**. Mark `[x]` only with passing live names and raw output.
+> **Current authorised scope:** Day 8 complete on `wip/day8-community` (TEST only). Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]` (reminder delivery evidenced in Task 8.3). **Do not start Day 9** until **`GO DAY 9`**. Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -293,7 +293,7 @@ Branch: `wip/day7-notices-retention` (from Day 6 wrap tip `5f9de3d` on `wip/day6
 - `crossSchoolAndRoleDenials: School B and requester cannot post or read School A notice`
 - `noClientMutateAndCatalog: direct DML denied; RLS on; no money or location fields`
 
-## [~] Day 8 — discussion community and handover reminder delivery
+## [x] Day 8 — discussion community and handover reminder delivery
 
 Branch: `wip/day8-community` (from Day 7 wrap tip `7dd7e28` on `wip/day7-notices-retention`). Apply new SQL/fixtures to TEST only. No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only. Community posts stay school-scoped and must not expose phone, email, address, trust score, or contact data.
 
@@ -327,6 +327,14 @@ Branch: `wip/day8-community` (from Day 7 wrap tip `7dd7e28` on `wip/day7-notices
 - `noDirectDml: clients cannot insert update delete reports or moderation actions`
 - `catalogAllowlistAndSearchPath: new tables RLS; RPCs allowlisted; no money or photo fields`
 
-### [ ] Task 8.3 — handover reminder delivery
+### [x] Task 8.3 — handover reminder delivery
 
-- Deliver due handover reminders only after rechecking live eligibility (exactly one confirmation, accepted incomplete leg, past due). Wire through server-admin email relay with `handover_reminder` kind unblocked for this path alone. Authenticated cannot claim/send. Live proof of eligibility gate and School B isolation. Stop after Day 8; wait for **`GO DAY 9`**.
+- Deliver due handover reminders only after rechecking live eligibility (exactly one confirmation, accepted incomplete leg, past due). Wire through server-admin email relay with `handover_reminder` kind unblocked for this path alone. Authenticated cannot claim/send or enqueue handover reminders. Completed/cancelled reminders are suppressed without queueing. Live proof of eligibility gate and School B isolation. Day 8 feature work complete; wait for **`GO DAY 9`**.
+
+**Passing live evidence:** `tests/rls/handover-reminder-delivery-live.test.ts`, **5/5** on TEST (`npm run test:handover-reminder-delivery:live`). Raw: `docs/evidence/TASK_8_3_HANDOVER_REMINDER_DELIVERY_LIVE_RAW.txt`. Migration `0044`. Allowlist after: `160` public / `85` authenticated / `59` internal. Exact passing names:
+
+- `deliverEligibleQueuesAndClaims: overdue reminder queues handover_reminder then service claim completes`
+- `suppressCompletedAndCancelled: delivery recheck suppresses resolved reminders without queueing`
+- `crossSchoolDenials: School B cannot read School A deliveries or enqueue foreign handover mail`
+- `noDirectDml: clients cannot insert update delete delivery rows or forge handover queue`
+- `catalogAllowlistAndSearchPath: delivery table RLS; RPCs allowlisted; no money fields`

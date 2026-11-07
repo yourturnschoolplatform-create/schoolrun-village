@@ -83,7 +83,8 @@
     {"name":"hide_community_content","reason":"own-school moderator hides active community content","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school only","searchPath":"pg_catalog"},
     {"name":"restore_community_content","reason":"own-school moderator restores hidden community content","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school hidden content","searchPath":"pg_catalog"},
     {"name":"remove_community_content","reason":"own-school moderator permanently withdraws community content","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school active or hidden content","searchPath":"pg_catalog"},
-    {"name":"list_community_moderation_queue","reason":"own-school moderator lists hidden community content with report counts","callerDerivation":"auth.uid(); school from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"}
+    {"name":"list_community_moderation_queue","reason":"own-school moderator lists hidden community content with report counts","callerDerivation":"auth.uid(); school from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
+    {"name":"list_my_handover_reminder_deliveries","reason":"recipient reads own handover reminder delivery decisions without email","callerDerivation":"auth.uid(); no arguments","schoolScope":"own membership schools only","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -140,6 +141,10 @@
     {"name":"community_target_school_and_author","reason":"internal community target school author status lookup","callerDerivation":"definer community moderation RPCs only","schoolScope":"target row school","searchPath":"pg_catalog"},
     {"name":"community_apply_status","reason":"internal gated community status transition helper","callerDerivation":"definer moderation RPCs only","schoolScope":"authorised target","searchPath":"pg_catalog"},
     {"name":"community_moderation_queue_item_json","reason":"internal moderation queue projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised queue row","searchPath":"pg_catalog"},
-    {"name":"community_require_moderator_membership","reason":"internal verified moderator membership derivation","callerDerivation":"definer community moderation RPCs only","schoolScope":"caller moderator school","searchPath":"pg_catalog"}
+    {"name":"community_require_moderator_membership","reason":"internal verified moderator membership derivation","callerDerivation":"definer community moderation RPCs only","schoolScope":"caller moderator school","searchPath":"pg_catalog"},
+    {"name":"guard_handover_reminder_deliveries","reason":"trigger-only append-only handover reminder delivery ledger","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
+    {"name":"handover_reminder_live_eligibility","reason":"internal live eligibility recheck before reminder delivery","callerDerivation":"definer delivery sweep only","schoolScope":"reminder source leg school","searchPath":"pg_catalog"},
+    {"name":"handover_reminder_delivery_json","reason":"internal delivery projection without email phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised delivery row","searchPath":"pg_catalog"},
+    {"name":"deliver_due_handover_reminders","reason":"service-role/server-admin enqueue of eligible handover reminders onto email relay","callerDerivation":"trusted job; anon/authenticated EXECUTE revoked","schoolScope":"server-selected due reminders after live recheck; never caller-supplied school","searchPath":"pg_catalog"}
   ]
 }
