@@ -57,13 +57,17 @@ Full TEST `npm run verify` exit 0 (47 unit, 376 RLS, allowlist 132/72/44). Tasks
 
 Authorised by **TASK DAY 8**. Work branch `wip/day8-community` from Day 7 wrap tip. Baseline `npm run verify` on TEST exit 0 (47 unit, 376 RLS, allowlist 132/72/44). Raw: `docs/evidence/DAY8_START_VERIFY_RAW.txt`. No new migration at start. Scope: school-scoped discussion community and handover reminder delivery. TEST only; **no Day 9**. See `TODO.md` Tasks 8.1–8.3.
 
-## Current scope — Day 8
-
-Authorised by **TASK DAY 8**. Work branch `wip/day8-community`. School-scoped discussion threads with own-school moderation, plus Day 5 residual handover reminder delivery via the Day 7 email-relay path after live eligibility recheck. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 8.1–8.3 evidenced; Day 8 wrap-up full TEST verify exit 0 (47 unit / 429 RLS; allowlist 160/85/59). Raw: `docs/evidence/DAY8_WRAPUP_VERIFY_RAW.txt`. Day 9 not started — wait for **`GO DAY 9`**.
-
 ## Day 8 wrap-up — 2026-11-07
 
-Full TEST `npm run verify` exit 0 (47 unit, 429 RLS, allowlist 160/85/59). Tasks 8.1–8.3 evidenced; aggregate Day 8 `[x]`. Aggregate Day 5 residual delivery closed `[x]`. Raw: `docs/evidence/DAY8_WRAPUP_VERIFY_RAW.txt`. DEV not migrated. Day 9 authorised only by **`GO DAY 9`**.
+Full TEST `npm run verify` exit 0 (47 unit, 429 RLS, allowlist 160/85/59). Tasks 8.1–8.3 evidenced; aggregate Day 8 `[x]`. Aggregate Day 5 residual delivery closed `[x]`. Raw: `docs/evidence/DAY8_WRAPUP_VERIFY_RAW.txt`. DEV not migrated. Day 9 authorised by **TASK DAY 9**.
+
+## Day 9 start — 2026-11-07
+
+Authorised by **TASK DAY 9**. Work branch `wip/day9-listings` from Day 8 wrap tip. Baseline `npm run verify` on TEST exit 0 (47 unit, 429 RLS, allowlist 160/85/59). Raw: `docs/evidence/DAY9_START_VERIFY_RAW.txt`. No new migration at start. Scope: free giveaway and second-hand listing board (no price/amount/currency). TEST only; **no Day 10**. See `TODO.md` Tasks 9.1–9.3.
+
+## Current scope — Day 9
+
+Authorised by **TASK DAY 9**. Work branch `wip/day9-listings`. School-scoped free giveaway/lending listings, interest/fulfilment without payment, admin-editable restricted items, and own-school listing moderation. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 9.1–9.3 remain open.
 
 ### Task 8.1 — school-scoped discussion community
 

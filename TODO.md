@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** Day 8 complete on `wip/day8-community` (TEST only). Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]` (reminder delivery evidenced in Task 8.3). **Do not start Day 9** until **`GO DAY 9`**. Mark `[x]` only with passing live names and raw output.
+> **Current authorised scope:** Day 9 started on `wip/day9-listings` (TEST only). Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]`. **Do not start Day 10** until **`GO DAY 10`**. Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -340,3 +340,25 @@ Branch: `wip/day8-community` (from Day 7 wrap tip `7dd7e28` on `wip/day7-notices
 - `crossSchoolDenials: School B cannot read School A deliveries or enqueue foreign handover mail`
 - `noDirectDml: clients cannot insert update delete delivery rows or forge handover queue`
 - `catalogAllowlistAndSearchPath: delivery table RLS; RPCs allowlisted; no money fields`
+
+## [~] Day 9 — free giveaway and second-hand listing board
+
+Branch: `wip/day9-listings` (from Day 8 wrap tip `bdb83b3` on `wip/day8-community`). Apply new SQL/fixtures to TEST only. No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only. Listings are free giveaway/lending only; restricted items are admin-editable; school-scoped with cross-school denial.
+
+**Baseline (Day 9 start):** Day 8 wrap-up `npm run verify` exit 0 on TEST (47 unit / 429 RLS; allowlist 160/85/59). Day 9 start verification raw: `docs/evidence/DAY9_START_VERIFY_RAW.txt`. No new migration in this start task.
+
+- School-scoped free item board: verified same-school parents can create/list free giveaway or lending listings; no price/amount/currency fields; no child photos or full names; School B denied School A.
+- Restricted-item catalogue editable by administrators; blocked items cannot be listed.
+- Own-school moderation path for listing withdraw/hide where required; every new table RLS + live test; every new function grants, pg_catalog-only path, allowlist, cross-school live test.
+
+### [ ] Task 9.1 — school-scoped free listings
+
+- Persist school-scoped free giveaway/lending listings with RLS. Verified member create/list/read; School B denied School A; no amount/price/currency/photo/phone fields. Explicit grants, pg_catalog-only path, allowlist, live cross-school denial.
+
+### [ ] Task 9.2 — listing interest and fulfilment
+
+- Same-school interest/claim flow without payment. Status transitions stay free-only. Cross-school denial. RLS + live tests.
+
+### [ ] Task 9.3 — restricted items and listing moderation
+
+- Admin-editable restricted-item catalogue; blocked listings rejected. Own-school moderator withdraw/hide with append-only audit. Cross-school denial. RLS + live tests. Stop after Day 9; wait for **`GO DAY 10`**.

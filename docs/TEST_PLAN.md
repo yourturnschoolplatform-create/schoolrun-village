@@ -199,7 +199,13 @@ Handover reminder delivery onto the email-relay queue after live eligibility rec
 
 ## Day 8 wrap-up — 2026-11-07 (TEST only)
 
-Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 160 public functions, 85 authenticated entries, 59 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **429/429** across 18 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live, school-notice-live, email-relay-live, retention-purge-live, running-late-live, community-live, community-moderation-live, handover-reminder-delivery-live). Raw: `docs/evidence/DAY8_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. Wrap-up also extended the ledger completion-name allowlist for Task 8.3 `list_my_handover_reminder_deliveries` and accepted FK `0A000` alongside guard `55000` for privileged handover truncate denial. DEV not migrated. Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]`. Day 9 authorised only by **`GO DAY 9`**.
+Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 160 public functions, 85 authenticated entries, 59 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **429/429** across 18 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live, school-notice-live, email-relay-live, retention-purge-live, running-late-live, community-live, community-moderation-live, handover-reminder-delivery-live). Raw: `docs/evidence/DAY8_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. Wrap-up also extended the ledger completion-name allowlist for Task 8.3 `list_my_handover_reminder_deliveries` and accepted FK `0A000` alongside guard `55000` for privileged handover truncate denial. DEV not migrated. Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]`. Day 9 authorised by **TASK DAY 9**.
+
+## Day 9 start — 2026-11-07 (TEST only)
+
+**TASK DAY 9** opened work on branch `wip/day9-listings` from the Day 8 wrap tip. Scope (from `docs/DECISIONS.md` / authorizing task): school-scoped free giveaway and second-hand listing board with no price/amount/currency, admin-editable restricted items, and own-school listing moderation. **Day 10 is not started.**
+
+Baseline milestone verification reused the green Day 8 wrap-up gate and re-ran `npm run verify` on TEST at Day 9 start: exit **0**; unit **47/47**; allowlist `160/85/59`; RLS **429/429**. Raw: `docs/evidence/DAY9_START_VERIFY_RAW.txt`. No new migration in this start task. Tasks 9.1–9.3 are open; no Day 9 feature SQL or live suite exists yet at branch open.
 
 ## G4 evidence — 2026-11-06 (TEST only)
 
