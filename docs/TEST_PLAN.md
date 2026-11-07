@@ -139,7 +139,11 @@ Baseline milestone verification reused the green Day 5 wrap-up gate and re-ran `
 
 ## Task 6.1 — 2026-11-07 (TEST only)
 
-Trust score engine + band-only peer exposure on TEST. Migrations `0027_day6_trust_score_engine.sql`, `0028_day6_trust_score_clamp_cast.sql`, `0029_day6_trust_score_clamp_case.sql`, `0030_day6_trust_score_audit_payload.sql`. Live suite `npm run test:trust:live`: **6/6** pass. Raw: `docs/evidence/TASK_6_1_TRUST_LIVE_RAW.txt`. Allowlist after: `74` public / `47` authenticated / `11` internal (`get_my_trust`, `get_peer_trust_band` authenticated; `apply_trust_score_delta`, `guard_trust_score_events`, `trust_band_for_user` internal). Cross-school peer band denied; peers never receive numeric scores. Policy-driven trip deltas remain Task 6.2. DEV not migrated.
+Trust score engine + band-only peer exposure on TEST. Migrations `0027_day6_trust_score_engine.sql`, `0028_day6_trust_score_clamp_cast.sql`, `0029_day6_trust_score_clamp_case.sql`, `0030_day6_trust_score_audit_payload.sql`. Live suite `npm run test:trust:live`: **6/6** pass. Raw: `docs/evidence/TASK_6_1_TRUST_LIVE_RAW.txt`. Allowlist after: `74` public / `47` authenticated / `11` internal (`get_my_trust`, `get_peer_trust_band` authenticated; `apply_trust_score_delta`, `guard_trust_score_events`, `trust_band_for_user` internal). Cross-school peer band denied; peers never receive numeric scores. DEV not migrated.
+
+## Task 6.2 — 2026-11-07 (TEST only)
+
+Policy-driven trust deltas on TEST. Migration `0031_day6_trust_policy_deltas.sql`. Live suite `npm run test:trust-deltas:live`: **6/6** pass. Raw: `docs/evidence/TASK_6_2_TRUST_DELTAS_LIVE_RAW.txt`. Allowlist after: `82` public / `47` authenticated / `19` internal (+8 internal helpers/triggers). Completion +1 to helper; schedule/swap cancel −3/−8 by lead time; urgent cover +3 on accept with 4h window, weekly cap and household exclusion. Cross-school event reads and client `apply_trust_score_delta` denied. Safety-hold / no-show / late-notice remain Task 6.3. DEV not migrated.
 
 ## G4 evidence — 2026-11-06 (TEST only)
 

@@ -220,9 +220,9 @@ Branch: `wip/day6-trust` (from `main` @ Day 5 wrap-up tip). Apply new SQL/fixtur
 
 Append-only `trust_score_events`; `apply_trust_score_delta` (internal); `get_my_trust` / `get_peer_trust_band`; School B denied School A events/bands; peers never receive numeric scores. Live **6/6** (`npm run test:trust:live`). Raw: `docs/evidence/TASK_6_1_TRUST_LIVE_RAW.txt`. Migrations `0027`–`0030`.
 
-### [ ] Task 6.2 — policy-driven deltas from trips and cancellations
+### [x] Task 6.2 — policy-driven deltas from trips and cancellations
 
-Apply published-policy deltas for completion and schedule/swap cancellations; urgent-cover eligibility; idempotent once-per-fact posting; live tests for cross-school denial and no client score writes.
+Published-policy deltas on completion (+1 helper), schedule/swap cancels (−3/−8 by lead time), urgent cover on accept (+3 with 4h/weekly/household rules). Idempotent once-per-fact. Live **6/6** (`npm run test:trust-deltas:live`). Raw: `docs/evidence/TASK_6_2_TRUST_DELTAS_LIVE_RAW.txt`. Migration `0031`.
 
 ### [ ] Task 6.3 — no-show, false-report, safety hold, and appeal
 

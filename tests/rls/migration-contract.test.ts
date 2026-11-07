@@ -190,4 +190,22 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
       /\b(amount|price|currency|money|fee|payment)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
+
+  it('posts policy-driven trust deltas from completion cancellations and urgent cover', async () => {
+    const deltas = (await readFile(resolve('db/migrations/0031_day6_trust_policy_deltas.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(deltas).toMatch(/function public\.trust_policy_delta/i);
+    expect(deltas).toMatch(/function public\.post_trust_completed_trip/i);
+    expect(deltas).toMatch(/function public\.post_trust_schedule_cancellation/i);
+    expect(deltas).toMatch(/function public\.post_trust_swap_cancellation/i);
+    expect(deltas).toMatch(/function public\.post_trust_urgent_cover_for_swap/i);
+    expect(deltas).toMatch(/swap_leg_completed_to_trust/i);
+    expect(deltas).toMatch(/schedule_cancellation_to_trust/i);
+    expect(deltas).toMatch(/swap_cancellation_to_trust/i);
+    expect(deltas).toMatch(/set search_path = pg_catalog/i);
+    expect(deltas).toMatch(/revoke all on function public\.post_trust_urgent_cover_for_swap/i);
+    expect(deltas).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
 });

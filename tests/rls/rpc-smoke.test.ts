@@ -76,6 +76,14 @@ const calls: Record<string, string> = {
   guard_trust_score_events: 'select public.guard_trust_score_events()',
   apply_trust_score_delta: `select public.apply_trust_score_delta('${north}'::uuid, '${northSchool}'::uuid, 1::smallint, 'completed_trip'::text, 'smoke'::text, '${instance}'::uuid)`,
   trust_band_for_user: `select public.trust_band_for_user('${north}'::uuid)`,
+  trust_published_policy: `select public.trust_published_policy('${northSchool}'::uuid)`,
+  trust_policy_delta: `select public.trust_policy_delta('${northSchool}'::uuid, 'completed_trip')`,
+  trust_hours_until_instance: `select public.trust_hours_until_instance('${northSchool}'::uuid, current_date, '15:00'::time, now())`,
+  trust_cancel_reason_for_hours: 'select public.trust_cancel_reason_for_hours(1.5)',
+  post_trust_completed_trip: 'select public.post_trust_completed_trip()',
+  post_trust_schedule_cancellation: 'select public.post_trust_schedule_cancellation()',
+  post_trust_swap_cancellation: 'select public.post_trust_swap_cancellation()',
+  post_trust_urgent_cover_for_swap: `select public.post_trust_urgent_cover_for_swap('${swap}'::uuid)`,
 };
 
 describe('allowlist RPC call coverage', () => {

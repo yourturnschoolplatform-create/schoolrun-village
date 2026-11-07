@@ -47,7 +47,11 @@ Authorised by **TASK DAY 6**. Work branch `wip/day6-trust`. Scope: trust scoring
 
 ### Task 6.1 — score ledger and band projection
 
-Migrations `0027`–`0030` add append-only `trust_score_events`, internal `apply_trust_score_delta` (clamped −100…150, source-idempotent), `get_my_trust` (own score+band), and `get_peer_trust_band` (same-school band only). Peers cannot read numeric scores via RPC, profile select, or event rows. Trip/cancellation policy posting is Task 6.2.
+Migrations `0027`–`0030` add append-only `trust_score_events`, internal `apply_trust_score_delta` (clamped −100…150, source-idempotent), `get_my_trust` (own score+band), and `get_peer_trust_band` (same-school band only). Peers cannot read numeric scores via RPC, profile select, or event rows.
+
+### Task 6.2 — policy-driven deltas
+
+Migration `0031` posts published-policy deltas from completed legs, schedule/swap cancellations, and eligible urgent cover on accept. Triggers and internal helpers only; clients cannot write scores. Late notice, no-show, false-report and safety-hold workflows remain Task 6.3.
 
 ## Current scope — Task 5.1
 
