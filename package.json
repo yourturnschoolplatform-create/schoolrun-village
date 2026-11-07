@@ -36,6 +36,7 @@
     "test:community:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/community-live.test.ts --reporter=verbose",
     "test:community-moderation:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/community-moderation-live.test.ts --reporter=verbose",
     "test:handover-reminder-delivery:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/handover-reminder-delivery-live.test.ts --reporter=verbose",
+    "test:listings:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/listings-live.test.ts --reporter=verbose",
     "handover:reminders:install:test": "tsx scripts/install-handover-reminders-test.ts"
   },
   "dependencies": {

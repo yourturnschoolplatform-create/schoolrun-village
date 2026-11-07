@@ -207,6 +207,10 @@ Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47
 
 Baseline milestone verification reused the green Day 8 wrap-up gate and re-ran `npm run verify` on TEST at Day 9 start: exit **0**; unit **47/47**; allowlist `160/85/59`; RLS **429/429**. Raw: `docs/evidence/DAY9_START_VERIFY_RAW.txt`. No new migration in this start task. Tasks 9.1–9.3 are open; no Day 9 feature SQL or live suite exists yet at branch open.
 
+## Task 9.1 — school-scoped free listings — 2026-11-07 (TEST only)
+
+School-scoped free giveaway/lending listings with restricted-item enforcement, search/filter and enquiries on TEST. Migrations `0045_day9_item_listings.sql`, `0046_day9_listing_audit_payload.sql`. Live suite `npm run test:listings:live`: **5/5** pass. Raw: `docs/evidence/TASK_9_1_LISTINGS_LIVE_RAW.txt`. Allowlist after: `174` public / `91` authenticated / `67` internal. Same-school create/search/filter/get/enquiry; free-only `display_offer_label`; restricted car seats/cots/bassinets/bunk beds/baby walkers/recalled items rejected; School B denied School A; direct DML denied; RLS SELECT-only; no amount/price/currency/payment/photo columns. DEV not migrated. Tasks 9.2–9.3 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

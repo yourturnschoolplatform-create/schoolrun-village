@@ -67,7 +67,11 @@ Authorised by **TASK DAY 9**. Work branch `wip/day9-listings` from Day 8 wrap ti
 
 ## Current scope — Day 9
 
-Authorised by **TASK DAY 9**. Work branch `wip/day9-listings`. School-scoped free giveaway/lending listings, interest/fulfilment without payment, admin-editable restricted items, and own-school listing moderation. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 9.1–9.3 remain open.
+Authorised by **TASK DAY 9**. Work branch `wip/day9-listings`. School-scoped free giveaway/lending listings, interest/fulfilment without payment, admin-editable restricted items, and own-school listing moderation. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Task 9.1 evidenced; Tasks 9.2–9.3 remain open.
+
+### Task 9.1 — school-scoped free listings
+
+Migrations `0045`–`0046` add `listing_restricted_items`, `item_listings`, `listing_enquiries` with RLS SELECT-only, free-only `display_offer_label`, restricted-term enforcement, and create/search/filter/get/enquiry RPCs. Live **5/5** on TEST. Raw: `docs/evidence/TASK_9_1_LISTINGS_LIVE_RAW.txt`. Allowlist after: `174` public / `91` authenticated / `67` internal. No amount, price, currency, payment, photo or phone columns.
 
 ### Task 8.1 — school-scoped discussion community
 

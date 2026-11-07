@@ -19,6 +19,7 @@ const foundationTables = [
   'community_threads', 'community_posts', 'community_comments', 'community_likes',
   'community_reports', 'community_moderation_actions',
   'handover_reminder_deliveries',
+  'listing_restricted_items', 'item_listings', 'listing_enquiries',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -43,6 +44,8 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0042_day8_community_moderation_guards.sql'), 'utf8'),
   readFile(resolve('db/migrations/0043_day8_community_moderation_audit_payload.sql'), 'utf8'),
   readFile(resolve('db/migrations/0044_day8_handover_reminder_delivery.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0045_day9_item_listings.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0046_day9_listing_audit_payload.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -370,6 +373,31 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(delivery).toMatch(/handover_reminder/i);
     expect(delivery).toMatch(/set search_path = pg_catalog/i);
     expect(delivery).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds school-scoped free item listings restricted catalogue search and enquiries without money fields', async () => {
+    const listings = (await readFile(resolve('db/migrations/0045_day9_item_listings.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(listings).toMatch(/create table public\.listing_restricted_items/i);
+    expect(listings).toMatch(/create table public\.item_listings/i);
+    expect(listings).toMatch(/create table public\.listing_enquiries/i);
+    expect(listings).toMatch(/alter table public\.listing_restricted_items enable row level security/i);
+    expect(listings).toMatch(/alter table public\.item_listings enable row level security/i);
+    expect(listings).toMatch(/alter table public\.listing_enquiries enable row level security/i);
+    expect(listings).toMatch(/function public\.create_item_listing/i);
+    expect(listings).toMatch(/function public\.search_item_listings/i);
+    expect(listings).toMatch(/function public\.get_item_listing/i);
+    expect(listings).toMatch(/function public\.create_listing_enquiry/i);
+    expect(listings).toMatch(/function public\.list_listing_enquiries/i);
+    expect(listings).toMatch(/function public\.list_restricted_listing_items/i);
+    expect(listings).toMatch(/display_offer_label/i);
+    expect(listings).toMatch(/car seat/i);
+    expect(listings).toMatch(/bassinet/i);
+    expect(listings).toMatch(/baby walker/i);
+    expect(listings).toMatch(/set search_path = pg_catalog/i);
+    expect(listings).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });

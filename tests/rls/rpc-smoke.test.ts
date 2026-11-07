@@ -162,6 +162,20 @@ const calls: Record<string, string> = {
   handover_reminder_live_eligibility: `select public.handover_reminder_live_eligibility('${instance}'::uuid)`,
   handover_reminder_delivery_json: 'select public.handover_reminder_delivery_json(null::public.handover_reminder_deliveries)',
   guard_handover_reminder_deliveries: 'select public.guard_handover_reminder_deliveries()',
+  create_item_listing: "select public.create_item_listing('giveaway', 'Smoke school jumper', 'Clean unused school jumper size 8', 'clothing', 'Free')",
+  search_item_listings: "select public.search_item_listings('jumper', 'giveaway', 'clothing')",
+  get_item_listing: `select public.get_item_listing('${instance}'::uuid)`,
+  create_listing_enquiry: `select public.create_listing_enquiry('${instance}'::uuid, 'Happy to collect after school')`,
+  list_listing_enquiries: `select public.list_listing_enquiries('${instance}'::uuid)`,
+  list_restricted_listing_items: 'select public.list_restricted_listing_items()',
+  listing_text_is_allowed: "select public.listing_text_is_allowed('hello')",
+  listing_contains_restricted_item: "select public.listing_contains_restricted_item('car seat')",
+  guard_listing_restricted_items: 'select public.guard_listing_restricted_items()',
+  guard_item_listings: 'select public.guard_item_listings()',
+  guard_listing_enquiries: 'select public.guard_listing_enquiries()',
+  listing_caller_membership: 'select public.listing_caller_membership()',
+  item_listing_json: 'select public.item_listing_json(null::public.item_listings)',
+  listing_enquiry_json: 'select public.listing_enquiry_json(null::public.listing_enquiries)',
 };
 
 describe('allowlist RPC call coverage', () => {

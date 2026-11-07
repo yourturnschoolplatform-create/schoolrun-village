@@ -351,9 +351,16 @@ Branch: `wip/day9-listings` (from Day 8 wrap tip `bdb83b3` on `wip/day8-communit
 - Restricted-item catalogue editable by administrators; blocked items cannot be listed.
 - Own-school moderation path for listing withdraw/hide where required; every new table RLS + live test; every new function grants, pg_catalog-only path, allowlist, cross-school live test.
 
-### [ ] Task 9.1 — school-scoped free listings
+### [x] Task 9.1 — school-scoped free listings
 
-- Persist school-scoped free giveaway/lending listings with RLS. Verified member create/list/read; School B denied School A; no amount/price/currency/photo/phone fields. Explicit grants, pg_catalog-only path, allowlist, live cross-school denial.
+- Persist school-scoped free giveaway/lending listings with RLS. Verified member create/search/filter/read and enquiries; restricted catalogue seeded and enforced (car seats, cots, bassinets, bunk beds, baby walkers, recalled items); School B denied School A; free-only `display_offer_label` text (no amount/price/currency/payment/photo/phone fields). Explicit grants, pg_catalog-only path, allowlist, live cross-school denial.
+
+**Passing live evidence:** `tests/rls/listings-live.test.ts`, **5/5** on TEST (`npm run test:listings:live`). Raw: `docs/evidence/TASK_9_1_LISTINGS_LIVE_RAW.txt`. Migrations `0045`, `0046`. Allowlist after: `174` public / `91` authenticated / `67` internal. Exact passing names:
+- `createSearchFilterEnquiry: same-school create search filter get and enquiry flow`
+- `restrictedItemsRejected: car seats cots bassinets bunk beds walkers and recalls denied`
+- `privacyAndOfferLabel: phones money labels and author self-enquiry denied`
+- `crossSchoolDenials: School B cannot create search get enquire or read School A listings`
+- `noDirectDmlAndCatalog: clients cannot write tables; RLS and free-only columns hold`
 
 ### [ ] Task 9.2 — listing interest and fulfilment
 

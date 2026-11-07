@@ -974,6 +974,12 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       remove_community_content: { sql: "select public.remove_community_content('post', $1::uuid)", values: [fixture.schoolA] },
       list_community_moderation_queue: { sql: 'select public.list_community_moderation_queue()' },
       list_my_handover_reminder_deliveries: { sql: 'select public.list_my_handover_reminder_deliveries()' },
+      create_item_listing: { sql: "select public.create_item_listing('giveaway', 'Contact scan jacket', 'Spare school jacket free to collect', 'clothing', 'Free')" },
+      search_item_listings: { sql: "select public.search_item_listings('jacket', 'giveaway', 'clothing')" },
+      get_item_listing: { sql: 'select public.get_item_listing($1::uuid)', values: [fixture.schoolA] },
+      create_listing_enquiry: { sql: 'select public.create_listing_enquiry($1::uuid, $2::text)', values: [fixture.schoolA, 'Can collect Friday afternoon'] },
+      list_listing_enquiries: { sql: 'select public.list_listing_enquiries($1::uuid)', values: [fixture.schoolA] },
+      list_restricted_listing_items: { sql: 'select public.list_restricted_listing_items()' },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;
