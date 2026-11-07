@@ -968,6 +968,11 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       list_community_threads: { sql: 'select public.list_community_threads()' },
       list_community_posts: { sql: 'select public.list_community_posts($1::uuid)', values: [fixture.schoolA] },
       list_community_comments: { sql: 'select public.list_community_comments($1::uuid)', values: [fixture.schoolA] },
+      report_community_content: { sql: "select public.report_community_content('post', $1::uuid, $2::text)", values: [fixture.schoolA, 'Contact scan report reason'] },
+      hide_community_content: { sql: "select public.hide_community_content('post', $1::uuid)", values: [fixture.schoolA] },
+      restore_community_content: { sql: "select public.restore_community_content('post', $1::uuid)", values: [fixture.schoolA] },
+      remove_community_content: { sql: "select public.remove_community_content('post', $1::uuid)", values: [fixture.schoolA] },
+      list_community_moderation_queue: { sql: 'select public.list_community_moderation_queue()' },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;

@@ -59,11 +59,15 @@ Authorised by **TASK DAY 8**. Work branch `wip/day8-community` from Day 7 wrap t
 
 ## Current scope — Day 8
 
-Authorised by **TASK DAY 8**. Work branch `wip/day8-community`. School-scoped discussion threads with own-school moderation, plus Day 5 residual handover reminder delivery via the Day 7 email-relay path after live eligibility recheck. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Task 8.1 evidenced; Tasks 8.2–8.3 remain open.
+Authorised by **TASK DAY 8**. Work branch `wip/day8-community`. School-scoped discussion threads with own-school moderation, plus Day 5 residual handover reminder delivery via the Day 7 email-relay path after live eligibility recheck. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 8.1–8.2 evidenced; Task 8.3 remains open.
 
 ### Task 8.1 — school-scoped discussion community
 
-Migration `0040` adds `community_threads`, `community_posts`, `community_comments`, `community_likes` with RLS SELECT-only, privacy-filtered create/list/comment/like RPCs, and Australian English Community hub UI. Live **5/5** on TEST. Raw: `docs/evidence/TASK_8_1_COMMUNITY_LIVE_RAW.txt`. Allowlist after: `145` public / `79` authenticated / `50` internal. No photos, child full names, phones, emails, nicknames, trust scores, or money fields. Tasks 8.2–8.3 and Day 9 not started.
+Migration `0040` adds `community_threads`, `community_posts`, `community_comments`, `community_likes` with RLS SELECT-only, privacy-filtered create/list/comment/like RPCs, and Australian English Community hub UI. Live **5/5** on TEST. Raw: `docs/evidence/TASK_8_1_COMMUNITY_LIVE_RAW.txt`. Allowlist after: `145` public / `79` authenticated / `50` internal. No photos, child full names, phones, emails, nicknames, trust scores, or money fields.
+
+### Task 8.2 — community moderation
+
+Migrations `0041`–`0043` add `community_reports` and append-only `community_moderation_actions`, auto-hide after three unique reports, and moderator hide/restore/remove/queue RPCs. Live **5/5** on TEST. Raw: `docs/evidence/TASK_8_2_COMMUNITY_MODERATION_LIVE_RAW.txt`. Allowlist after: `155` public / `84` authenticated / `55` internal. Task 8.3 and Day 9 not started.
 
 ## Current scope — Day 7
 

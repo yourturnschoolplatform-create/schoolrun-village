@@ -78,7 +78,12 @@
     {"name":"toggle_community_like","reason":"verified member likes or unlikes own-school post or comment","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active target","searchPath":"pg_catalog"},
     {"name":"list_community_threads","reason":"list active discussion threads for caller school","callerDerivation":"auth.uid(); no school arguments","schoolScope":"own verified school only","searchPath":"pg_catalog"},
     {"name":"list_community_posts","reason":"list active posts in an own-school thread","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active thread","searchPath":"pg_catalog"},
-    {"name":"list_community_comments","reason":"list active comments on an own-school post","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active post","searchPath":"pg_catalog"}
+    {"name":"list_community_comments","reason":"list active comments on an own-school post","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active post","searchPath":"pg_catalog"},
+    {"name":"report_community_content","reason":"verified member files unique report; auto-hides after three unique reports","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active content; privacy-filtered reason","searchPath":"pg_catalog"},
+    {"name":"hide_community_content","reason":"own-school moderator hides active community content","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school only","searchPath":"pg_catalog"},
+    {"name":"restore_community_content","reason":"own-school moderator restores hidden community content","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school hidden content","searchPath":"pg_catalog"},
+    {"name":"remove_community_content","reason":"own-school moderator permanently withdraws community content","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school active or hidden content","searchPath":"pg_catalog"},
+    {"name":"list_community_moderation_queue","reason":"own-school moderator lists hidden community content with report counts","callerDerivation":"auth.uid(); school from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -130,6 +135,11 @@
     {"name":"community_caller_membership","reason":"internal verified membership derivation for community RPCs","callerDerivation":"definer community RPCs only","schoolScope":"caller verified school","searchPath":"pg_catalog"},
     {"name":"community_thread_json","reason":"internal thread projection with parent display name only","callerDerivation":"definer RPCs only","schoolScope":"authorised thread","searchPath":"pg_catalog"},
     {"name":"community_post_json","reason":"internal post projection without nickname phone or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised post","searchPath":"pg_catalog"},
-    {"name":"community_comment_json","reason":"internal comment projection without nickname phone or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised comment","searchPath":"pg_catalog"}
+    {"name":"community_comment_json","reason":"internal comment projection without nickname phone or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised comment","searchPath":"pg_catalog"},
+    {"name":"guard_community_moderation","reason":"trigger-only append-only community reports and moderation actions","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
+    {"name":"community_target_school_and_author","reason":"internal community target school author status lookup","callerDerivation":"definer community moderation RPCs only","schoolScope":"target row school","searchPath":"pg_catalog"},
+    {"name":"community_apply_status","reason":"internal gated community status transition helper","callerDerivation":"definer moderation RPCs only","schoolScope":"authorised target","searchPath":"pg_catalog"},
+    {"name":"community_moderation_queue_item_json","reason":"internal moderation queue projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised queue row","searchPath":"pg_catalog"},
+    {"name":"community_require_moderator_membership","reason":"internal verified moderator membership derivation","callerDerivation":"definer community moderation RPCs only","schoolScope":"caller moderator school","searchPath":"pg_catalog"}
   ]
 }

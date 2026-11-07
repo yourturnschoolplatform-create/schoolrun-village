@@ -17,6 +17,7 @@ const foundationTables = [
   'departure_check_logs', 'retention_purge_runs',
   'running_late_notices',
   'community_threads', 'community_posts', 'community_comments', 'community_likes',
+  'community_reports', 'community_moderation_actions',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -37,6 +38,9 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0037_day7_retention_purge.sql'), 'utf8'),
   readFile(resolve('db/migrations/0039_day7_running_late_notices.sql'), 'utf8'),
   readFile(resolve('db/migrations/0040_day8_community_discussion.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0041_day8_community_moderation.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0042_day8_community_moderation_guards.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0043_day8_community_moderation_audit_payload.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -330,6 +334,25 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(community).toMatch(/community_text_is_allowed/i);
     expect(community).toMatch(/set search_path = pg_catalog/i);
     expect(community).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds community moderation reports auto-hide and moderator review without money fields', async () => {
+    const moderation = (await readFile(resolve('db/migrations/0041_day8_community_moderation.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(moderation).toMatch(/create table public\.community_reports/i);
+    expect(moderation).toMatch(/create table public\.community_moderation_actions/i);
+    expect(moderation).toMatch(/alter table public\.community_reports enable row level security/i);
+    expect(moderation).toMatch(/alter table public\.community_moderation_actions enable row level security/i);
+    expect(moderation).toMatch(/function public\.report_community_content/i);
+    expect(moderation).toMatch(/function public\.hide_community_content/i);
+    expect(moderation).toMatch(/function public\.restore_community_content/i);
+    expect(moderation).toMatch(/function public\.remove_community_content/i);
+    expect(moderation).toMatch(/function public\.list_community_moderation_queue/i);
+    expect(moderation).toMatch(/auto_hide|auto-hidden after three unique reports/i);
+    expect(moderation).toMatch(/set search_path = pg_catalog/i);
+    expect(moderation).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });

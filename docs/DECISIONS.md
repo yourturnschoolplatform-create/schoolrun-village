@@ -26,7 +26,9 @@ Email relay is the default. After a swap is accepted, each parent may opt in to 
 
 The item board supports free giveaway/lending only: there is no price field. Restricted items are admin-editable. There is no live location tracking.
 
-School-scoped discussion community content is text-only for verified same-school members. Threads, posts, comments and likes never store photos, phones, emails, addresses, child nicknames, trust scores, or amount/price/currency. A privacy filter rejects phone numbers, email addresses, photo phrasing and child full-name phrasing before insert. Authors appear by parent display name only. Own-school moderation is a later Day 8 task.
+School-scoped discussion community content is text-only for verified same-school members. Threads, posts, comments and likes never store photos, phones, emails, addresses, child nicknames, trust scores, or amount/price/currency. A privacy filter rejects phone numbers, email addresses, photo phrasing and child full-name phrasing before insert. Authors appear by parent display name only.
+
+Community moderation: verified same-school members may file one report per target with a privacy-filtered reason; authors cannot report their own content. After three unique reports the target auto-hides. Own-school volunteer moderators may hide, restore (hidden → active), or remove (withdraw) content and read a hidden-content queue. Reports and moderation actions are append-only. School B cannot moderate or report School A content.
 
 ## Technical decisions
 

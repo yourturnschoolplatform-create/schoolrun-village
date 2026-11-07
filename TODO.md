@@ -315,9 +315,17 @@ Branch: `wip/day8-community` (from Day 7 wrap tip `7dd7e28` on `wip/day7-notices
 - `noDirectDml: clients cannot insert update delete community tables directly`
 - `catalogAllowlistAndSearchPath: new tables RLS; RPCs allowlisted; no money or photo fields`
 
-### [ ] Task 8.2 — community moderation
+### [x] Task 8.2 — community moderation
 
-- Own-school moderator queue, withdraw/hide, and append-only moderation audit. Generator/participant cannot forge moderator actions. Cross-school denial. RLS + live tests.
+- Unique same-school reports with privacy-filtered reasons; auto-hide after three unique reports; own-school moderator hide/restore/remove and moderation queue; append-only `community_reports` / `community_moderation_actions` audit. Authors cannot self-report; parents cannot forge moderator actions. School B denied School A. RLS + live tests.
+
+**Passing live evidence:** `tests/rls/community-moderation-live.test.ts`, **5/5** on TEST (`npm run test:community-moderation:live`). Raw: `docs/evidence/TASK_8_2_COMMUNITY_MODERATION_LIVE_RAW.txt`. Migrations `0041`–`0043`. Allowlist after: `155` public / `84` authenticated / `55` internal. Exact passing names:
+
+- `reportAutoHideRestoreRemove: three unique reports auto-hide; moderator restore then remove`
+- `moderatorHideAndParticipantCannotForge: moderator hide works; parents denied hide restore remove`
+- `crossSchoolDenials: School B cannot report hide restore remove or queue School A content`
+- `noDirectDml: clients cannot insert update delete reports or moderation actions`
+- `catalogAllowlistAndSearchPath: new tables RLS; RPCs allowlisted; no money or photo fields`
 
 ### [ ] Task 8.3 — handover reminder delivery
 

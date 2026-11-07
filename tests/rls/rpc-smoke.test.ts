@@ -147,6 +147,16 @@ const calls: Record<string, string> = {
   community_thread_json: 'select public.community_thread_json(null::public.community_threads)',
   community_post_json: 'select public.community_post_json(null::public.community_posts)',
   community_comment_json: 'select public.community_comment_json(null::public.community_comments)',
+  report_community_content: `select public.report_community_content('post', '${instance}'::uuid, 'Smoke report reason')`,
+  hide_community_content: `select public.hide_community_content('post', '${instance}'::uuid)`,
+  restore_community_content: `select public.restore_community_content('post', '${instance}'::uuid)`,
+  remove_community_content: `select public.remove_community_content('post', '${instance}'::uuid)`,
+  list_community_moderation_queue: 'select public.list_community_moderation_queue()',
+  guard_community_moderation: 'select public.guard_community_moderation()',
+  community_target_school_and_author: `select public.community_target_school_and_author('post', '${instance}'::uuid)`,
+  community_apply_status: `select public.community_apply_status('post', '${instance}'::uuid, 'hidden')`,
+  community_moderation_queue_item_json: `select public.community_moderation_queue_item_json('post', '${instance}'::uuid, '${instance}'::uuid, 'hidden', 0, now(), null, 'body', 'Name')`,
+  community_require_moderator_membership: 'select public.community_require_moderator_membership()',
 };
 
 describe('allowlist RPC call coverage', () => {

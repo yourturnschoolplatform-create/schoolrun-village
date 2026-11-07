@@ -189,6 +189,10 @@ Baseline milestone verification reused the green Day 7 wrap-up gate and re-ran `
 
 School-scoped discussion threads, posts, comments and likes on TEST. Migration `0040_day8_community_discussion.sql`. Live suite `npm run test:community:live`: **5/5** pass. Raw: `docs/evidence/TASK_8_1_COMMUNITY_LIVE_RAW.txt`. Allowlist after: `145` public / `79` authenticated / `50` internal. Same-school create/list/comment/like; privacy filter denies phones/emails/photos/child full-name phrasing; School B denied School A; direct DML denied; RLS SELECT-only; no amount/price/currency/photo columns. Australian English Community hub UI. DEV not migrated. Tasks 8.2–8.3 and Day 9 not started.
 
+## Task 8.2 — community moderation — 2026-11-07 (TEST only)
+
+Community reporting, auto-hide after three unique reports, and own-school moderator review on TEST. Migrations `0041_day8_community_moderation.sql`, `0042_day8_community_moderation_guards.sql`, `0043_day8_community_moderation_audit_payload.sql`. Live suite `npm run test:community-moderation:live`: **5/5** pass. Raw: `docs/evidence/TASK_8_2_COMMUNITY_MODERATION_LIVE_RAW.txt`. Allowlist after: `155` public / `84` authenticated / `55` internal. Parents report; third unique report auto-hides; moderator restore/remove/hide/queue; parents cannot forge moderator actions; School B denied School A; direct DML denied; no amount/price/currency/photo columns. DEV not migrated. Task 8.3 and Day 9 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`
