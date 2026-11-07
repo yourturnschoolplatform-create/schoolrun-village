@@ -221,7 +221,13 @@ Global administrator create/update/soft-deactivate of restricted listing catalog
 
 ## Day 9 wrap-up — 2026-11-07 (TEST only)
 
-Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 193 public functions, 102 authenticated entries, 75 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **482/482** across 21 files (prior Day 8 suites plus listings-live, listing-moderation-live, restricted-items-admin-live). Raw: `docs/evidence/DAY9_WRAPUP_VERIFY_RAW.txt`. Migrations `0045`–`0048` on TEST. DEV not migrated. Aggregate Day 9 `[x]`. Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]`. Day 10 waits for **`GO DAY 10`**.
+Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 193 public functions, 102 authenticated entries, 75 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **482/482** across 21 files (prior Day 8 suites plus listings-live, listing-moderation-live, restricted-items-admin-live). Raw: `docs/evidence/DAY9_WRAPUP_VERIFY_RAW.txt`. Migrations `0045`–`0048` on TEST. DEV not migrated. Aggregate Day 9 `[x]`. Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]`. Day 10 authorised by **TASK DAY 10**.
+
+## Day 10 start — 2026-11-07 (TEST only)
+
+**TASK DAY 10** opened work on branch `wip/day10-admin-notifications` from the Day 9 wrap tip. Scope (from authorizing task): notifications and admin console. **Day 11 is not started.**
+
+Baseline milestone: last green Day 9 wrap-up full verify on TEST (47 unit / 482 RLS; allowlist 193/102/75). Day 10 start re-ran `npm run verify`: typecheck/lint/unit **47/47** PASS; `db:migrate:test` failed with safe error `ENOTFOUND` (TEST DB host unreachable; URL not logged). Raw: `docs/evidence/DAY10_START_VERIFY_RAW.txt`. No new migration in this start task. Tasks 10.1–10.3 are open; no Day 10 feature SQL or live suite exists yet at branch open. Full baseline exit 0 remains pending reachable `SUPABASE_RLS_TEST_DATABASE_URL`.
 
 ## G4 evidence — 2026-11-06 (TEST only)
 

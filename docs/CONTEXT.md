@@ -67,8 +67,6 @@ Authorised by **TASK DAY 9**. Work branch `wip/day9-listings` from Day 8 wrap ti
 
 ## Current scope — Day 9
 
-Authorised by **TASK DAY 9**. Work branch `wip/day9-listings`. School-scoped free giveaway/lending listings, status fulfilment without payment, admin-editable restricted items, and own-school listing moderation. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 9.1–9.3 evidenced; aggregate Day 9 `[x]`.
-
 ### Task 9.1 — school-scoped free listings
 
 Migrations `0045`–`0046` add `listing_restricted_items`, `item_listings`, `listing_enquiries` with RLS SELECT-only, free-only `display_offer_label`, restricted-term enforcement, and create/search/filter/get/enquiry RPCs. Live **5/5** on TEST. Raw: `docs/evidence/TASK_9_1_LISTINGS_LIVE_RAW.txt`. Allowlist after: `174` public / `91` authenticated / `67` internal. No amount, price, currency, payment, photo or phone columns.
@@ -83,7 +81,15 @@ Migration `0048` adds global-admin create/update/list RPCs for `listing_restrict
 
 ## Day 9 wrap-up — 2026-11-07
 
-Full TEST `npm run verify` exit 0 (47 unit, 482 RLS, allowlist 193/102/75). Tasks 9.1–9.3 evidenced; aggregate Day 9 `[x]`. Raw: `docs/evidence/DAY9_WRAPUP_VERIFY_RAW.txt`. DEV not migrated. Day 10 waits for **`GO DAY 10`**.
+Full TEST `npm run verify` exit 0 (47 unit, 482 RLS, allowlist 193/102/75). Tasks 9.1–9.3 evidenced; aggregate Day 9 `[x]`. Raw: `docs/evidence/DAY9_WRAPUP_VERIFY_RAW.txt`. DEV not migrated. Day 10 authorised by **TASK DAY 10**.
+
+## Day 10 start — 2026-11-07
+
+Authorised by **TASK DAY 10**. Work branch `wip/day10-admin-notifications` from Day 9 wrap tip. Scope: notifications and admin console. TEST only; **no Day 11**. See `TODO.md` Tasks 10.1–10.3. Baseline re-verify: typecheck/lint/unit **47/47** PASS; RLS migrate blocked by TEST DB host `ENOTFOUND` (URL not logged). Raw: `docs/evidence/DAY10_START_VERIFY_RAW.txt`. No new migration at start. Last green full verify remains Day 9 wrap `193/102/75` · **482/482**.
+
+## Current scope — Day 10
+
+Authorised by **TASK DAY 10**. Work branch `wip/day10-admin-notifications`. Notification delivery/preferences and global admin console read/mutation surfaces. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location; notification payloads stay phone-free. Tasks 10.1–10.3 remain open.
 
 ### Task 8.1 — school-scoped discussion community
 

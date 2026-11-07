@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** Day 9 complete on `wip/day9-listings` (TEST only). Aggregate Day 9 `[x]`. Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]`. **Do not start Day 10** until **`GO DAY 10`**. Mark `[x]` only with passing live names and raw output.
+> **Current authorised scope:** Day 10 started on `wip/day10-admin-notifications` (TEST only). Aggregate Day 9 `[x]`. Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]`. **Do not start Day 11** until **`GO DAY 11`**. Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -382,3 +382,25 @@ Branch: `wip/day9-listings` (from Day 8 wrap tip `bdb83b3` on `wip/day8-communit
 - `adminCreateUpdateDeactivate: admin manages catalogue and enforcement follows active terms`
 - `nonAdminAndCrossSchoolDenials: parents and school moderators cannot mutate catalogue`
 - `catalogAllowlistAndSearchPath: admin RPCs allowlisted with pg_catalog paths; no money fields`
+
+## [~] Day 10 — notifications and admin console
+
+Branch: `wip/day10-admin-notifications` (from Day 9 wrap tip `ea2fdcc` on `wip/day9-listings`). Apply new SQL/fixtures to TEST only. No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only. Notifications stay phone-free; admin tools are global-admin gated with audit.
+
+**Baseline (Day 10 start):** Day 9 wrap-up last green `npm run verify` exit 0 on TEST (47 unit / 482 RLS; allowlist 193/102/75). Day 10 start re-verify attempt raw: `docs/evidence/DAY10_START_VERIFY_RAW.txt` — typecheck/lint/unit **47/47** PASS; RLS migrate **blocked** (`ENOTFOUND` on `SUPABASE_RLS_TEST_DATABASE_URL` host; no URL logged). No new migration in this start task. Re-run full baseline verify once TEST DB DNS is reachable.
+
+- Notification delivery for due operational events (in-app and email-relay paths already used for handover/contact); preferences without paywalling safety; no live location or phone in payloads.
+- Global admin console surfaces for catalogue/policy/membership operations already gated by `is_admin()`, with cross-school isolation for school-scoped data and audit logging.
+- Every new table RLS + live test; every new function grants, pg_catalog-only path, allowlist, cross-school live test.
+
+### [ ] Task 10.1 — notification delivery and preferences
+
+- Persist notification preference and delivery ledger with RLS. Deliver due in-app/email-relay notifications without phones, money fields, or live location. Cross-school denial. Explicit grants, pg_catalog-only path, allowlist, live tests.
+
+### [ ] Task 10.2 — admin console read models
+
+- Global-admin list/read RPCs for operational queues (memberships, moderation, restricted catalogue, audit summaries) without exposing phones or child nicknames beyond policy. Non-admin denied. Live cross-school and role denials.
+
+### [ ] Task 10.3 — admin console mutations and audit
+
+- Admin-gated mutations already authorised by product policy (e.g. restricted catalogue, trust policy publish paths as required) with append-only audit. School moderators cannot forge global admin actions. RLS + live tests. Stop after Day 10; wait for **`GO DAY 11`**.
