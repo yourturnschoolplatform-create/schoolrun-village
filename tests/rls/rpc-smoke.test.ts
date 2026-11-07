@@ -33,6 +33,8 @@ const calls: Record<string, string> = {
   expire_my_swap_proposals: 'select public.expire_my_swap_proposals()',
   get_accepted_swap_children: `select * from public.get_accepted_swap_children('${swap}'::uuid)`,
   get_my_ledger: 'select public.get_my_ledger()',
+  get_my_trust: 'select public.get_my_trust()',
+  get_peer_trust_band: `select public.get_peer_trust_band('${north}'::uuid)`,
   grant_contact_sharing: `select public.grant_contact_sharing('${swap}'::uuid, 'smoke'::text, '{}'::uuid[])`,
   revoke_contact_sharing: `select public.revoke_contact_sharing('${swap}'::uuid)`,
   get_shared_contact: `select public.get_shared_contact('${swap}'::uuid, '${northMembership}'::uuid)`,
@@ -71,6 +73,9 @@ const calls: Record<string, string> = {
   record_leg_confirmation: `select public.record_leg_confirmation('${instance}'::uuid, 'pickup_done')`,
   maybe_record_handover_reminder: `select public.maybe_record_handover_reminder('${instance}'::uuid)`,
   enqueue_due_handover_reminders: 'select public.enqueue_due_handover_reminders()',
+  guard_trust_score_events: 'select public.guard_trust_score_events()',
+  apply_trust_score_delta: `select public.apply_trust_score_delta('${north}'::uuid, '${northSchool}'::uuid, 1::smallint, 'completed_trip'::text, 'smoke'::text, '${instance}'::uuid)`,
+  trust_band_for_user: `select public.trust_band_for_user('${north}'::uuid)`,
 };
 
 describe('allowlist RPC call coverage', () => {

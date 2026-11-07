@@ -22,10 +22,11 @@
     "db:migrate": "tsx scripts/run-migrations.ts --target=development",
     "db:migrate:test": "tsx scripts/run-migrations.ts --target=rls-test",
     "check:secrets": "tsx scripts/check-client-boundary.ts",
-    "db:rls:live": "npm run db:migrate:test && vitest run --config vitest.rls.config.ts tests/rls/live-rls.test.ts tests/rls/ledger-live.test.ts tests/rls/contact-live.test.ts tests/rls/handover-live.test.ts",
+    "db:rls:live": "npm run db:migrate:test && vitest run --config vitest.rls.config.ts tests/rls/live-rls.test.ts tests/rls/ledger-live.test.ts tests/rls/contact-live.test.ts tests/rls/handover-live.test.ts tests/rls/trust-live.test.ts",
     "test:ledger:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/ledger-live.test.ts --reporter=verbose",
     "test:contact:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/contact-live.test.ts --reporter=verbose",
     "test:handover:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/handover-live.test.ts --reporter=verbose",
+    "test:trust:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/trust-live.test.ts --reporter=verbose",
     "handover:reminders:install:test": "tsx scripts/install-handover-reminders-test.ts"
   },
   "dependencies": {

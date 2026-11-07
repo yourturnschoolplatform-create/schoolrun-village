@@ -43,7 +43,11 @@ Full TEST `npm run verify` exit 0 (47 unit, 252 RLS). Tasks 5.1 / 5.2 backend / 
 
 ## Current scope — Day 6
 
-Authorised by **TASK DAY 6**. Work branch `wip/day6-trust`. Scope: trust scoring under published policy, band-only disclosure, no-show/false-report, safety hold and appeals. Inputs already in schema (`profiles.trust_score`, `trust_policy_versions`, cancellation/completion facts) are not yet scored by an engine. TEST only; no Day 7. See `TODO.md` Tasks 6.1–6.3.
+Authorised by **TASK DAY 6**. Work branch `wip/day6-trust`. Scope: trust scoring under published policy, band-only disclosure, no-show/false-report, safety hold and appeals. TEST only; no Day 7. See `TODO.md` Tasks 6.1–6.3.
+
+### Task 6.1 — score ledger and band projection
+
+Migrations `0027`–`0030` add append-only `trust_score_events`, internal `apply_trust_score_delta` (clamped −100…150, source-idempotent), `get_my_trust` (own score+band), and `get_peer_trust_band` (same-school band only). Peers cannot read numeric scores via RPC, profile select, or event rows. Trip/cancellation policy posting is Task 6.2.
 
 ## Current scope — Task 5.1
 

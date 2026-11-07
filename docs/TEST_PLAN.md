@@ -137,6 +137,10 @@ Day 5 aggregate remains `[~]`: school notice is unimplemented; Task 5.2 outbound
 
 Baseline milestone verification reused the green Day 5 wrap-up gate and re-ran `npm run verify` on TEST at Day 6 start: exit **0**; unit **47/47**; allowlist `69/45/8`; RLS **252/252**. Raw: `docs/evidence/DAY6_START_VERIFY_RAW.txt`. No new migration in this start task. **Day 7 is not started.**
 
+## Task 6.1 — 2026-11-07 (TEST only)
+
+Trust score engine + band-only peer exposure on TEST. Migrations `0027_day6_trust_score_engine.sql`, `0028_day6_trust_score_clamp_cast.sql`, `0029_day6_trust_score_clamp_case.sql`, `0030_day6_trust_score_audit_payload.sql`. Live suite `npm run test:trust:live`: **6/6** pass. Raw: `docs/evidence/TASK_6_1_TRUST_LIVE_RAW.txt`. Allowlist after: `74` public / `47` authenticated / `11` internal (`get_my_trust`, `get_peer_trust_band` authenticated; `apply_trust_score_delta`, `guard_trust_score_events`, `trust_band_for_user` internal). Cross-school peer band denied; peers never receive numeric scores. Policy-driven trip deltas remain Task 6.2. DEV not migrated.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

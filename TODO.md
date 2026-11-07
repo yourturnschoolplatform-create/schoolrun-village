@@ -216,9 +216,9 @@ Branch: `wip/day6-trust` (from `main` @ Day 5 wrap-up tip). Apply new SQL/fixtur
 - Provisional no-show reports (24 hours undisputed or moderator-confirmed); appeals within 48 hours; moderator safety hold disables swaps only, alerts admin, review within 24 hours, appealable.
 - Every new table: RLS + live test. Every new function: explicit grants, `search_path = pg_catalog` only, allowlist entry, cross-school live test. Non-privileged `authenticated` + synthetic JWT claims.
 
-### [ ] Task 6.1 — score ledger and band projection
+### [x] Task 6.1 — score ledger and band projection
 
-Append-only trust score events (or equivalent) derived from audited facts; band helper; School B cannot read School A scores/events; other parents never receive numeric scores via RPC/API.
+Append-only `trust_score_events`; `apply_trust_score_delta` (internal); `get_my_trust` / `get_peer_trust_band`; School B denied School A events/bands; peers never receive numeric scores. Live **6/6** (`npm run test:trust:live`). Raw: `docs/evidence/TASK_6_1_TRUST_LIVE_RAW.txt`. Migrations `0027`–`0030`.
 
 ### [ ] Task 6.2 — policy-driven deltas from trips and cancellations
 

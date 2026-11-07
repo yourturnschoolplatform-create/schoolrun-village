@@ -904,6 +904,8 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       expire_my_swap_proposals: { sql: 'select public.expire_my_swap_proposals()' },
       get_accepted_swap_children: { sql: 'select * from public.get_accepted_swap_children($1::uuid)', values: [swap.id] },
       get_my_ledger: { sql: 'select public.get_my_ledger()' },
+      get_my_trust: { sql: 'select public.get_my_trust()' },
+      get_peer_trust_band: { sql: 'select public.get_peer_trust_band($1::uuid)', values: [fixture.partner.userId] },
       get_reciprocal_match_candidates: { sql: 'select * from public.get_reciprocal_match_candidates(false)' },
       has_current_onboarding_consents: { sql: 'select public.has_current_onboarding_consents($1::uuid)', values: [fixture.owner.userId] },
       is_admin: { sql: 'select public.is_admin()' },

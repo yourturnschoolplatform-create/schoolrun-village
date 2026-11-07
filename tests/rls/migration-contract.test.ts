@@ -10,7 +10,7 @@ const foundationTables = [
   'household_links', 'household_link_invitations', 'school_calendar_periods', 'availability_patterns', 'availability_instances',
   'schedule_cancellation_events', 'match_blocks', 'swap_proposals', 'swap_legs', 'swap_ledger_entries',
   'contact_consents', 'contact_consent_backups', 'swap_cancellation_events', 'swap_contact_notifications',
-  'swap_leg_confirmations', 'swap_leg_reminders',
+  'swap_leg_confirmations', 'swap_leg_reminders', 'trust_score_events',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -24,9 +24,11 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0018_day5_trip_count_ledger.sql'), 'utf8'),
   readFile(resolve('db/migrations/0019_day5_contact_consents.sql'), 'utf8'),
   readFile(resolve('db/migrations/0020_day5_two_step_handover.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0027_day6_trust_score_engine.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
+const day6TrustSql = (await readFile(resolve('db/migrations/0027_day6_trust_score_engine.sql'), 'utf8')).replace(/\r\n/g, '\n');
 
 describe('Day 1 through Day 4 RLS migration contract', () => {
   it.each(foundationTables)('enables RLS for %s', (table) => {
@@ -169,5 +171,23 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(sql).toMatch(/swap is blocked/i);
     expect(sql).toMatch(/first_match_viewed/i);
     expect(sql).toMatch(/first_swap_accepted/i);
+  });
+
+  it('adds append-only trust score events with band-only peer exposure', () => {
+    expect(day6TrustSql).toMatch(/create table public\.trust_score_events/i);
+    expect(day6TrustSql).toMatch(/trust score history is append-only/i);
+    expect(day6TrustSql).toMatch(/alter table public\.trust_score_events enable row level security/i);
+    expect(day6TrustSql).toMatch(/trust_score_events_select_own/i);
+    expect(day6TrustSql).toMatch(/function public\.apply_trust_score_delta/i);
+    expect(day6TrustSql).toMatch(/function public\.get_my_trust\(\)/i);
+    expect(day6TrustSql).toMatch(/function public\.get_peer_trust_band\(p_peer_user_id uuid\)/i);
+    expect(day6TrustSql).toMatch(/set search_path = pg_catalog/i);
+    expect(day6TrustSql).toMatch(/grant execute on function public\.get_my_trust\(\) to authenticated/i);
+    expect(day6TrustSql).toMatch(/grant execute on function public\.get_peer_trust_band\(uuid\) to authenticated/i);
+    expect(day6TrustSql).toMatch(/revoke all on function public\.apply_trust_score_delta/i);
+    expect(day6TrustSql).toMatch(/jsonb_build_object\(\s*'trust_band', band\s*\)/i);
+    expect(day6TrustSql).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
   });
 });
