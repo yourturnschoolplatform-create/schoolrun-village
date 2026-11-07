@@ -51,7 +51,15 @@ Authorised by **TASK DAY 7**. Work branch `wip/day7-notices-retention` from Day 
 
 ## Day 7 wrap-up — 2026-11-07
 
-Full TEST `npm run verify` exit 0 (47 unit, 376 RLS, allowlist 132/72/44). Tasks 7.1–7.4 evidenced; aggregate Day 7 `[x]`. Raw: `docs/evidence/DAY7_WRAPUP_VERIFY_RAW.txt`. DEV not migrated. **Wait for `GO DAY 8`.**
+Full TEST `npm run verify` exit 0 (47 unit, 376 RLS, allowlist 132/72/44). Tasks 7.1–7.4 evidenced; aggregate Day 7 `[x]`. Raw: `docs/evidence/DAY7_WRAPUP_VERIFY_RAW.txt`. DEV not migrated. Day 8 authorised by **TASK DAY 8**.
+
+## Day 8 start — 2026-11-07
+
+Authorised by **TASK DAY 8**. Work branch `wip/day8-community` from Day 7 wrap tip. Baseline `npm run verify` on TEST exit 0 (47 unit, 376 RLS, allowlist 132/72/44). Raw: `docs/evidence/DAY8_START_VERIFY_RAW.txt`. No new migration at start. Scope: school-scoped discussion community and handover reminder delivery. TEST only; **no Day 9**. See `TODO.md` Tasks 8.1–8.3.
+
+## Current scope — Day 8
+
+Authorised by **TASK DAY 8**. Work branch `wip/day8-community`. School-scoped discussion threads with own-school moderation, plus Day 5 residual handover reminder delivery via the Day 7 email-relay path after live eligibility recheck. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 8.1–8.3 remain open.
 
 ## Current scope — Day 7
 

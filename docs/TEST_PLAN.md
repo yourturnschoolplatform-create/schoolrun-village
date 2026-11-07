@@ -177,7 +177,13 @@ Running-late notice store and late trust penalties on TEST. Migration `0039_day7
 
 ## Day 7 wrap-up — 2026-11-07 (TEST only)
 
-Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 132 public functions, 72 authenticated entries, 44 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **376/376** across 15 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live, school-notice-live, email-relay-live, retention-purge-live, running-late-live). Raw: `docs/evidence/DAY7_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. Wrap-up also extended rpc-smoke and contact allowlist leak-scan maps for Day 7 RPCs and stabilised school-notice access-log order assertion. DEV not migrated. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 remains `[~]` for Day 8 handover reminder delivery. **Do not start Day 8 without `GO DAY 8`.**
+Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 132 public functions, 72 authenticated entries, 44 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **376/376** across 15 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live, school-notice-live, email-relay-live, retention-purge-live, running-late-live). Raw: `docs/evidence/DAY7_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. Wrap-up also extended rpc-smoke and contact allowlist leak-scan maps for Day 7 RPCs and stabilised school-notice access-log order assertion. DEV not migrated. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 remains `[~]` for Day 8 handover reminder delivery. Day 8 authorised by **TASK DAY 8**.
+
+## Day 8 start — 2026-11-07 (TEST only)
+
+**TASK DAY 8** opened work on branch `wip/day8-community` from the Day 7 wrap tip. Scope (from `docs/CONTEXT.md` / Day 5 residual / authorizing task): school-scoped discussion community (threads, replies, own-school moderation) and handover reminder **delivery** with live eligibility recheck through the Day 7 email-relay path. **Day 9 is not started.**
+
+Baseline milestone verification reused the green Day 7 wrap-up gate and re-ran `npm run verify` on TEST at Day 8 start: exit **0**; unit **47/47**; allowlist `132/72/44`; RLS **376/376**. Raw: `docs/evidence/DAY8_START_VERIFY_RAW.txt`. No new migration in this start task. Tasks 8.1–8.3 are open; no Day 8 feature SQL or live suite exists yet at branch open.
 
 ## G4 evidence — 2026-11-06 (TEST only)
 

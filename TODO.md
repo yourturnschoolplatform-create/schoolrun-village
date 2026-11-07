@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** Day 7 wrap-up green on `wip/day7-notices-retention` (TEST only). Tasks 7.1–7.4 evidenced; aggregate Day 7 `[x]`. Aggregate Day 6 `[x]` (running-late notice closed under 7.4). Aggregate Day 5 remains `[~]` until Day 8 reminder delivery. **Do not start Day 8** until **`GO DAY 8`**. Mark `[x]` only with passing live names and raw output.
+> **Current authorised scope:** Day 8 started on `wip/day8-community` (TEST only). Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 remains `[~]` until handover reminder delivery is evidenced. **Do not start Day 9** until **`GO DAY 9`**. Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -292,3 +292,25 @@ Branch: `wip/day7-notices-retention` (from Day 6 wrap tip `5f9de3d` on `wip/day6
 - `lateWithPriorNoticePenalty: prior notice before window yields -2 on late pickup`
 - `crossSchoolAndRoleDenials: School B and requester cannot post or read School A notice`
 - `noClientMutateAndCatalog: direct DML denied; RLS on; no money or location fields`
+
+## [~] Day 8 — discussion community and handover reminder delivery
+
+Branch: `wip/day8-community` (from Day 7 wrap tip `7dd7e28` on `wip/day7-notices-retention`). Apply new SQL/fixtures to TEST only. No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only. Community posts stay school-scoped and must not expose phone, email, address, trust score, or contact data.
+
+**Baseline (Day 8 start):** Day 7 wrap-up `npm run verify` exit 0 on TEST (47 unit / 376 RLS; allowlist 132/72/44). Day 8 start verification raw: `docs/evidence/DAY8_START_VERIFY_RAW.txt`. No new migration in this start task.
+
+- School-scoped discussion community: verified same-school parents can post and reply; volunteer moderators can moderate own-school threads; School B denied School A reads/writes; no live location or money fields.
+- Handover reminder **delivery** (Day 5 residual): recheck live eligibility before send; allow `handover_reminder` through the Day 7 email-relay path for due `swap_leg_reminders` only; no premature delivery.
+- Every new table: RLS + live test. Every new function: explicit grants, `search_path = pg_catalog` only, allowlist entry, cross-school live test. Non-privileged `authenticated` + synthetic JWT claims.
+
+### [ ] Task 8.1 — school-scoped discussion threads
+
+- Persist school-scoped discussion posts and replies with RLS. Participant create/list/read for verified own-school members; School B denied School A; no phone/email/address/nickname/trust score/amount fields in payloads. Explicit grants, pg_catalog-only path, allowlist, live cross-school denial.
+
+### [ ] Task 8.2 — community moderation
+
+- Own-school moderator queue, withdraw/hide, and append-only moderation audit. Generator/participant cannot forge moderator actions. Cross-school denial. RLS + live tests.
+
+### [ ] Task 8.3 — handover reminder delivery
+
+- Deliver due handover reminders only after rechecking live eligibility (exactly one confirmation, accepted incomplete leg, past due). Wire through server-admin email relay with `handover_reminder` kind unblocked for this path alone. Authenticated cannot claim/send. Live proof of eligibility gate and School B isolation. Stop after Day 8; wait for **`GO DAY 9`**.
