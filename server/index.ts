@@ -7,6 +7,7 @@ import { createSchedulesRouter, ScheduleInputError } from './schedules-router.js
 import { createMatchesRouter, MatchInputError } from './matches-router.js';
 import { createContactsRouter } from './contacts-router.js';
 import { createHandoverRouter } from './handover-router.js';
+import { createNotificationsRouter } from './notifications-router.js';
 import { loadVerifiedSchoolScope, RequestAuthenticationError } from './supabase/request-client.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -82,6 +83,7 @@ export async function createApp() {
   app.use('/api/matches', createMatchesRouter());
   app.use('/api/contacts', createContactsRouter());
   app.use('/api/handover', createHandoverRouter());
+  app.use('/api/notifications', createNotificationsRouter());
 
   if (!isProduction) {
     const vite = await createViteServer({

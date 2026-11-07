@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { matchApi, type MatchCandidate, type Swap } from '../lib/match-api';
 import { ContactNotifications, ContactSharing } from './ContactSharing';
 import { Handover } from './Handover';
+import { NotificationFeed } from './NotificationFeed';
 
 type Child = { nickname: string; yearLevel: number };
 
@@ -55,6 +56,7 @@ export function MatchHub({ client }: { client: SupabaseClient }) {
         <p>Only reciprocal, same-school options appear. Trust is shown as a band, never a score.</p>
       </div>
       {message && <p className="notice notice--teal" role="status">{message}</p>}
+      <NotificationFeed client={client} />
       <ContactNotifications client={client} onChanged={refresh} />
       <label className="match-toggle">
         <input type="checkbox" checked={differentDates} onChange={(event) => setDifferentDates(event.target.checked)} />
