@@ -97,7 +97,11 @@ Migration `0049` adds `public.notifications` with owner SELECT + read-only UPDAT
 
 ### Task 10.2 — system event notification wiring
 
-Migration `0050_day10_system_event_notifications.sql` fans out phone-free inbox rows for handover confirm/complete (triggers on `swap_leg_confirmations` / `swap_legs.completed_at`), swap propose/accept/decline/withdraw, safety-hold place/resolve, and trust score deltas (no numeric scores in copy). Metadata uses allowlisted keys only (`entity_type`/`entity_id`/`reason_code`/`outcome`/`source`). Allowlist +3 internal (`notify_user_event_once`, `notify_handover_confirmation`, `notify_handover_completion`). Live suite `tests/rls/notification-events-live.test.ts`. TEST migrate still `ENOTFOUND`. Admin console read models deferred to Task 10.3.
+Migration `0050_day10_system_event_notifications.sql` fans out phone-free inbox rows for handover confirm/complete (triggers on `swap_leg_confirmations` / `swap_legs.completed_at`), swap propose/accept/decline/withdraw, safety-hold place/resolve, and trust score deltas (no numeric scores in copy). Metadata uses allowlisted keys only (`entity_type`/`entity_id`/`reason_code`/`outcome`/`source`). Allowlist +3 internal (`notify_user_event_once`, `notify_handover_confirmation`, `notify_handover_completion`). Live suite `tests/rls/notification-events-live.test.ts`. TEST migrate still `ENOTFOUND` in agent shell.
+
+### Task 10.3 — admin console mutations and read models
+
+Migration `0051_day10_admin_moderation.sql` adds global-admin-only (`public.is_admin()` / `role_assignments`, not email) suspend/unsuspend, admin safety-hold resolve by subject, and list RPCs for active holds / suspended users / `admin.*` audit rows. Writes append to `public.audit_logs` with safe payload keys. School moderators denied on admin RPCs (they keep school-scoped `resolve_safety_hold`). Live suite `tests/rls/admin-moderation-live.test.ts`. Agent TEST DNS may still be `ENOTFOUND`.
 
 ### Task 8.1 — school-scoped discussion community
 

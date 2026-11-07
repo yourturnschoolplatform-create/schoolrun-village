@@ -488,4 +488,27 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(wiring).toMatch(/entity_type/i);
     expect(wiring).not.toMatch(/jsonb_build_object\(\s*'leg_id'/i);
   });
+
+  it('adds global-admin moderation RPCs and audit without email hardcoding or money fields', async () => {
+    const admin = (await readFile(resolve('db/migrations/0051_day10_admin_moderation.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(admin).toMatch(/function public\.admin_require/i);
+    expect(admin).toMatch(/function public\.admin_suspend_user/i);
+    expect(admin).toMatch(/function public\.admin_unsuspend_user/i);
+    expect(admin).toMatch(/function public\.admin_resolve_safety_hold/i);
+    expect(admin).toMatch(/function public\.list_admin_safety_holds/i);
+    expect(admin).toMatch(/function public\.list_admin_suspended_users/i);
+    expect(admin).toMatch(/function public\.list_admin_audit_actions/i);
+    expect(admin).toMatch(/public\.is_admin\(\)/i);
+    expect(admin).toMatch(/insert into public\.audit_logs/i);
+    expect(admin).toMatch(/admin_suspended/i);
+    expect(admin).toMatch(/set search_path = pg_catalog/i);
+    expect(admin).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(admin).not.toMatch(/create (schema|table|function) yourturn\./i);
+    expect(admin).not.toMatch(/yourturn\.schoolplatform@gmail\.com/i);
+    expect(admin).not.toMatch(/\badmin_email\b/i);
+    expect(admin).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude|email)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
 });

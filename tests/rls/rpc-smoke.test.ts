@@ -202,6 +202,17 @@ const calls: Record<string, string> = {
   guard_notifications: 'select public.guard_notifications()',
   notification_json: 'select public.notification_json(null::public.notifications)',
   enqueue_user_notification: `select public.enqueue_user_notification('${north}'::uuid, '${northSchool}'::uuid, 'system', 'Smoke title', 'Smoke body', '{}'::jsonb)`,
+  notify_user_event_once: `select public.notify_user_event_once('${north}'::uuid, '${northSchool}'::uuid, 'system', 'Smoke title', 'Smoke body', 'swap_leg', '${instance}'::uuid, 'smoke', 'notified', 'system_event')`,
+  notify_handover_confirmation: 'select public.notify_handover_confirmation()',
+  notify_handover_completion: 'select public.notify_handover_completion()',
+  list_admin_safety_holds: 'select public.list_admin_safety_holds()',
+  list_admin_suspended_users: 'select public.list_admin_suspended_users()',
+  list_admin_audit_actions: 'select public.list_admin_audit_actions(50)',
+  admin_suspend_user: `select public.admin_suspend_user('${north}'::uuid, 'smoke_suspend')`,
+  admin_unsuspend_user: `select public.admin_unsuspend_user('${north}'::uuid, 'smoke_unsuspend')`,
+  admin_resolve_safety_hold: `select public.admin_resolve_safety_hold('${north}'::uuid, 'lift', 'smoke_admin_review')`,
+  admin_require: 'select public.admin_require()',
+  admin_reason_code_is_valid: "select public.admin_reason_code_is_valid('smoke_reason')",
 };
 
 describe('allowlist RPC call coverage', () => {

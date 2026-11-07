@@ -241,6 +241,10 @@ Live blocked: `db:migrate:test` and `npm run test:notifications:live` fail with 
 
 Wires operational events into `public.notifications` via `enqueue_user_notification`. Migration `0050_day10_system_event_notifications.sql`. Triggers: `notify_handover_confirmation` (AFTER INSERT confirmations), `notify_handover_completion` (AFTER UPDATE `completed_at`). RPC patches: propose/transition swap, place/resolve safety hold, apply trust delta (score-free title/body). New kinds include `handover_completed`, `handover_update`, `swap_proposed`, `swap_declined`, `swap_withdrawn`, `safety_hold`, `trust_update`. Allowlist +3 internal. Live suite `npm run test:notification-events:live` (handoverConfirmAndComplete, swapAcceptDeclineWithdraw, safetyHoldAndTrustDelta, catalogTriggersAndInternalOnly). Offline contract updated. TEST migrate still `ENOTFOUND`. DEV not migrated. Task 10.2 remains `[~]` until live names pass.
 
+## Task 10.3 — admin console moderation — 2026-11-07 (TEST only; live may be blocked)
+
+Global-admin suspend/unsuspend, admin-only safety-hold resolve, and admin read models on source. Migration `0051_day10_admin_moderation.sql`. Uses existing `public.is_admin()` + `public.audit_logs` (no `yourturn.admin_audit_logs`, no hardcoded admin email, no `yourturn.memberships`). Allowlist +6 authenticated / +2 internal. Live suite `npm run test:admin-moderation:live` (adminSuspendUnsuspend, adminResolveSafetyHold, catalogAdminOnly). School moderators denied on admin RPCs. DEV not migrated. Task 10.3 remains `[~]` until live names pass. Day 11 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

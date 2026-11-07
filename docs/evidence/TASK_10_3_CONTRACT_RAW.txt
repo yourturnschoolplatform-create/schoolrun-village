@@ -1,0 +1,22 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help
+ npmrc` for supported config options.
+위치 줄:1 문자:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> yourturn@0.1.0 test:rls:contract
+> vitest run --config vitest.rls.config.ts tests/rls/migration-contract.test.ts
+
+
+ RUN  v3.2.7 C:/Users/jayro/Downloads/yourturn
+
+ ✓ tests/rls/migration-contract.test.ts (88 tests) 52ms
+
+ Test Files  1 passed (1)
+      Tests  88 passed (88)
+   Start at  21:38:25
+   Duration  971ms (transform 72ms, setup 0ms, collect 128ms, tests 52ms, environment 0ms, prepare 145ms)
+

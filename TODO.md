@@ -404,6 +404,8 @@ Branch: `wip/day10-admin-notifications` (from Day 9 wrap tip `ea2fdcc` on `wip/d
 - Authorised as event→inbox fan-out (admin read models deferred into Task 10.3). Migration `0050_day10_system_event_notifications.sql`: handover confirmation/completion triggers, swap propose/accept/decline/withdraw RPC notify, safety-hold place/resolve, trust delta (score-free copy). Allowlist +3 internal trigger/helper. Live suite `npm run test:notification-events:live`.
 - **Remains:** Apply `0049`+`0050` and live suites on reachable TEST (`ENOTFOUND`). Do not mark `[x]` until live names pass.
 
-### [ ] Task 10.3 — admin console mutations and audit
+### [~] Task 10.3 — admin console mutations and audit
 
 - Admin-gated mutations already authorised by product policy (e.g. restricted catalogue, trust policy publish paths as required) with append-only audit. School moderators cannot forge global admin actions. RLS + live tests. Stop after Day 10; wait for **`GO DAY 11`**.
+- **Done (source):** Migration `0051_day10_admin_moderation.sql` — `admin_suspend_user` / `admin_unsuspend_user` / `admin_resolve_safety_hold` (global `is_admin()` only), read models `list_admin_safety_holds` / `list_admin_suspended_users` / `list_admin_audit_actions`, audit via `public.audit_logs` (no email hardcode, no `yourturn.admin_audit_logs`). Allowlist +6 auth / +2 internal. Live suite `npm run test:admin-moderation:live`.
+- **Remains:** Apply on reachable TEST and pass live names before `[x]`.

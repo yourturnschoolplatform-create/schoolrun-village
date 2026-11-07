@@ -104,7 +104,13 @@
     {"name":"list_all_restricted_listing_items","reason":"global admin lists full restricted catalogue including inactive and match terms","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue","searchPath":"pg_catalog"},
     {"name":"list_my_notifications","reason":"caller lists own in-app notifications optionally unread-only","callerDerivation":"auth.uid(); no school arguments","schoolScope":"own user_id rows only","searchPath":"pg_catalog"},
     {"name":"mark_notification_read","reason":"caller marks one own notification read","callerDerivation":"auth.uid(); notification id is not caller identity","schoolScope":"own user_id row only","searchPath":"pg_catalog"},
-    {"name":"mark_all_notifications_read","reason":"caller marks all own unread notifications read","callerDerivation":"auth.uid(); no arguments","schoolScope":"own user_id rows only","searchPath":"pg_catalog"}
+    {"name":"mark_all_notifications_read","reason":"caller marks all own unread notifications read","callerDerivation":"auth.uid(); no arguments","schoolScope":"own user_id rows only","searchPath":"pg_catalog"},
+    {"name":"list_admin_safety_holds","reason":"global admin lists active safety holds without phones or nicknames","callerDerivation":"auth.uid() must be admin","schoolScope":"cross-school admin read; no school argument","searchPath":"pg_catalog"},
+    {"name":"list_admin_suspended_users","reason":"global admin lists platform-suspended profiles without display names phones or nicknames","callerDerivation":"auth.uid() must be admin","schoolScope":"global; no school argument","searchPath":"pg_catalog"},
+    {"name":"list_admin_audit_actions","reason":"global admin lists recent admin.* audit_logs with safe payload keys only","callerDerivation":"auth.uid() must be admin","schoolScope":"global admin actions; optional school_id on rows","searchPath":"pg_catalog"},
+    {"name":"admin_suspend_user","reason":"global admin sets profiles.admin_suspended with append-only audit","callerDerivation":"auth.uid() must be admin; target is not caller identity","schoolScope":"global profile flag; school moderators denied","searchPath":"pg_catalog"},
+    {"name":"admin_unsuspend_user","reason":"global admin clears profiles.admin_suspended with append-only audit","callerDerivation":"auth.uid() must be admin; target is not caller identity","schoolScope":"global profile flag; school moderators denied","searchPath":"pg_catalog"},
+    {"name":"admin_resolve_safety_hold","reason":"global admin resolves subject active safety hold; school moderators must use resolve_safety_hold","callerDerivation":"auth.uid() must be admin; subject user id is not caller identity","schoolScope":"hold school derived from row; moderator forge denied","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -188,6 +194,8 @@
     {"name":"enqueue_user_notification","reason":"system/service enqueue of phone-free in-app notification; no anon/authenticated EXECUTE","callerDerivation":"trusted job or definer callers; anon/authenticated EXECUTE revoked","schoolScope":"recipient and school supplied by trusted caller","searchPath":"pg_catalog"},
     {"name":"notify_user_event_once","reason":"internal idempotent event fan-out into owner notifications; no anon/authenticated EXECUTE","callerDerivation":"definer system-event RPCs and triggers only","schoolScope":"recipient and school supplied by trusted caller","searchPath":"pg_catalog"},
     {"name":"notify_handover_confirmation","reason":"trigger-only partner inbox row on pickup or arrival confirmation","callerDerivation":"trigger NEW only","schoolScope":"leg school; partner user_id from swap_legs","searchPath":"pg_catalog"},
-    {"name":"notify_handover_completion","reason":"trigger-only both-party inbox rows when swap_legs.completed_at is first set","callerDerivation":"trigger NEW/OLD only","schoolScope":"leg school; helper and requester user_ids","searchPath":"pg_catalog"}
+    {"name":"notify_handover_completion","reason":"trigger-only both-party inbox rows when swap_legs.completed_at is first set","callerDerivation":"trigger NEW/OLD only","schoolScope":"leg school; helper and requester user_ids","searchPath":"pg_catalog"},
+    {"name":"admin_require","reason":"internal global-admin gate for console RPCs; no anon/authenticated EXECUTE","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"},
+    {"name":"admin_reason_code_is_valid","reason":"internal reason_code shape check for admin console mutations","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"}
   ]
 }

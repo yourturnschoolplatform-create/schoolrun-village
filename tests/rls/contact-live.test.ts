@@ -994,6 +994,12 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       list_my_notifications: { sql: 'select public.list_my_notifications(false)' },
       mark_notification_read: { sql: 'select public.mark_notification_read($1::uuid)', values: [fixture.schoolA] },
       mark_all_notifications_read: { sql: 'select public.mark_all_notifications_read()' },
+      list_admin_safety_holds: { sql: 'select public.list_admin_safety_holds()' },
+      list_admin_suspended_users: { sql: 'select public.list_admin_suspended_users()' },
+      list_admin_audit_actions: { sql: 'select public.list_admin_audit_actions(50)' },
+      admin_suspend_user: { sql: 'select public.admin_suspend_user($1::uuid, $2::text)', values: [fixture.parentB.userId, 'contact_scan_suspend'] },
+      admin_unsuspend_user: { sql: 'select public.admin_unsuspend_user($1::uuid, $2::text)', values: [fixture.parentB.userId, 'contact_scan_unsuspend'] },
+      admin_resolve_safety_hold: { sql: 'select public.admin_resolve_safety_hold($1::uuid, $2::text, $3::text)', values: [fixture.parentB.userId, 'lift', 'contact_scan_hold'] },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;
