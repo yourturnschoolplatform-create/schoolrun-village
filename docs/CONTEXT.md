@@ -79,7 +79,7 @@ Migrations `0041`–`0043` add `community_reports` and append-only `community_mo
 
 ### Task 8.3 — handover reminder delivery
 
-Migration `0044` adds append-only `handover_reminder_deliveries`, service-only `deliver_due_handover_reminders` with live eligibility recheck, `handover_reminder` enqueue onto email-relay for that path alone, and recipient `list_my_handover_reminder_deliveries`. Live **5/5** on TEST. Raw: `docs/evidence/TASK_8_3_HANDOVER_REMINDER_DELIVERY_LIVE_RAW.txt`. Allowlist after: `160` public / `85` authenticated / `59` internal. Authenticated cannot claim/send or enqueue handover reminders. Day 9 not started.
+Migration `0044` adds append-only `handover_reminder_deliveries`, service-only `deliver_due_handover_reminders` with live eligibility recheck, `handover_reminder` enqueue onto email-relay for that path alone, and recipient `list_my_handover_reminder_deliveries`. Live **5/5** on TEST. Raw: `docs/evidence/TASK_8_3_HANDOVER_REMINDER_DELIVERY_LIVE_RAW.txt`. Allowlist after: `160` public / `85` authenticated / `59` internal. Authenticated cannot claim/send or enqueue handover reminders.
 
 ## Current scope — Day 7
 
