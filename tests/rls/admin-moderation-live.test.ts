@@ -212,14 +212,16 @@ describe('Task 10.3 live admin moderation console', { timeout: LIVE_TIMEOUT }, (
     )).toBe(true);
 
     const cleared = await authenticated<{ admin_unsuspend_user: {
-      outcome: string; admin_suspended: boolean;
+      user_id: string; outcome: string; admin_suspended: boolean;
     } }>(
       fixture.admin.userId,
       'select public.admin_unsuspend_user($1::uuid, $2::text) as admin_unsuspend_user',
       [fixture.parentA.userId, 'appeal_upheld'],
     );
     expect(cleared[0].admin_unsuspend_user).toEqual({
-      outcome: 'unsuspended', admin_suspended: false,
+      user_id: fixture.parentA.userId,
+      outcome: 'unsuspended',
+      admin_suspended: false,
     });
 
     await denied(() => authenticated(fixture.moderatorA.userId,
@@ -258,7 +260,7 @@ describe('Task 10.3 live admin moderation console', { timeout: LIVE_TIMEOUT }, (
       [fixture.parentA.userId, 'lift', 'moderator_forge']));
 
     const resolved = await authenticated<{ admin_resolve_safety_hold: {
-      hold_id: string; outcome: string;
+      hold_id: string; subject_user_id: string; school_id: string; outcome: string;
     } }>(
       fixture.admin.userId,
       'select public.admin_resolve_safety_hold($1::uuid, $2::text, $3::text) as admin_resolve_safety_hold',
@@ -267,6 +269,8 @@ describe('Task 10.3 live admin moderation console', { timeout: LIVE_TIMEOUT }, (
     expect(resolved[0].admin_resolve_safety_hold).toEqual({
       hold_id: hold[0].place_safety_hold,
       outcome: 'lifted',
+      school_id: expect.any(String),
+      subject_user_id: fixture.parentA.userId,
     });
 
     const after = await authenticated<{ list_admin_safety_holds: unknown[] }>(
