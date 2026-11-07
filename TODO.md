@@ -362,10 +362,16 @@ Branch: `wip/day9-listings` (from Day 8 wrap tip `bdb83b3` on `wip/day8-communit
 - `crossSchoolDenials: School B cannot create search get enquire or read School A listings`
 - `noDirectDmlAndCatalog: clients cannot write tables; RLS and free-only columns hold`
 
-### [ ] Task 9.2 — listing interest and fulfilment
+### [x] Task 9.2 — listing status, withdrawal, and moderation
 
-- Same-school interest/claim flow without payment. Status transitions stay free-only. Cross-school denial. RLS + live tests.
+- Author collected/fulfilled/withdraw status transitions without payment; same-school reporting with auto-hide after three unique reports; own-school moderator hide/restore/remove/queue with append-only audit. Cross-school denial. RLS + live tests.
 
-### [ ] Task 9.3 — restricted items and listing moderation
+**Passing live evidence:** `tests/rls/listing-moderation-live.test.ts`, **4/4** on TEST (`npm run test:listing-moderation:live`). Raw: `docs/evidence/TASK_9_2_LISTING_MODERATION_LIVE_RAW.txt`. Migration `0047`. Allowlist after: `187` public / `99` authenticated / `72` internal. Exact passing names:
+- `authorCollectedFulfilledWithdraw: author marks collected fulfilled and withdraws; search drops closed listings`
+- `reportAutoHideRestoreRemove: three unique reports auto-hide; moderator restore remove and queue`
+- `crossSchoolDenials: School B cannot status-change report or moderate School A listings`
+- `noDirectDmlAndCatalog: clients cannot write report or action tables; RLS and paths hold`
 
-- Admin-editable restricted-item catalogue; blocked listings rejected. Own-school moderator withdraw/hide with append-only audit. Cross-school denial. RLS + live tests. Stop after Day 9; wait for **`GO DAY 10`**.
+### [ ] Task 9.3 — restricted items admin edit
+
+- Admin-editable restricted-item catalogue mutations (seed/enforcement already in 9.1; reporting/moderation already in 9.2). Cross-school denial. RLS + live tests. Stop after Day 9; wait for **`GO DAY 10`**.

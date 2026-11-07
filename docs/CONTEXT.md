@@ -67,11 +67,15 @@ Authorised by **TASK DAY 9**. Work branch `wip/day9-listings` from Day 8 wrap ti
 
 ## Current scope — Day 9
 
-Authorised by **TASK DAY 9**. Work branch `wip/day9-listings`. School-scoped free giveaway/lending listings, interest/fulfilment without payment, admin-editable restricted items, and own-school listing moderation. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Task 9.1 evidenced; Tasks 9.2–9.3 remain open.
+Authorised by **TASK DAY 9**. Work branch `wip/day9-listings`. School-scoped free giveaway/lending listings, status fulfilment without payment, admin-editable restricted items, and own-school listing moderation. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 9.1–9.2 evidenced; Task 9.3 remains open.
 
 ### Task 9.1 — school-scoped free listings
 
 Migrations `0045`–`0046` add `listing_restricted_items`, `item_listings`, `listing_enquiries` with RLS SELECT-only, free-only `display_offer_label`, restricted-term enforcement, and create/search/filter/get/enquiry RPCs. Live **5/5** on TEST. Raw: `docs/evidence/TASK_9_1_LISTINGS_LIVE_RAW.txt`. Allowlist after: `174` public / `91` authenticated / `67` internal. No amount, price, currency, payment, photo or phone columns.
+
+### Task 9.2 — listing status, withdrawal, and moderation
+
+Migration `0047` expands listing status to collected/fulfilled/hidden/withdrawn, adds `listing_reports` and append-only `listing_moderation_actions`, author status RPCs, report auto-hide, and moderator hide/restore/remove/queue. Live **4/4** on TEST. Raw: `docs/evidence/TASK_9_2_LISTING_MODERATION_LIVE_RAW.txt`. Allowlist after: `187` public / `99` authenticated / `72` internal.
 
 ### Task 8.1 — school-scoped discussion community
 

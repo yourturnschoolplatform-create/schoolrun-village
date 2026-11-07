@@ -90,7 +90,15 @@
     {"name":"get_item_listing","reason":"read one active own-school free listing","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
     {"name":"create_listing_enquiry","reason":"same-school parent enquires on an active free listing without payment","callerDerivation":"auth.uid() verified membership; not the author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
     {"name":"list_listing_enquiries","reason":"author lists all enquiries or enquirer lists own on a listing","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school listing participants only","searchPath":"pg_catalog"},
-    {"name":"list_restricted_listing_items","reason":"verified member reads active restricted-item catalogue labels","callerDerivation":"auth.uid() verified membership","schoolScope":"global catalogue; membership gate only","searchPath":"pg_catalog"}
+    {"name":"list_restricted_listing_items","reason":"verified member reads active restricted-item catalogue labels","callerDerivation":"auth.uid() verified membership","schoolScope":"global catalogue; membership gate only","searchPath":"pg_catalog"},
+    {"name":"mark_item_listing_collected","reason":"author marks own active free listing collected without payment","callerDerivation":"auth.uid() must be listing author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
+    {"name":"mark_item_listing_fulfilled","reason":"author marks own active free listing fulfilled without payment","callerDerivation":"auth.uid() must be listing author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
+    {"name":"withdraw_item_listing","reason":"author withdraws own active free listing","callerDerivation":"auth.uid() must be listing author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
+    {"name":"report_item_listing","reason":"verified member files unique listing report; auto-hides after three unique reports","callerDerivation":"auth.uid() verified membership; not author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
+    {"name":"hide_item_listing","reason":"own-school moderator hides active listing","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school only","searchPath":"pg_catalog"},
+    {"name":"restore_item_listing","reason":"own-school moderator restores hidden listing","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school hidden listing","searchPath":"pg_catalog"},
+    {"name":"remove_item_listing","reason":"own-school moderator permanently withdraws listing","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school active or hidden listing","searchPath":"pg_catalog"},
+    {"name":"list_listing_moderation_queue","reason":"own-school moderator lists hidden listings with report counts","callerDerivation":"auth.uid(); school from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -159,6 +167,11 @@
     {"name":"guard_listing_enquiries","reason":"trigger-only append-only listing enquiries","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
     {"name":"listing_caller_membership","reason":"internal verified membership derivation for listing RPCs","callerDerivation":"definer listing RPCs only","schoolScope":"caller verified school","searchPath":"pg_catalog"},
     {"name":"item_listing_json","reason":"internal listing projection with free offer label only; no money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised listing","searchPath":"pg_catalog"},
-    {"name":"listing_enquiry_json","reason":"internal enquiry projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised enquiry","searchPath":"pg_catalog"}
+    {"name":"listing_enquiry_json","reason":"internal enquiry projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised enquiry","searchPath":"pg_catalog"},
+    {"name":"guard_listing_moderation","reason":"trigger-only append-only listing reports and moderation actions","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
+    {"name":"listing_apply_status","reason":"internal gated listing status transition helper","callerDerivation":"definer listing status/moderation RPCs only","schoolScope":"authorised listing","searchPath":"pg_catalog"},
+    {"name":"listing_require_moderator_membership","reason":"internal verified moderator membership derivation for listing moderation","callerDerivation":"definer listing moderation RPCs only","schoolScope":"caller moderator school","searchPath":"pg_catalog"},
+    {"name":"listing_moderation_queue_item_json","reason":"internal moderation queue projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised queue row","searchPath":"pg_catalog"},
+    {"name":"listing_author_transition","reason":"internal author collected fulfilled withdraw transition helper","callerDerivation":"definer author status RPCs only","schoolScope":"own listing","searchPath":"pg_catalog"}
   ]
 }

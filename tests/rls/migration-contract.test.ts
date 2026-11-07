@@ -20,6 +20,7 @@ const foundationTables = [
   'community_reports', 'community_moderation_actions',
   'handover_reminder_deliveries',
   'listing_restricted_items', 'item_listings', 'listing_enquiries',
+  'listing_reports', 'listing_moderation_actions',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -46,6 +47,7 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0044_day8_handover_reminder_delivery.sql'), 'utf8'),
   readFile(resolve('db/migrations/0045_day9_item_listings.sql'), 'utf8'),
   readFile(resolve('db/migrations/0046_day9_listing_audit_payload.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0047_day9_listing_status_moderation.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -398,6 +400,28 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(listings).toMatch(/baby walker/i);
     expect(listings).toMatch(/set search_path = pg_catalog/i);
     expect(listings).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds listing collected fulfilled withdrawal reporting and moderation without money fields', async () => {
+    const moderation = (await readFile(resolve('db/migrations/0047_day9_listing_status_moderation.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(moderation).toMatch(/create table public\.listing_reports/i);
+    expect(moderation).toMatch(/create table public\.listing_moderation_actions/i);
+    expect(moderation).toMatch(/alter table public\.listing_reports enable row level security/i);
+    expect(moderation).toMatch(/alter table public\.listing_moderation_actions enable row level security/i);
+    expect(moderation).toMatch(/function public\.mark_item_listing_collected/i);
+    expect(moderation).toMatch(/function public\.mark_item_listing_fulfilled/i);
+    expect(moderation).toMatch(/function public\.withdraw_item_listing/i);
+    expect(moderation).toMatch(/function public\.report_item_listing/i);
+    expect(moderation).toMatch(/function public\.hide_item_listing/i);
+    expect(moderation).toMatch(/function public\.restore_item_listing/i);
+    expect(moderation).toMatch(/function public\.remove_item_listing/i);
+    expect(moderation).toMatch(/function public\.list_listing_moderation_queue/i);
+    expect(moderation).toMatch(/collected|fulfilled/i);
+    expect(moderation).toMatch(/set search_path = pg_catalog/i);
+    expect(moderation).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });

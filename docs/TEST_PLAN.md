@@ -211,6 +211,10 @@ Baseline milestone verification reused the green Day 8 wrap-up gate and re-ran `
 
 School-scoped free giveaway/lending listings with restricted-item enforcement, search/filter and enquiries on TEST. Migrations `0045_day9_item_listings.sql`, `0046_day9_listing_audit_payload.sql`. Live suite `npm run test:listings:live`: **5/5** pass. Raw: `docs/evidence/TASK_9_1_LISTINGS_LIVE_RAW.txt`. Allowlist after: `174` public / `91` authenticated / `67` internal. Same-school create/search/filter/get/enquiry; free-only `display_offer_label`; restricted car seats/cots/bassinets/bunk beds/baby walkers/recalled items rejected; School B denied School A; direct DML denied; RLS SELECT-only; no amount/price/currency/payment/photo columns. DEV not migrated. Tasks 9.2–9.3 not started.
 
+## Task 9.2 — listing status, withdrawal, and moderation — 2026-11-07 (TEST only)
+
+Listing collected/fulfilled/withdraw author transitions, reporting with auto-hide, and own-school moderator review on TEST. Migration `0047_day9_listing_status_moderation.sql`. Live suite `npm run test:listing-moderation:live`: **4/4** pass. Raw: `docs/evidence/TASK_9_2_LISTING_MODERATION_LIVE_RAW.txt`. Allowlist after: `187` public / `99` authenticated / `72` internal. Author status closes search visibility; third unique report auto-hides; moderator restore/remove/hide/queue; parents cannot forge moderator actions; School B denied School A mutations and sees empty foreign queue/search; direct DML denied; no amount/price/currency/payment/photo columns. DEV not migrated. Task 9.3 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

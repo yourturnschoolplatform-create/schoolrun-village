@@ -176,6 +176,19 @@ const calls: Record<string, string> = {
   listing_caller_membership: 'select public.listing_caller_membership()',
   item_listing_json: 'select public.item_listing_json(null::public.item_listings)',
   listing_enquiry_json: 'select public.listing_enquiry_json(null::public.listing_enquiries)',
+  mark_item_listing_collected: `select public.mark_item_listing_collected('${instance}'::uuid)`,
+  mark_item_listing_fulfilled: `select public.mark_item_listing_fulfilled('${instance}'::uuid)`,
+  withdraw_item_listing: `select public.withdraw_item_listing('${instance}'::uuid)`,
+  report_item_listing: `select public.report_item_listing('${instance}'::uuid, 'Smoke listing report reason')`,
+  hide_item_listing: `select public.hide_item_listing('${instance}'::uuid)`,
+  restore_item_listing: `select public.restore_item_listing('${instance}'::uuid)`,
+  remove_item_listing: `select public.remove_item_listing('${instance}'::uuid)`,
+  list_listing_moderation_queue: 'select public.list_listing_moderation_queue()',
+  guard_listing_moderation: 'select public.guard_listing_moderation()',
+  listing_apply_status: `select public.listing_apply_status('${instance}'::uuid, 'hidden', 'moderation')`,
+  listing_require_moderator_membership: 'select public.listing_require_moderator_membership()',
+  listing_moderation_queue_item_json: 'select public.listing_moderation_queue_item_json(null::public.item_listings, 0)',
+  listing_author_transition: `select public.listing_author_transition('${instance}'::uuid, 'withdrawn', 'withdrawn')`,
 };
 
 describe('allowlist RPC call coverage', () => {

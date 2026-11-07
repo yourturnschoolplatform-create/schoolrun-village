@@ -980,6 +980,14 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       create_listing_enquiry: { sql: 'select public.create_listing_enquiry($1::uuid, $2::text)', values: [fixture.schoolA, 'Can collect Friday afternoon'] },
       list_listing_enquiries: { sql: 'select public.list_listing_enquiries($1::uuid)', values: [fixture.schoolA] },
       list_restricted_listing_items: { sql: 'select public.list_restricted_listing_items()' },
+      mark_item_listing_collected: { sql: 'select public.mark_item_listing_collected($1::uuid)', values: [fixture.schoolA] },
+      mark_item_listing_fulfilled: { sql: 'select public.mark_item_listing_fulfilled($1::uuid)', values: [fixture.schoolA] },
+      withdraw_item_listing: { sql: 'select public.withdraw_item_listing($1::uuid)', values: [fixture.schoolA] },
+      report_item_listing: { sql: 'select public.report_item_listing($1::uuid, $2::text)', values: [fixture.schoolA, 'Contact scan listing report'] },
+      hide_item_listing: { sql: 'select public.hide_item_listing($1::uuid)', values: [fixture.schoolA] },
+      restore_item_listing: { sql: 'select public.restore_item_listing($1::uuid)', values: [fixture.schoolA] },
+      remove_item_listing: { sql: 'select public.remove_item_listing($1::uuid)', values: [fixture.schoolA] },
+      list_listing_moderation_queue: { sql: 'select public.list_listing_moderation_queue()' },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;
