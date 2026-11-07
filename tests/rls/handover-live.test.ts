@@ -615,7 +615,8 @@ describe('Task 5.3 live two-party handover and missing-confirmation reminders', 
           [`public.${table}`])).rows).toEqual([{ granted: true }]);
         await denied(() => query(`update public.${table} set school_id = school_id where swap_leg_id = $1`, [swap.legId]), ['55000']);
         await denied(() => query(`delete from public.${table} where swap_leg_id = $1`, [swap.legId]), ['55000']);
-        await denied(() => query(`truncate public.${table}`), ['55000']);
+        // Truncate may raise guard 55000 or FK 0A000 once delivery ledger references reminders.
+        await denied(() => query(`truncate public.${table}`), ['55000', '0A000']);
       }
     });
     expect(await facts(swap)).toEqual(before);

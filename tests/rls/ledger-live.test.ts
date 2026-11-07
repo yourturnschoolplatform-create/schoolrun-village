@@ -723,14 +723,19 @@ describe('Task 5.1 live immutable membership-pair ledger', { timeout: LIVE_TIMEO
       from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and p.proname ~ '(complet|handover)'
         and has_function_privilege('authenticated', p.oid, 'EXECUTE') order by p.proname`);
-    // Task 5.3 authorises reminder-only refresh, not a raw completion command.
-    // Keep the exact allowlist, zero-argument/path checks and no-completion-DML
-    // assertion instead of silently dropping this foundation protection.
-    expect(completionRPCs.map((row) => row.proname)).toEqual(['refresh_my_handover_reminders']);
-    expect(completionRPCs[0].arguments).toBe(0);
-    expect(completionRPCs[0].path).toEqual(['search_path=pg_catalog']);
-    expect(completionRPCs[0].body).not.toMatch(/(?:update|insert\s+into|delete\s+from)\s+public\.swap_legs/i);
-    expect(allowlist.authenticated.some((entry) => entry.name === 'refresh_my_handover_reminders')).toBe(true);
+    // Task 5.3/8.3 authorise reminder refresh and delivery listing, not a raw
+    // completion command. Keep exact allowlist, zero-argument/path checks and
+    // no-completion-DML instead of silently dropping this foundation protection.
+    expect(completionRPCs.map((row) => row.proname)).toEqual([
+      'list_my_handover_reminder_deliveries',
+      'refresh_my_handover_reminders',
+    ]);
+    for (const row of completionRPCs) {
+      expect(row.arguments).toBe(0);
+      expect(row.path).toEqual(['search_path=pg_catalog']);
+      expect(row.body).not.toMatch(/(?:update|insert\s+into|delete\s+from)\s+public\.swap_legs/i);
+      expect(allowlist.authenticated.some((entry) => entry.name === row.proname)).toBe(true);
+    }
     await denied(() => authenticated(fixture.requester.userId,
       'select public.get_my_ledger($1::uuid)', [fixture.parentB.userId]), ['42883']);
   });

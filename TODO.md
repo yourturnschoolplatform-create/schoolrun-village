@@ -115,7 +115,7 @@ Passing test-project live names:
 
 **G6 — 2026-11-07.** User confirmed G1–G5 evidence. Merged `wip/day4-stabilisation` into `main` at `898da403a51125ca44add057eaf0d576779cd248`. Day 2/3/4 `[x]` sub-items above cite only the named passing live tests; aggregate Day 2/3/4 remain `[~]`. Confirmed G4 failures stay open. No new migration or live rerun. Day 5 is not started by G6. Details: `docs/G6_MERGE_REPORT.md`.
 
-## [~] Day 5 — ledger, consent, handover, notice, and report
+## [x] Day 5 — ledger, consent, handover, notice, and report
 
 - Create append-only `swap_ledger_entries` with counts only. Entries are pair-specific and non-transferable, never carry money/price/amount, expire after eight weeks, schedule a week-six reminder job, and expire silently. The ledger must never create a negative balance across a pair or transfer balance to another pair.
 - Default communication to email relay. After acceptance, require plain-language, versioned, timestamped, revocable mobile-number-sharing consent limited to the swap partner and specifically chosen backups. Revoking consent ends that swap. No school notice may contain a mobile number.
@@ -296,6 +296,8 @@ Branch: `wip/day7-notices-retention` (from Day 6 wrap tip `5f9de3d` on `wip/day6
 ## [x] Day 8 — discussion community and handover reminder delivery
 
 Branch: `wip/day8-community` (from Day 7 wrap tip `7dd7e28` on `wip/day7-notices-retention`). Apply new SQL/fixtures to TEST only. No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only. Community posts stay school-scoped and must not expose phone, email, address, trust score, or contact data.
+
+**Day 8 wrap-up — 2026-11-07, TEST only.** Full `npm run verify` exit **0**: TypeScript/ESLint clean; unit **47/47**; allowlist `160/85/59`; RLS **429/429** across 18 files (migration-contract, live-rls, rpc-smoke, invitation/g3, ledger, contact, handover, trust, trust-deltas, trust-holds, school-notice, email-relay, retention-purge, running-late, community, community-moderation, handover-reminder-delivery). Raw: `docs/evidence/DAY8_WRAPUP_VERIFY_RAW.txt`. Tasks 8.1–8.3 evidenced `[x]`. No new migration in this wrap-up. Wrap-up stabilised ledger completion-name allowlist for `list_my_handover_reminder_deliveries` and handover truncate denial for FK `0A000`. DEV not migrated. Wait for **`GO DAY 9`**.
 
 **Baseline (Day 8 start):** Day 7 wrap-up `npm run verify` exit 0 on TEST (47 unit / 376 RLS; allowlist 132/72/44). Day 8 start verification raw: `docs/evidence/DAY8_START_VERIFY_RAW.txt`. No new migration in this start task.
 

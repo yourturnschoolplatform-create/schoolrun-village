@@ -110,7 +110,7 @@ Independent review found a possible unordered unique-analytics-key lock cycle ac
 
 ### Task 5.3 foundation assertion reconciliation
 
-The pre-handover ledger catalogue test expected no authenticated function whose name matched `(complet|handover)`. Task 5.3 deliberately introduces `refresh_my_handover_reminders`, which creates reminder records but never writes completion. The assertion now permits exactly that named zero-argument, pg_catalog-only, allowlisted function, rejects any additional matching function and asserts its body cannot UPDATE/INSERT/DELETE swap_legs. It retains all original ledger trigger privilege/path checks, direct completion-write denial and forged getter-argument denial. Both role-bound confirmation RPCs have positive/negative live tests in the handover suite. No legacy C3/G1 test or failing acceptance assertion is changed or skipped.
+The pre-handover ledger catalogue test expected no authenticated function whose name matched `(complet|handover)`. Task 5.3 deliberately introduces `refresh_my_handover_reminders`, and Task 8.3 adds `list_my_handover_reminder_deliveries`; both create/list reminder delivery state and never write completion. The assertion permits exactly those named zero-argument, pg_catalog-only, allowlisted functions, rejects any additional matching function and asserts their bodies cannot UPDATE/INSERT/DELETE swap_legs. It retains all original ledger trigger privilege/path checks, direct completion-write denial and forged getter-argument denial. Both role-bound confirmation RPCs have positive/negative live tests in the handover suite. No legacy C3/G1 test or failing acceptance assertion is changed or skipped.
 
 
 ## Task 5.3 final evidence — 2026-11-03 (TEST only)
@@ -196,6 +196,10 @@ Community reporting, auto-hide after three unique reports, and own-school modera
 ## Task 8.3 — handover reminder delivery — 2026-11-07 (TEST only)
 
 Handover reminder delivery onto the email-relay queue after live eligibility recheck on TEST. Migration `0044_day8_handover_reminder_delivery.sql`. Live suite `npm run test:handover-reminder-delivery:live`: **5/5** pass. Raw: `docs/evidence/TASK_8_3_HANDOVER_REMINDER_DELIVERY_LIVE_RAW.txt`. Allowlist after: `160` public / `85` authenticated / `59` internal. Service `deliver_due_handover_reminders` queues `handover_reminder` only when still eligible; completed/cancelled suppressed; authenticated cannot enqueue/claim/send; School B denied School A delivery reads; direct DML denied; no amount/price/currency columns. DEV not migrated. Aggregate Day 8 and Day 5 residual delivery `[x]`. Day 9 not started.
+
+## Day 8 wrap-up — 2026-11-07 (TEST only)
+
+Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 160 public functions, 85 authenticated entries, 59 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **429/429** across 18 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live, school-notice-live, email-relay-live, retention-purge-live, running-late-live, community-live, community-moderation-live, handover-reminder-delivery-live). Raw: `docs/evidence/DAY8_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. Wrap-up also extended the ledger completion-name allowlist for Task 8.3 `list_my_handover_reminder_deliveries` and accepted FK `0A000` alongside guard `55000` for privileged handover truncate denial. DEV not migrated. Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]`. Day 9 authorised only by **`GO DAY 9`**.
 
 ## G4 evidence — 2026-11-06 (TEST only)
 

@@ -59,7 +59,11 @@ Authorised by **TASK DAY 8**. Work branch `wip/day8-community` from Day 7 wrap t
 
 ## Current scope — Day 8
 
-Authorised by **TASK DAY 8**. Work branch `wip/day8-community`. School-scoped discussion threads with own-school moderation, plus Day 5 residual handover reminder delivery via the Day 7 email-relay path after live eligibility recheck. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 8.1–8.3 evidenced; Day 8 aggregate complete. Day 9 not started.
+Authorised by **TASK DAY 8**. Work branch `wip/day8-community`. School-scoped discussion threads with own-school moderation, plus Day 5 residual handover reminder delivery via the Day 7 email-relay path after live eligibility recheck. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 8.1–8.3 evidenced; Day 8 wrap-up full TEST verify exit 0 (47 unit / 429 RLS; allowlist 160/85/59). Raw: `docs/evidence/DAY8_WRAPUP_VERIFY_RAW.txt`. Day 9 not started — wait for **`GO DAY 9`**.
+
+## Day 8 wrap-up — 2026-11-07
+
+Full TEST `npm run verify` exit 0 (47 unit, 429 RLS, allowlist 160/85/59). Tasks 8.1–8.3 evidenced; aggregate Day 8 `[x]`. Aggregate Day 5 residual delivery closed `[x]`. Raw: `docs/evidence/DAY8_WRAPUP_VERIFY_RAW.txt`. DEV not migrated. Day 9 authorised only by **`GO DAY 9`**.
 
 ### Task 8.1 — school-scoped discussion community
 
