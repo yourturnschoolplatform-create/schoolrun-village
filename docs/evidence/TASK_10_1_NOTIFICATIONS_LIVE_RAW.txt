@@ -1,0 +1,19 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help
+ npmrc` for supported config options.
+위치 줄:1 문자:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> yourturn@0.1.0 test:notifications:live
+> npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/notifications-live.test.ts --reporter=verbose
+
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for
+ supported config options.
+
+> yourturn@0.1.0 db:migrate:test
+> tsx scripts/run-migrations.ts --target=rls-test
+
+Migration failed while processing connection (safe error code: ENOTFOUND). No database URL or key was logged.

@@ -991,6 +991,9 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       create_restricted_listing_item: { sql: "select public.create_restricted_listing_item('contact_scan_item', 'Contact scan restricted', array['contact scan item'])" },
       update_restricted_listing_item: { sql: 'select public.update_restricted_listing_item($1::uuid, $2::text, $3::text[], $4::boolean)', values: [fixture.schoolA, 'Contact scan label', ['contact scan term'], true] },
       list_all_restricted_listing_items: { sql: 'select public.list_all_restricted_listing_items()' },
+      list_my_notifications: { sql: 'select public.list_my_notifications(false)' },
+      mark_notification_read: { sql: 'select public.mark_notification_read($1::uuid)', values: [fixture.schoolA] },
+      mark_all_notifications_read: { sql: 'select public.mark_all_notifications_read()' },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;

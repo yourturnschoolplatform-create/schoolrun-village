@@ -89,7 +89,11 @@ Authorised by **TASK DAY 10**. Work branch `wip/day10-admin-notifications` from 
 
 ## Current scope — Day 10
 
-Authorised by **TASK DAY 10**. Work branch `wip/day10-admin-notifications`. Notification delivery/preferences and global admin console read/mutation surfaces. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location; notification payloads stay phone-free. Tasks 10.1–10.3 remain open.
+Authorised by **TASK DAY 10**. Work branch `wip/day10-admin-notifications`. Notification delivery/preferences and global admin console read/mutation surfaces. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location; notification payloads stay phone-free. Tasks 10.2–10.3 remain open; Task 10.1 is `[~]`.
+
+### Task 10.1 — notification inbox ledger (schema/RPC slice)
+
+Migration `0049` adds `public.notifications` with owner SELECT + read-only UPDATE RLS, system-only enqueue (GUC `yourturn.notification_enqueue`), and authenticated list/mark-one/mark-all RPCs. Allowlist source: authenticated **105** / internal **79** (expected public **200** after migrate). Live suite `tests/rls/notifications-live.test.ts` and `npm run test:notifications:live` ready but blocked: TEST migrate `ENOTFOUND` (URL not logged). Offline evidence: contract **86/86**, unit **47/47**. Preferences and due-delivery orchestration remain. Raw: `docs/evidence/TASK_10_1_MIGRATE_RAW.txt`, `docs/evidence/TASK_10_1_NOTIFICATIONS_LIVE_RAW.txt`.
 
 ### Task 8.1 — school-scoped discussion community
 

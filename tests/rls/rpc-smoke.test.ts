@@ -195,6 +195,13 @@ const calls: Record<string, string> = {
   listing_restricted_item_json: 'select public.listing_restricted_item_json(null::public.listing_restricted_items)',
   listing_require_admin: 'select public.listing_require_admin()',
   listing_normalise_match_terms: "select public.listing_normalise_match_terms(array['term one'])",
+  list_my_notifications: 'select public.list_my_notifications(false)',
+  mark_notification_read: `select public.mark_notification_read('${instance}'::uuid)`,
+  mark_all_notifications_read: 'select public.mark_all_notifications_read()',
+  notification_metadata_is_safe: "select public.notification_metadata_is_safe('{}'::jsonb)",
+  guard_notifications: 'select public.guard_notifications()',
+  notification_json: 'select public.notification_json(null::public.notifications)',
+  enqueue_user_notification: `select public.enqueue_user_notification('${north}'::uuid, '${northSchool}'::uuid, 'system', 'Smoke title', 'Smoke body', '{}'::jsonb)`,
 };
 
 describe('allowlist RPC call coverage', () => {

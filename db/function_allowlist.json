@@ -101,7 +101,10 @@
     {"name":"list_listing_moderation_queue","reason":"own-school moderator lists hidden listings with report counts","callerDerivation":"auth.uid(); school from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
     {"name":"create_restricted_listing_item","reason":"global admin creates restricted catalogue entry with match terms","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue; no school argument","searchPath":"pg_catalog"},
     {"name":"update_restricted_listing_item","reason":"global admin updates label match terms or soft-deactivates restricted entry","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue; no school argument","searchPath":"pg_catalog"},
-    {"name":"list_all_restricted_listing_items","reason":"global admin lists full restricted catalogue including inactive and match terms","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue","searchPath":"pg_catalog"}
+    {"name":"list_all_restricted_listing_items","reason":"global admin lists full restricted catalogue including inactive and match terms","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue","searchPath":"pg_catalog"},
+    {"name":"list_my_notifications","reason":"caller lists own in-app notifications optionally unread-only","callerDerivation":"auth.uid(); no school arguments","schoolScope":"own user_id rows only","searchPath":"pg_catalog"},
+    {"name":"mark_notification_read","reason":"caller marks one own notification read","callerDerivation":"auth.uid(); notification id is not caller identity","schoolScope":"own user_id row only","searchPath":"pg_catalog"},
+    {"name":"mark_all_notifications_read","reason":"caller marks all own unread notifications read","callerDerivation":"auth.uid(); no arguments","schoolScope":"own user_id rows only","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -178,6 +181,10 @@
     {"name":"listing_author_transition","reason":"internal author collected fulfilled withdraw transition helper","callerDerivation":"definer author status RPCs only","schoolScope":"own listing","searchPath":"pg_catalog"},
     {"name":"listing_restricted_item_json","reason":"internal restricted catalogue projection without money fields","callerDerivation":"definer admin RPCs only","schoolScope":"authorised catalogue row","searchPath":"pg_catalog"},
     {"name":"listing_require_admin","reason":"internal global admin gate for restricted catalogue mutations","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"listing_normalise_match_terms","reason":"internal match-term normalisation and privacy filter for restricted catalogue","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"}
+    {"name":"listing_normalise_match_terms","reason":"internal match-term normalisation and privacy filter for restricted catalogue","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"},
+    {"name":"notification_metadata_is_safe","reason":"internal safe metadata shape check for notifications","callerDerivation":"definer helpers and guards only","schoolScope":"none","searchPath":"pg_catalog"},
+    {"name":"guard_notifications","reason":"trigger-only notification immutability and system enqueue gate","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
+    {"name":"notification_json","reason":"internal notification projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised notification","searchPath":"pg_catalog"},
+    {"name":"enqueue_user_notification","reason":"system/service enqueue of phone-free in-app notification; no anon/authenticated EXECUTE","callerDerivation":"trusted job or definer callers; anon/authenticated EXECUTE revoked","schoolScope":"recipient and school supplied by trusted caller","searchPath":"pg_catalog"}
   ]
 }

@@ -393,9 +393,11 @@ Branch: `wip/day10-admin-notifications` (from Day 9 wrap tip `ea2fdcc` on `wip/d
 - Global admin console surfaces for catalogue/policy/membership operations already gated by `is_admin()`, with cross-school isolation for school-scoped data and audit logging.
 - Every new table RLS + live test; every new function grants, pg_catalog-only path, allowlist, cross-school live test.
 
-### [ ] Task 10.1 — notification delivery and preferences
+### [~] Task 10.1 — notification delivery and preferences
 
 - Persist notification preference and delivery ledger with RLS. Deliver due in-app/email-relay notifications without phones, money fields, or live location. Cross-school denial. Explicit grants, pg_catalog-only path, allowlist, live tests.
+- **Done (source):** Migration `0049_day10_user_notifications.sql` — `notifications` table, owner SELECT/UPDATE(read) RLS, system `enqueue_user_notification`, owner `list_my_notifications` / `mark_notification_read` / `mark_all_notifications_read`; allowlist +3 auth / +4 internal; live suite + smoke/contact/contract wired. Offline: typecheck/lint/unit **47/47**, migration-contract **86/86**.
+- **Remains:** Apply `0049` + live `npm run test:notifications:live` on reachable TEST (`ENOTFOUND` on current agent `SUPABASE_RLS_TEST_DATABASE_URL`; HOST_LEN=19). Preference rows and due-event delivery orchestration not in this slice. Do not mark `[x]` until live names pass.
 
 ### [ ] Task 10.2 — admin console read models
 

@@ -229,6 +229,14 @@ Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47
 
 Baseline milestone: last green Day 9 wrap-up full verify on TEST (47 unit / 482 RLS; allowlist 193/102/75). Day 10 start re-ran `npm run verify`: typecheck/lint/unit **47/47** PASS; `db:migrate:test` failed with safe error `ENOTFOUND` (TEST DB host unreachable; URL not logged). Raw: `docs/evidence/DAY10_START_VERIFY_RAW.txt`. No new migration in this start task. Tasks 10.1–10.3 are open; no Day 10 feature SQL or live suite exists yet at branch open. Full baseline exit 0 remains pending reachable `SUPABASE_RLS_TEST_DATABASE_URL`.
 
+## Task 10.1 — user notifications ledger (schema/RPC) — 2026-11-07 (TEST only; live blocked)
+
+Owner in-app notifications table + RLS + list/mark RPCs on source. Migration `0049_day10_user_notifications.sql`. Allowlist diff: +3 authenticated (`list_my_notifications`, `mark_notification_read`, `mark_all_notifications_read`), +4 internal (`notification_metadata_is_safe`, `guard_notifications`, `notification_json`, `enqueue_user_notification`). Source counts: authenticated **105** / internal **79** (expected public **200** after migrate; live allowlist verify not run).
+
+Offline: typecheck PASS; lint PASS; unit **47/47** (`docs/evidence/TASK_10_1_UNIT_RAW.txt`); migration-contract **86/86** (`docs/evidence/TASK_10_1_CONTRACT_RAW.txt`).
+
+Live blocked: `db:migrate:test` and `npm run test:notifications:live` fail with safe `ENOTFOUND` (HOST_LEN=19; URL not logged). Raw: `docs/evidence/TASK_10_1_MIGRATE_RAW.txt`, `docs/evidence/TASK_10_1_NOTIFICATIONS_LIVE_RAW.txt`. Suite covers owner list/mark, peer/School B denial, blocked INSERT/DELETE/enqueue, catalog grants/search_path. Preferences and due-event delivery not in this slice. DEV not migrated. Task 10.1 remains `[~]` until live names pass.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`
