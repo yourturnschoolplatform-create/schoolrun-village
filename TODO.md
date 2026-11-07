@@ -239,10 +239,19 @@ Branch: `wip/day7-notices-retention` (from Day 6 wrap tip `5f9de3d` on `wip/day6
 - Close Day 5/6 operational residuals that are not Day 8 delivery: phone-free school notice copy, configurable outbound email relay transport (server admin module only), 90-day purge of departure/contact/notice logs after a swap ends, and running-late notice posting that feeds late trust deltas (−2 with prior notice before window start, else −5).
 - Every new table: RLS + live test. Every new function: explicit grants, `search_path = pg_catalog` only, allowlist entry, cross-school live test. Non-privileged `authenticated` + synthetic JWT claims.
 
-### [ ] Task 7.1 — phone-free school notice
+### [x] Task 7.1 — phone-free school notice and moderation
 
-- Generate a copyable school notice from an accepted swap using only year level, date, and collector display name. Exclude phone number, email, address, child nickname, trust score, price, and contact data.
-- Persist notice generation/access logs needed for the 90-day retention policy without storing forbidden fields. RLS + live cross-school denial. Explicit grants, pg_catalog-only path, allowlist entry.
+- Generate a copyable school notice from an accepted swap using only year level(s), date, and collector display name. Exclude phone number, email, address, child nickname, trust score, price, and contact data.
+- Persist notice generation/access logs needed for the 90-day retention policy without storing forbidden fields. School moderator queue + withdraw. RLS + live cross-school denial. Explicit grants, pg_catalog-only path, allowlist entry.
+
+**Passing live evidence:** `tests/rls/school-notice-live.test.ts`, **6/6** on TEST (`npm run test:school-notice:live`). Raw: `docs/evidence/TASK_7_1_SCHOOL_NOTICE_LIVE_RAW.txt`. Migrations `0033`–`0034`. Allowlist after: `107` public / `63` authenticated / `28` internal. Exact passing names:
+
+- `generatePhoneFreeNotice: accepted participant creates year-date-collector copy without nickname or contact`
+- `moderationQueueAndWithdraw: school moderator lists and withdraws; generator cannot revive by regenerate until after withdraw`
+- `crossSchoolAndRoleDenials: stranger School B parent/moderator and anon cannot generate read or moderate School A notices`
+- `noDirectDmlAndImmutable: clients cannot insert update delete truncate notices or access logs`
+- `listMineAndGet: participants list and get own notice; payload stays phone-free`
+- `catalogAllowlistAndSearchPath: new tables RLS SELECT-only; RPCs allowlisted with pg_catalog paths; no money fields`
 
 ### [ ] Task 7.2 — outbound email relay transport
 

@@ -53,6 +53,10 @@ Authorised by **TASK DAY 7**. Work branch `wip/day7-notices-retention` from Day 
 
 Authorised by **TASK DAY 7**. Work branch `wip/day7-notices-retention`. Closing Day 5/6 residuals that are not reminder delivery. Child data remains nickname + year level only; notices stay phone-free; no amount/price/currency; safety features stay free; no live location.
 
+### Task 7.1 — phone-free school notices and moderation
+
+Migrations `0033`–`0034` add `school_notices` and `school_notice_access_logs` with RLS, phone-free generate/get/list RPCs, school moderator queue and withdraw. Live **6/6** on TEST. Raw: `docs/evidence/TASK_7_1_SCHOOL_NOTICE_LIVE_RAW.txt`. Tasks 7.2–7.4 remain open. Day 8 not started.
+
 ### Task 6.1 — score ledger and band projection
 
 Migrations `0027`–`0030` add append-only `trust_score_events`, internal `apply_trust_score_delta` (clamped −100…150, source-idempotent), `get_my_trust` (own score+band), and `get_peer_trust_band` (same-school band only). Peers cannot read numeric scores via RPC, profile select, or event rows.

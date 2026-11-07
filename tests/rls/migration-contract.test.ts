@@ -12,6 +12,7 @@ const foundationTables = [
   'contact_consents', 'contact_consent_backups', 'swap_cancellation_events', 'swap_contact_notifications',
   'swap_leg_confirmations', 'swap_leg_reminders', 'trust_score_events',
   'trust_incident_reports', 'trust_safety_holds', 'trust_appeals', 'trust_trip_penalties',
+  'school_notices', 'school_notice_access_logs',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -27,6 +28,7 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0020_day5_two_step_handover.sql'), 'utf8'),
   readFile(resolve('db/migrations/0027_day6_trust_score_engine.sql'), 'utf8'),
   readFile(resolve('db/migrations/0032_day6_trust_holds_appeals.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0033_day7_school_notices.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -227,6 +229,24 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(holds).toMatch(/set search_path = pg_catalog/i);
     expect(holds).not.toMatch(
       /\b(amount|price|currency|money|fee|payment)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds phone-free school notices with school-scoped moderation', async () => {
+    const notices = (await readFile(resolve('db/migrations/0033_day7_school_notices.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(notices).toMatch(/create table public\.school_notices/i);
+    expect(notices).toMatch(/create table public\.school_notice_access_logs/i);
+    expect(notices).toMatch(/alter table public\.school_notices enable row level security/i);
+    expect(notices).toMatch(/alter table public\.school_notice_access_logs enable row level security/i);
+    expect(notices).toMatch(/function public\.generate_school_notice/i);
+    expect(notices).toMatch(/function public\.list_school_notice_moderation_queue/i);
+    expect(notices).toMatch(/function public\.withdraw_school_notice/i);
+    expect(notices).toMatch(/year_levels/i);
+    expect(notices).toMatch(/collector_display_name/i);
+    expect(notices).toMatch(/set search_path = pg_catalog/i);
+    expect(notices).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|email|address)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
 });

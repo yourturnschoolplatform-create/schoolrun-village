@@ -57,7 +57,12 @@
     {"name":"resolve_safety_hold","reason":"moderator lifts or upholds active safety hold","callerDerivation":"auth.uid() moderator/admin","schoolScope":"own-school hold","searchPath":"pg_catalog"},
     {"name":"file_trust_appeal","reason":"penalised parent appeals confirmed report or hold within 48h","callerDerivation":"auth.uid() as appellant","schoolScope":"own school target","searchPath":"pg_catalog"},
     {"name":"resolve_trust_appeal","reason":"moderator upholds or dismisses open appeal","callerDerivation":"auth.uid() moderator/admin","schoolScope":"own-school appeal","searchPath":"pg_catalog"},
-    {"name":"user_has_active_safety_hold","reason":"RLS/helper swap-disable check","callerDerivation":"auth.uid() via matching RPCs","schoolScope":"school-scoped hold lookup","searchPath":"pg_catalog"}
+    {"name":"user_has_active_safety_hold","reason":"RLS/helper swap-disable check","callerDerivation":"auth.uid() via matching RPCs","schoolScope":"school-scoped hold lookup","searchPath":"pg_catalog"},
+    {"name":"generate_school_notice","reason":"create or return phone-free school collection notice for accepted swap leg","callerDerivation":"auth.uid() must be helper or requester","schoolScope":"accepted same-school participant; year levels and collector display name only","searchPath":"pg_catalog"},
+    {"name":"get_school_notice","reason":"read phone-free school notice and log access","callerDerivation":"auth.uid() participant moderator or admin","schoolScope":"own-school notice only","searchPath":"pg_catalog"},
+    {"name":"list_my_school_notices","reason":"list caller school notices for own accepted legs","callerDerivation":"auth.uid(); no arguments","schoolScope":"generator or leg participant","searchPath":"pg_catalog"},
+    {"name":"list_school_notice_moderation_queue","reason":"moderator school notice queue","callerDerivation":"auth.uid(); school derived from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
+    {"name":"withdraw_school_notice","reason":"generator or school moderator withdraws an active notice","callerDerivation":"auth.uid() generator moderator or admin","schoolScope":"own-school notice","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -82,6 +87,11 @@
     {"name":"guard_trust_trip_penalties","reason":"trigger-only append-only no-show trip obligations","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
     {"name":"apply_confirmed_no_show_effects","reason":"internal confirm path for no-show score and trip penalties","callerDerivation":"resolve/sweep only","schoolScope":"confirmed report school","searchPath":"pg_catalog"},
     {"name":"apply_confirmed_false_report_effects","reason":"internal confirm path for false-report score delta","callerDerivation":"resolve/sweep only","schoolScope":"confirmed report school","searchPath":"pg_catalog"},
-    {"name":"sweep_provisional_trust_reports","reason":"service/cron undisputed provisional auto-confirm","callerDerivation":"trusted job; anon/authenticated EXECUTE revoked","schoolScope":"server-selected provisional rows past deadline","searchPath":"pg_catalog"}
+    {"name":"sweep_provisional_trust_reports","reason":"service/cron undisputed provisional auto-confirm","callerDerivation":"trusted job; anon/authenticated EXECUTE revoked","schoolScope":"server-selected provisional rows past deadline","searchPath":"pg_catalog"},
+    {"name":"guard_school_notice_history","reason":"trigger-only notice immutability and append-only access logs","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
+    {"name":"school_notice_year_label","reason":"internal year-level label formatter without nicknames","callerDerivation":"definer helpers only","schoolScope":"none","searchPath":"pg_catalog"},
+    {"name":"school_notice_build_body","reason":"internal phone-free notice body builder","callerDerivation":"definer helpers only","schoolScope":"none","searchPath":"pg_catalog"},
+    {"name":"school_notice_json","reason":"internal phone-free notice JSON projection","callerDerivation":"definer RPCs only","schoolScope":"notice row already authorised by caller RPC","searchPath":"pg_catalog"},
+    {"name":"log_school_notice_access","reason":"internal append-only access log writer","callerDerivation":"auth.uid() via public notice RPCs only","schoolScope":"notice school","searchPath":"pg_catalog"}
   ]
 }

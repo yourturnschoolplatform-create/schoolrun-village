@@ -159,6 +159,10 @@ Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47
 
 Baseline milestone verification reused the green Day 6 wrap-up gate and re-ran `npm run verify` on TEST at Day 7 start: exit **0**; unit **47/47**; allowlist `97/58/23`; RLS **306/306**. Raw: `docs/evidence/DAY7_START_VERIFY_RAW.txt`. No new migration in this start task. Tasks 7.1–7.4 are open; no Day 7 feature SQL or live suite exists yet at branch open.
 
+## Task 7.1 — 2026-11-07 (TEST only)
+
+Phone-free school notices and school-scoped moderation on TEST. Migrations `0033_day7_school_notices.sql`, `0034_day7_school_notice_ambiguity.sql`. Live suite `npm run test:school-notice:live`: **6/6** pass. Raw: `docs/evidence/TASK_7_1_SCHOOL_NOTICE_LIVE_RAW.txt`. Allowlist after: `107` public / `63` authenticated / `28` internal. Participants generate/get/list notices with year levels + date + collector display name only; moderator queue and withdraw; School B denied School A; direct DML denied; append-only access logs; pg_catalog paths. DEV not migrated. Tasks 7.2–7.4 and Day 8 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`
