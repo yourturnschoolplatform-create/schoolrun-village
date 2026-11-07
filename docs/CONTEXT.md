@@ -35,7 +35,11 @@ If a proposed change conflicts with them, record and approve an explicit decisio
 
 ## G6 checkpoint status — 2026-11-07
 
-The user confirmed G1–G5 evidence and authorised merging `wip/day4-stabilisation` into the main checkpoint. DEV catalogue evidence through migrations `0001`–`0025` is retained; the DEV live harness was not run because fixture cleanup is not guaranteed. The confirmed G4 full verify remains exit 1 (C3, G1, and the availability privacy-scan failures). Only narrowly evidenced Day 2/3/4 outcomes may be `[x]`; aggregate day workflows stay `[~]`. See `TODO.md`, `docs/TEST_PLAN.md` and `docs/G6_MERGE_REPORT.md`. **G6 does not start Day 5.**
+The user confirmed G1–G5 evidence and authorised merging `wip/day4-stabilisation` into the main checkpoint. DEV catalogue evidence through migrations `0001`–`0025` is retained; the DEV live harness was not run because fixture cleanup is not guaranteed. Only narrowly evidenced Day 2/3/4 outcomes may be `[x]`; aggregate day workflows stay `[~]`. See `TODO.md`, `docs/TEST_PLAN.md` and `docs/G6_MERGE_REPORT.md`.
+
+## Day 5 wrap-up — 2026-11-07
+
+Full TEST `npm run verify` exit 0 (47 unit, 252 RLS). Tasks 5.1 / 5.2 backend / 5.3 live scopes are evidenced; aggregate Day 5 remains `[~]` (school notice, email relay transport, 90-day purge, Day 8 reminder delivery). **Do not start Day 6 without an explicit GO.**
 
 ## Current scope — Task 5.1
 

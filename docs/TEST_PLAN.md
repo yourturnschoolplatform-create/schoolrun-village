@@ -121,6 +121,16 @@ The completed full `npm run verify` did **not** pass: TypeScript and ESLint pass
 
 The aggregate run only applied/reconciled migrations against TEST; `0001`–`0021` were already applied. DEV was not migrated. The dedicated Task 5.3 result supports its narrow tracker `[x]`; the overall Day 5 remains `[~]`, and the full verify gate remains red. No school notice, Day 8 delivery, real-login walkthrough or publication is claimed.
 
+## Day 5 wrap-up — 2026-11-07 (TEST only)
+
+Full `npm run verify` exit **0**. TypeScript passed, ESLint passed, unit **47/47**, allowlist `69 public / 45 authenticated / 8 internal`, RLS **252/252**. Raw: `docs/evidence/DAY5_WRAPUP_VERIFY_RAW.txt`.
+
+Suite counts inside that run: migration-contract 46; live-rls 17 (including C3 and G1); rpc-smoke 54; g3-live and invitation-live covered in the 252; ledger-live 27; contact-live 57; handover-live 24. Privacy scan records only `accept_current_consent` as known legacy `42702` (not a phone leak).
+
+A first wrap-up attempt failed one static migration-contract assertion on Windows because concatenated migration SQL retained CRLF while newline-sensitive regexes expected LF. `tests/rls/migration-contract.test.ts` now normalises `\r\n` to `\n` before matching. Re-verify then passed. No new SQL migration in this wrap-up. DEV was not migrated.
+
+Day 5 aggregate remains `[~]`: school notice is unimplemented; Task 5.2 outbound email relay and 90-day purge remain open; handover reminder **delivery** is Day 8. Narrow Task 5.1 / 5.2 backend / 5.3 live scopes stay evidenced `[x]` as cited in `TODO.md`. **Do not start Day 6 without an explicit GO.**
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

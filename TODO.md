@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** G6 merge confirmation only — merge `wip/day4-stabilisation` into main, keep Day 2/3/4 `[x]` only where passing live names are cited, update docs. **Do not start Day 5 from G6.** Mark `[x]` only with passing live names and raw output; preserve confirmed G4 legacy failures.
+> **Current authorised scope:** Day 5 wrap-up complete on TEST (`npm run verify` exit 0). Aggregate Day 5 remains `[~]` (school notice, email relay transport, 90-day purge, Day 8 reminder delivery). **Do not start Day 6 without an explicit GO.** Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -123,6 +123,8 @@ Passing test-project live names:
 - Generate a copyable school notice using only year level, date, and collector display name. Include no phone number, email, address, child nickname, trust score, price, or contact data.
 - Add IDs-only `first_trip_completed`; test pair isolation/non-negative ledger, consent revocation ending a swap, two-confirmation completion, and phone-free notice output. Produce the Day 5 standard report and wait for **`GO DAY 6`**.
 
+**Day 5 wrap-up — 2026-11-07, TEST only.** Full `npm run verify` exit **0**: unit 47/47; allowlist 69/45/8; RLS **252/252** (migration-contract 46, live-rls 17 incl. C3/G1, rpc-smoke 54, invitation/g3 suites, ledger 27, contact 57, handover 24). Raw: `docs/evidence/DAY5_WRAPUP_VERIFY_RAW.txt`. Aggregate Day 5 stays `[~]` until school notice, outbound email transport, 90-day purge and Day 8 reminder delivery are evidenced. Do not start Day 6 without **`GO DAY 6`**.
+
 ### [x] Task 5.1 — immutable membership-pair trip-count ledger
 
 - Add `swap_ledger_entries` with `from_membership` (recipient/debtor), `to_membership` (provider), `swap_leg_id`, integer `trip_count_delta`, `created_at`, eight-week `expires_at` and week-six `reminder_due_at`. No transferable/third-party or amount/price/currency/money-balance field.
@@ -131,7 +133,7 @@ Passing test-project live names:
 - Prove with live non-privileged authenticated tests: own updates/deletes denied; direct inserts denied; School B parent/moderator and same-school nonparticipants cannot read; catalog has no monetary columns; expired entries do not net; completion emits exactly one entry. Every new function has explicit grants, pg_catalog-only path, an allowlist record and cross-school coverage; new table RLS is live-tested.
 - Completion is a trusted `swap_legs.completed_at` integration hook only. The two-step handover and reminder delivery remain separate future tasks. Run new live tests on the TEST project only; do not seed or migrate DEV in this task.
 
-**Passing live evidence:** `tests/rls/ledger-live.test.ts`, 27/27 on the separate TEST project; raw runner output `docs/evidence/TASK_5_1_LEDGER_LIVE_RAW.txt`. Exact passing names include:
+**Passing live evidence:** `tests/rls/ledger-live.test.ts`, 27/27 on the separate TEST project; raw runner output `docs/evidence/TASK_5_1_LEDGER_LIVE_RAW.txt`. Re-run 2026-11-07: 27/27, `docs/evidence/TASK_5_1_LEDGER_LIVE_RERUN_RAW.txt`. Exact passing names include:
 
 - `trusted completion posts exactly once even after an unchanged completion update`
 - `records recipient membership as debtor and helper membership as provider for both participants`
@@ -166,7 +168,7 @@ This completion applies to Task 5.1's TEST-backed ledger only, not the broader D
 
 #### [x] Task 5.2 — versioned private sharing, access removal, atomic cancellation and in-app partner notification
 
-Passing TEST evidence: `tests/rls/contact-live.test.ts`, **57/57 PASS** in the final full run, with every live name and safe per-RPC outcome in `docs/evidence/TASK_5_2_VERIFY_RAW.txt`. These exact passing names support this narrow backend completion:
+Passing TEST evidence: `tests/rls/contact-live.test.ts`, **57/57 PASS** in the final full run, with every live name and safe per-RPC outcome in `docs/evidence/TASK_5_2_VERIFY_RAW.txt`. Re-run 2026-11-07: **57/57 PASS**, `docs/evidence/TASK_5_2_CONTACT_LIVE_RERUN_RAW.txt` (privacy scan: `accept_current_consent` known legacy `42702` only; no phone leak). These exact passing names support this narrow backend completion:
 
 - `acceptedpartnerSuccess: both accepted partners read only the other consenting membership`
 - `chosenbackupSuccess: two explicitly chosen verified same-school backups can read the owner`
@@ -199,6 +201,6 @@ The four new public tables and private mobile table all have RLS and live covera
 - Emit `first_trip_completed` once per participating user on completion. Actors come from immutable confirmations previously derived from auth.uid(), school from the accepted source leg; no caller-supplied attribution. No child data, contact number, amount, price, currency, location or free-form analytics payload.
 - Live tests under non-superuser authenticated synthetic claims prove role and cross-school denial, both orders, one-confirmation incompleteness, timestamp/idempotency, reminder timing, exactly-one ledger and correct/unique analytics. Every new function has explicit grants, pg_catalog-only path, allowlist and cross-school coverage; every new table has RLS and live coverage. Preserve existing test failures and report raw output.
 
-**Passing TEST evidence:** `tests/rls/handover-live.test.ts`, 24/24 PASS in both the dedicated run and full harness. Every subtest name and raw runner output are retained in `docs/evidence/TASK_5_3_LIVE_RAW.txt`; the full `npm run verify` output is `docs/evidence/TASK_5_3_VERIFY_RAW.txt`. Native TEST cron `yourturn-handover-reminder-records` is active and an observed run succeeded (`TASK_5_3_CRON_RUNS_RAW.json`). `npm run build` and `npm run check:secrets` passed (`TASK_5_3_BUILD_RAW.txt`). The aggregate gate remains exit 1 because of unchanged C3 and G1 tests; this does not negate the dedicated handover cases and does not mark Day 5 complete.
+**Passing TEST evidence:** `tests/rls/handover-live.test.ts`, 24/24 PASS in both the dedicated run and full harness. Every subtest name and raw runner output are retained in `docs/evidence/TASK_5_3_LIVE_RAW.txt`; the full `npm run verify` output is `docs/evidence/TASK_5_3_VERIFY_RAW.txt`. Re-run 2026-11-07: **24/24 PASS**, `docs/evidence/TASK_5_3_HANDOVER_LIVE_RERUN_RAW.txt` (includes reminderBoundary ±29/±31, bothOrders, duplicateTaps, wrongCaller, catalogFunctions). Native TEST cron `yourturn-handover-reminder-records` is active and an observed run succeeded (`TASK_5_3_CRON_RUNS_RAW.json`). `npm run build` and `npm run check:secrets` passed (`TASK_5_3_BUILD_RAW.txt`). The aggregate gate remains exit 1 because of unchanged C3 and G1 tests; this does not negate the dedicated handover cases and does not mark Day 5 complete.
 
 **Not in Task 5.3 / Day 5 remains [~]:** school notice generation is not implemented; Task 5.2's outbound email relay and 90-day purge remain unconfigured. Handover reminder delivery is Day 8 and is not included; this task records due reminders only. No DEV migration, live login/browser acceptance or publication is claimed.

@@ -25,8 +25,8 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0019_day5_contact_consents.sql'), 'utf8'),
   readFile(resolve('db/migrations/0020_day5_two_step_handover.sql'), 'utf8'),
 ]);
-const sql = migrations.join('\n');
-const day3Sql = await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8');
+const sql = migrations.join('\n').replace(/\r\n/g, '\n');
+const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
 
 describe('Day 1 through Day 4 RLS migration contract', () => {
   it.each(foundationTables)('enables RLS for %s', (table) => {
