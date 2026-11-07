@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** Day 7 Tasks 7.1–7.4 evidenced on `wip/day7-notices-retention` (TEST only). Aggregate Day 5/6/7 remain `[~]` until a Day 7 wrap verifies the full suite. **Do not start Day 8** (handover reminder delivery) until **`GO DAY 8`**. Mark `[x]` only with passing live names and raw output.
+> **Current authorised scope:** Day 7 wrap-up green on `wip/day7-notices-retention` (TEST only). Tasks 7.1–7.4 evidenced; aggregate Day 7 `[x]`. Aggregate Day 6 `[x]` (running-late notice closed under 7.4). Aggregate Day 5 remains `[~]` until Day 8 reminder delivery. **Do not start Day 8** until **`GO DAY 8`**. Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -205,11 +205,11 @@ The four new public tables and private mobile table all have RLS and live covera
 
 **Not in Task 5.3 / Day 5 remains [~]:** school notice generation is not implemented; Task 5.2's outbound email relay and 90-day purge remain unconfigured. Handover reminder delivery is Day 8 and is not included; this task records due reminders only. No DEV migration, live login/browser acceptance or publication is claimed.
 
-## [~] Day 6 — trust scoring, bands, holds, and appeals
+## [x] Day 6 — trust scoring, bands, holds, and appeals
 
 Branch: `wip/day6-trust` (from `main` @ Day 5 wrap-up tip). Apply new SQL/fixtures to TEST only. Exact trust scores never leave the database to other parents; clients see **bands** only (`Trusted` / `Standard` / `Caution` / `Restricted` / `Suspended`). No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only.
 
-**Day 6 wrap-up — 2026-11-07, TEST only.** Full `npm run verify` exit **0**: unit **47/47**; allowlist `97/58/23`; RLS **306/306** (migration-contract, live-rls, rpc-smoke, invitation/g3, ledger, contact, handover, trust, trust-deltas, trust-holds). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. Tasks 6.1–6.3 evidenced `[x]`. Aggregate Day 6 stays `[~]` until running-late notice posting is evidenced under Day 7 Task 7.4. Day 7 authorised by **TASK DAY 7**.
+**Day 6 wrap-up — 2026-11-07, TEST only.** Full `npm run verify` exit **0**: unit **47/47**; allowlist `97/58/23`; RLS **306/306** (migration-contract, live-rls, rpc-smoke, invitation/g3, ledger, contact, handover, trust, trust-deltas, trust-holds). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. Tasks 6.1–6.3 evidenced `[x]`. Running-late notice posting later evidenced under Day 7 Task 7.4; aggregate Day 6 closed `[x]` at Day 7 wrap.
 
 **Baseline (Day 6 start):** Day 5 wrap-up `npm run verify` exit 0 on TEST (47 unit / 252 RLS). Day 6 start verification raw: `docs/evidence/DAY6_START_VERIFY_RAW.txt`.
 
@@ -230,9 +230,11 @@ Published-policy deltas on completion (+1 helper), schedule/swap cancels (−3/�
 
 Provisional no-show/false-report; moderator confirm/reject and 24h sweep; safety hold (swap-only disable); 48h appeals; no-show trip penalties (+2) via `trust_trip_penalties`; append-only audit. Live **6/6** (`npm run test:trust-holds:live`). Raw: `docs/evidence/TASK_6_3_TRUST_HOLDS_LIVE_RAW.txt`. Migration `0032`. Running-late notice store deferred to Day 7 Task 7.4.
 
-## [~] Day 7 — school notice, email relay, retention purge, and running-late notices
+## [x] Day 7 — school notice, email relay, retention purge, and running-late notices
 
 Branch: `wip/day7-notices-retention` (from Day 6 wrap tip `5f9de3d` on `wip/day6-trust`). Apply new SQL/fixtures to TEST only. No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only. School notices never include phone, email, address, nickname, trust score, or contact data. **Handover reminder delivery is Day 8 and is out of scope.**
+
+**Day 7 wrap-up — 2026-11-07, TEST only.** Full `npm run verify` exit **0**: TypeScript/ESLint clean; unit **47/47**; allowlist `132/72/44`; RLS **376/376** across 15 files (migration-contract, live-rls, rpc-smoke, invitation/g3, ledger, contact, handover, trust, trust-deltas, trust-holds, school-notice, email-relay, retention-purge, running-late). Raw: `docs/evidence/DAY7_WRAPUP_VERIFY_RAW.txt`. Tasks 7.1–7.4 evidenced `[x]`. No new migration in this wrap-up. DEV not migrated. Wait for **`GO DAY 8`**.
 
 **Baseline (Day 7 start):** Day 6 wrap-up `npm run verify` exit 0 on TEST (47 unit / 306 RLS; allowlist 97/58/23). Day 7 start verification raw: `docs/evidence/DAY7_START_VERIFY_RAW.txt`. No new migration in this start task.
 

@@ -43,11 +43,15 @@ Full TEST `npm run verify` exit 0 (47 unit, 252 RLS). Tasks 5.1 / 5.2 backend / 
 
 ## Day 6 wrap-up — 2026-11-07
 
-Full TEST `npm run verify` exit 0 (47 unit, 306 RLS, allowlist 97/58/23). Tasks 6.1–6.3 evidenced; running-late notice posting evidenced under Day 7 Task 7.4. Aggregate Day 6 remains `[~]` pending Day 7 wrap. Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`.
+Full TEST `npm run verify` exit 0 (47 unit, 306 RLS, allowlist 97/58/23). Tasks 6.1–6.3 evidenced; running-late notice posting evidenced under Day 7 Task 7.4. Aggregate Day 6 `[x]` at Day 7 wrap. Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`.
 
 ## Day 7 start — 2026-11-07
 
 Authorised by **TASK DAY 7**. Work branch `wip/day7-notices-retention` from Day 6 wrap tip. Baseline `npm run verify` on TEST exit 0 (47 unit, 306 RLS, allowlist 97/58/23). Raw: `docs/evidence/DAY7_START_VERIFY_RAW.txt`. No new migration at start. Scope: school notice, outbound email relay transport, 90-day purge, running-late notices. TEST only; **no Day 8** (handover reminder delivery). See `TODO.md` Tasks 7.1–7.4.
+
+## Day 7 wrap-up — 2026-11-07
+
+Full TEST `npm run verify` exit 0 (47 unit, 376 RLS, allowlist 132/72/44). Tasks 7.1–7.4 evidenced; aggregate Day 7 `[x]`. Raw: `docs/evidence/DAY7_WRAPUP_VERIFY_RAW.txt`. DEV not migrated. **Wait for `GO DAY 8`.**
 
 ## Current scope — Day 7
 

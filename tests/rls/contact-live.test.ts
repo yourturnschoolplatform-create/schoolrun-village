@@ -947,6 +947,20 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       file_trust_appeal: { sql: "select public.file_trust_appeal('safety_hold', $1::uuid)", values: [fixture.schoolA] },
       resolve_trust_appeal: { sql: "select public.resolve_trust_appeal($1::uuid, 'dismiss')", values: [fixture.schoolA] },
       user_has_active_safety_hold: { sql: 'select public.user_has_active_safety_hold($1::uuid, $2::uuid)', values: [fixture.owner.userId, fixture.schoolA] },
+      generate_school_notice: { sql: 'select public.generate_school_notice((select id from public.swap_legs where swap_id=$1::uuid order by id limit 1))', values: [swap.id] },
+      get_school_notice: { sql: 'select public.get_school_notice($1::uuid)', values: [fixture.schoolA] },
+      list_my_school_notices: { sql: 'select public.list_my_school_notices()' },
+      list_school_notice_moderation_queue: { sql: 'select public.list_school_notice_moderation_queue()' },
+      withdraw_school_notice: { sql: 'select public.withdraw_school_notice($1::uuid)', values: [fixture.schoolA] },
+      mask_email_address: { sql: "select public.mask_email_address('parent@example.invalid')" },
+      get_email_relay_delivery_policy: { sql: 'select public.get_email_relay_delivery_policy()' },
+      enqueue_email_relay: { sql: "select public.enqueue_email_relay($1::uuid, 'swap_partner_notice', $2::uuid)", values: [swap.id, fixture.partner.userId] },
+      list_my_email_relay_queue: { sql: 'select public.list_my_email_relay_queue()' },
+      list_school_email_relay_queue: { sql: 'select public.list_school_email_relay_queue()' },
+      get_retention_purge_policy: { sql: 'select public.get_retention_purge_policy()' },
+      post_running_late_notice: { sql: 'select public.post_running_late_notice((select id from public.swap_legs where swap_id=$1::uuid order by id limit 1))', values: [swap.id] },
+      get_running_late_notice: { sql: 'select public.get_running_late_notice((select id from public.swap_legs where swap_id=$1::uuid order by id limit 1))', values: [swap.id] },
+      list_my_running_late_notices: { sql: 'select public.list_my_running_late_notices()' },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;

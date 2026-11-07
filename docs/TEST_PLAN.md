@@ -151,7 +151,7 @@ Trust holds, appeals, no-show/false-report on TEST. Migration `0032_day6_trust_h
 
 ## Day 6 wrap-up — 2026-11-07 (TEST only)
 
-Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 97 public functions, 58 authenticated entries, 23 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **306/306** across 11 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. DEV not migrated. Contact privacy scan includes Day 6 RPCs; only `accept_current_consent` remains known legacy `42702` (not a phone leak). Aggregate Day 6 stays `[~]` for undelivered running-late notice posting (moved to Day 7 Task 7.4).
+Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 97 public functions, 58 authenticated entries, 23 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **306/306** across 11 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. DEV not migrated. Contact privacy scan includes Day 6 RPCs; only `accept_current_consent` remains known legacy `42702` (not a phone leak). Running-late notice posting moved to Day 7 Task 7.4 and closed at Day 7 wrap; aggregate Day 6 `[x]`.
 
 ## Day 7 start — 2026-11-07 (TEST only)
 
@@ -174,6 +174,10 @@ Outbound email relay queue, masking, and delivery policy on TEST. Migrations `00
 ## Task 7.4 — 2026-11-07 (TEST only)
 
 Running-late notice store and late trust penalties on TEST. Migration `0039_day7_running_late_notices.sql`. Live suite `npm run test:running-late:live`: **6/6** pass. Raw: `docs/evidence/TASK_7_4_RUNNING_LATE_LIVE_RAW.txt`. Allowlist after: `132` public / `72` authenticated / `44` internal. Helper posts before requester pickup window start; partner read; after-window post denied (`22023`); 15+ minute late `pickup_done` posts −5 without notice or −2 with prior notice; School B denied School A; direct DML denied; no amount/price/currency/location columns. DEV not migrated. Day 8 not started.
+
+## Day 7 wrap-up — 2026-11-07 (TEST only)
+
+Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 132 public functions, 72 authenticated entries, 44 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **376/376** across 15 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live, school-notice-live, email-relay-live, retention-purge-live, running-late-live). Raw: `docs/evidence/DAY7_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. Wrap-up also extended rpc-smoke and contact allowlist leak-scan maps for Day 7 RPCs and stabilised school-notice access-log order assertion. DEV not migrated. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 remains `[~]` for Day 8 handover reminder delivery. **Do not start Day 8 without `GO DAY 8`.**
 
 ## G4 evidence — 2026-11-06 (TEST only)
 

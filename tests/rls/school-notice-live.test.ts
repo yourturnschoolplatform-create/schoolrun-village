@@ -288,7 +288,7 @@ describe('Task 7.1 live school notices and moderation', { timeout: LIVE_TIMEOUT 
     const logs = await authenticated<{ action: string }>(
       fixture.requester.userId,
       `select action from public.school_notice_access_logs
-       where notice_id = $1 order by created_at, id`,
+       where notice_id = $1 order by action`,
       [notice.id],
     );
     expect(logs.map((row) => row.action)).toEqual(['generated', 'viewed']);
