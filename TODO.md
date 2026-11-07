@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** Day 5 wrap-up complete on TEST (`npm run verify` exit 0). Aggregate Day 5 remains `[~]` (school notice, email relay transport, 90-day purge, Day 8 reminder delivery). **Do not start Day 6 without an explicit GO.** Mark `[x]` only with passing live names and raw output.
+> **Current authorised scope:** Day 6 trust engine on `wip/day6-trust` (TEST only). Aggregate Day 5 remains `[~]`. **Do not start Day 7.** Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -204,3 +204,26 @@ The four new public tables and private mobile table all have RLS and live covera
 **Passing TEST evidence:** `tests/rls/handover-live.test.ts`, 24/24 PASS in both the dedicated run and full harness. Every subtest name and raw runner output are retained in `docs/evidence/TASK_5_3_LIVE_RAW.txt`; the full `npm run verify` output is `docs/evidence/TASK_5_3_VERIFY_RAW.txt`. Re-run 2026-11-07: **24/24 PASS**, `docs/evidence/TASK_5_3_HANDOVER_LIVE_RERUN_RAW.txt` (includes reminderBoundary ±29/±31, bothOrders, duplicateTaps, wrongCaller, catalogFunctions). Native TEST cron `yourturn-handover-reminder-records` is active and an observed run succeeded (`TASK_5_3_CRON_RUNS_RAW.json`). `npm run build` and `npm run check:secrets` passed (`TASK_5_3_BUILD_RAW.txt`). The aggregate gate remains exit 1 because of unchanged C3 and G1 tests; this does not negate the dedicated handover cases and does not mark Day 5 complete.
 
 **Not in Task 5.3 / Day 5 remains [~]:** school notice generation is not implemented; Task 5.2's outbound email relay and 90-day purge remain unconfigured. Handover reminder delivery is Day 8 and is not included; this task records due reminders only. No DEV migration, live login/browser acceptance or publication is claimed.
+
+## [~] Day 6 — trust scoring, bands, holds, and appeals
+
+Branch: `wip/day6-trust` (from `main` @ Day 5 wrap-up tip). Apply new SQL/fixtures to TEST only. Exact trust scores never leave the database to other parents; clients see **bands** only (`Trusted` / `Standard` / `Caution` / `Restricted` / `Suspended`). No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only.
+
+**Baseline (Day 6 start):** Day 5 wrap-up `npm run verify` exit 0 on TEST (47 unit / 252 RLS). Day 6 start verification raw: `docs/evidence/DAY6_START_VERIFY_RAW.txt`. Existing inputs already present: `profiles.trust_score` (default 70), published `trust_policy_versions`, immutable `schedule_cancellation_events`, completed-leg ledger/handover facts. Scoring engine and hold/appeal workflows are **not** implemented yet.
+
+- Consume Day 3 `schedule_cancellation_events` and Day 5 completion/cancellation facts under the published trust policy: completed trip +1; eligible urgent cover +3 (within four hours of pickup, max two/week, no same-household); cancel under 24 hours -3, under two hours -8; late 15+ minutes after window start -2 with prior running-late notice else -5; confirmed no-show -20 (or -10 if backup accepts) plus two trips owed; confirmed false report -15; reviewed safety violation -25.
+- Keep scores server-side; expose band only to other parents. Thresholds/actions only via immutable published `trust_policy_versions`.
+- Provisional no-show reports (24 hours undisputed or moderator-confirmed); appeals within 48 hours; moderator safety hold disables swaps only, alerts admin, review within 24 hours, appealable.
+- Every new table: RLS + live test. Every new function: explicit grants, `search_path = pg_catalog` only, allowlist entry, cross-school live test. Non-privileged `authenticated` + synthetic JWT claims.
+
+### [ ] Task 6.1 — score ledger and band projection
+
+Append-only trust score events (or equivalent) derived from audited facts; band helper; School B cannot read School A scores/events; other parents never receive numeric scores via RPC/API.
+
+### [ ] Task 6.2 — policy-driven deltas from trips and cancellations
+
+Apply published-policy deltas for completion and schedule/swap cancellations; urgent-cover eligibility; idempotent once-per-fact posting; live tests for cross-school denial and no client score writes.
+
+### [ ] Task 6.3 — no-show, false-report, safety hold, and appeal
+
+Provisional no-show and false-report workflows; moderator safety hold; appeal path; append-only audit; live cross-school and role denials. Stop after Day 6 report; wait for **`GO DAY 7`**.

@@ -129,7 +129,13 @@ Suite counts inside that run: migration-contract 46; live-rls 17 (including C3 a
 
 A first wrap-up attempt failed one static migration-contract assertion on Windows because concatenated migration SQL retained CRLF while newline-sensitive regexes expected LF. `tests/rls/migration-contract.test.ts` now normalises `\r\n` to `\n` before matching. Re-verify then passed. No new SQL migration in this wrap-up. DEV was not migrated.
 
-Day 5 aggregate remains `[~]`: school notice is unimplemented; Task 5.2 outbound email relay and 90-day purge remain open; handover reminder **delivery** is Day 8. Narrow Task 5.1 / 5.2 backend / 5.3 live scopes stay evidenced `[x]` as cited in `TODO.md`. **Do not start Day 6 without an explicit GO.**
+Day 5 aggregate remains `[~]`: school notice is unimplemented; Task 5.2 outbound email relay and 90-day purge remain open; handover reminder **delivery** is Day 8. Narrow Task 5.1 / 5.2 backend / 5.3 live scopes stay evidenced `[x]` as cited in `TODO.md`.
+
+## Day 6 start — 2026-11-07 (TEST only)
+
+**TASK DAY 6** opened work on branch `wip/day6-trust`. Scope (from `docs/DECISIONS.md` / `TODO.md`): policy-driven trust deltas, band-only peer disclosure, provisional no-show/false-report, moderator safety hold and appeals. No Day 6 SQL or live trust suite exists yet at branch open.
+
+Baseline milestone verification reused the green Day 5 wrap-up gate and re-ran `npm run verify` on TEST at Day 6 start: exit **0**; unit **47/47**; allowlist `69/45/8`; RLS **252/252**. Raw: `docs/evidence/DAY6_START_VERIFY_RAW.txt`. No new migration in this start task. **Day 7 is not started.**
 
 ## G4 evidence — 2026-11-06 (TEST only)
 

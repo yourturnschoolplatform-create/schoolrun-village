@@ -39,7 +39,11 @@ The user confirmed G1–G5 evidence and authorised merging `wip/day4-stabilisati
 
 ## Day 5 wrap-up — 2026-11-07
 
-Full TEST `npm run verify` exit 0 (47 unit, 252 RLS). Tasks 5.1 / 5.2 backend / 5.3 live scopes are evidenced; aggregate Day 5 remains `[~]` (school notice, email relay transport, 90-day purge, Day 8 reminder delivery). **Do not start Day 6 without an explicit GO.**
+Full TEST `npm run verify` exit 0 (47 unit, 252 RLS). Tasks 5.1 / 5.2 backend / 5.3 live scopes are evidenced; aggregate Day 5 remains `[~]` (school notice, email relay transport, 90-day purge, Day 8 reminder delivery).
+
+## Current scope — Day 6
+
+Authorised by **TASK DAY 6**. Work branch `wip/day6-trust`. Scope: trust scoring under published policy, band-only disclosure, no-show/false-report, safety hold and appeals. Inputs already in schema (`profiles.trust_score`, `trust_policy_versions`, cancellation/completion facts) are not yet scored by an engine. TEST only; no Day 7. See `TODO.md` Tasks 6.1–6.3.
 
 ## Current scope — Task 5.1
 
