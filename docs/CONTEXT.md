@@ -93,7 +93,11 @@ Authorised by **TASK DAY 10**. Work branch `wip/day10-admin-notifications`. Noti
 
 ### Task 10.1 — notification inbox ledger (schema/RPC slice)
 
-Migration `0049` adds `public.notifications` with owner SELECT + read-only UPDATE RLS, system-only enqueue (GUC `yourturn.notification_enqueue`), and authenticated list/mark-one/mark-all RPCs. Allowlist source: authenticated **105** / internal **79** (expected public **200** after migrate). Live suite `tests/rls/notifications-live.test.ts` and `npm run test:notifications:live` ready but blocked: TEST migrate `ENOTFOUND` (URL not logged). Offline evidence: contract **86/86**, unit **47/47**. Preferences and due-delivery orchestration remain. Raw: `docs/evidence/TASK_10_1_MIGRATE_RAW.txt`, `docs/evidence/TASK_10_1_NOTIFICATIONS_LIVE_RAW.txt`.
+Migration `0049` adds `public.notifications` with owner SELECT + read-only UPDATE RLS, system-only enqueue (GUC `yourturn.notification_enqueue`), and authenticated list/mark-one/mark-all RPCs. Allowlist source after 10.1: authenticated **105** / internal **79**. Live suite ready but blocked: TEST migrate `ENOTFOUND`. Preferences remain. Raw: `docs/evidence/TASK_10_1_*`.
+
+### Task 10.2 — system event notification wiring
+
+Migration `0050_day10_system_event_notifications.sql` fans out phone-free inbox rows for handover confirm/complete (triggers on `swap_leg_confirmations` / `swap_legs.completed_at`), swap propose/accept/decline/withdraw, safety-hold place/resolve, and trust score deltas (no numeric scores in copy). Metadata uses allowlisted keys only (`entity_type`/`entity_id`/`reason_code`/`outcome`/`source`). Allowlist +3 internal (`notify_user_event_once`, `notify_handover_confirmation`, `notify_handover_completion`). Live suite `tests/rls/notification-events-live.test.ts`. TEST migrate still `ENOTFOUND`. Admin console read models deferred to Task 10.3.
 
 ### Task 8.1 — school-scoped discussion community
 

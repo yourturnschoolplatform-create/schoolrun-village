@@ -460,4 +460,32 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
+
+  it('wires handover swap and trust events into owner notifications without money fields', async () => {
+    const wiring = (await readFile(resolve('db/migrations/0050_day10_system_event_notifications.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(wiring).toMatch(/function public\.notify_user_event_once/i);
+    expect(wiring).toMatch(/function public\.notify_handover_confirmation/i);
+    expect(wiring).toMatch(/function public\.notify_handover_completion/i);
+    expect(wiring).toMatch(/handover_completed/i);
+    expect(wiring).toMatch(/handover_update/i);
+    expect(wiring).toMatch(/swap_proposed/i);
+    expect(wiring).toMatch(/swap_declined/i);
+    expect(wiring).toMatch(/swap_withdrawn/i);
+    expect(wiring).toMatch(/safety_hold/i);
+    expect(wiring).toMatch(/trust_update/i);
+    expect(wiring).toMatch(/create or replace function public\.propose_reciprocal_swap/i);
+    expect(wiring).toMatch(/create or replace function public\.transition_swap_proposal/i);
+    expect(wiring).toMatch(/create or replace function public\.place_safety_hold/i);
+    expect(wiring).toMatch(/create or replace function public\.resolve_safety_hold/i);
+    expect(wiring).toMatch(/create or replace function public\.apply_trust_score_delta/i);
+    expect(wiring).toMatch(/set search_path = pg_catalog/i);
+    expect(wiring).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(wiring).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+    expect(wiring).toMatch(/'Your school trust record was updated\.'/);
+    expect(wiring).toMatch(/entity_type/i);
+    expect(wiring).not.toMatch(/jsonb_build_object\(\s*'leg_id'/i);
+  });
 });

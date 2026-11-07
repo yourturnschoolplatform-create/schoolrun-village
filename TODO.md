@@ -399,9 +399,10 @@ Branch: `wip/day10-admin-notifications` (from Day 9 wrap tip `ea2fdcc` on `wip/d
 - **Done (source):** Migration `0049_day10_user_notifications.sql` — `notifications` table, owner SELECT/UPDATE(read) RLS, system `enqueue_user_notification`, owner `list_my_notifications` / `mark_notification_read` / `mark_all_notifications_read`; allowlist +3 auth / +4 internal; live suite + smoke/contact/contract wired. Offline: typecheck/lint/unit **47/47**, migration-contract **86/86**.
 - **Remains:** Apply `0049` + live `npm run test:notifications:live` on reachable TEST (`ENOTFOUND` on current agent `SUPABASE_RLS_TEST_DATABASE_URL`; HOST_LEN=19). Preference rows and due-event delivery orchestration not in this slice. Do not mark `[x]` until live names pass.
 
-### [ ] Task 10.2 — admin console read models
+### [~] Task 10.2 — system event notification wiring (handover / swap / trust)
 
-- Global-admin list/read RPCs for operational queues (memberships, moderation, restricted catalogue, audit summaries) without exposing phones or child nicknames beyond policy. Non-admin denied. Live cross-school and role denials.
+- Authorised as event→inbox fan-out (admin read models deferred into Task 10.3). Migration `0050_day10_system_event_notifications.sql`: handover confirmation/completion triggers, swap propose/accept/decline/withdraw RPC notify, safety-hold place/resolve, trust delta (score-free copy). Allowlist +3 internal trigger/helper. Live suite `npm run test:notification-events:live`.
+- **Remains:** Apply `0049`+`0050` and live suites on reachable TEST (`ENOTFOUND`). Do not mark `[x]` until live names pass.
 
 ### [ ] Task 10.3 — admin console mutations and audit
 

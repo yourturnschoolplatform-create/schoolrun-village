@@ -40,6 +40,7 @@
     "test:listing-moderation:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/listing-moderation-live.test.ts --reporter=verbose",
     "test:restricted-items-admin:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/restricted-items-admin-live.test.ts --reporter=verbose",
     "test:notifications:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/notifications-live.test.ts --reporter=verbose",
+    "test:notification-events:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/notification-events-live.test.ts --reporter=verbose",
     "handover:reminders:install:test": "tsx scripts/install-handover-reminders-test.ts"
   },
   "dependencies": {

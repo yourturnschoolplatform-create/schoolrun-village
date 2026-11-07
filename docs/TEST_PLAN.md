@@ -237,6 +237,10 @@ Offline: typecheck PASS; lint PASS; unit **47/47** (`docs/evidence/TASK_10_1_UNI
 
 Live blocked: `db:migrate:test` and `npm run test:notifications:live` fail with safe `ENOTFOUND` (HOST_LEN=19; URL not logged). Raw: `docs/evidence/TASK_10_1_MIGRATE_RAW.txt`, `docs/evidence/TASK_10_1_NOTIFICATIONS_LIVE_RAW.txt`. Suite covers owner list/mark, peer/School B denial, blocked INSERT/DELETE/enqueue, catalog grants/search_path. Preferences and due-event delivery not in this slice. DEV not migrated. Task 10.1 remains `[~]` until live names pass.
 
+## Task 10.2 — system event notifications (handover/swap/trust) — 2026-11-07 (TEST only; live blocked)
+
+Wires operational events into `public.notifications` via `enqueue_user_notification`. Migration `0050_day10_system_event_notifications.sql`. Triggers: `notify_handover_confirmation` (AFTER INSERT confirmations), `notify_handover_completion` (AFTER UPDATE `completed_at`). RPC patches: propose/transition swap, place/resolve safety hold, apply trust delta (score-free title/body). New kinds include `handover_completed`, `handover_update`, `swap_proposed`, `swap_declined`, `swap_withdrawn`, `safety_hold`, `trust_update`. Allowlist +3 internal. Live suite `npm run test:notification-events:live` (handoverConfirmAndComplete, swapAcceptDeclineWithdraw, safetyHoldAndTrustDelta, catalogTriggersAndInternalOnly). Offline contract updated. TEST migrate still `ENOTFOUND`. DEV not migrated. Task 10.2 remains `[~]` until live names pass.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

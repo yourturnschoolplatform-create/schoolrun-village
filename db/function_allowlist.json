@@ -185,6 +185,9 @@
     {"name":"notification_metadata_is_safe","reason":"internal safe metadata shape check for notifications","callerDerivation":"definer helpers and guards only","schoolScope":"none","searchPath":"pg_catalog"},
     {"name":"guard_notifications","reason":"trigger-only notification immutability and system enqueue gate","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
     {"name":"notification_json","reason":"internal notification projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised notification","searchPath":"pg_catalog"},
-    {"name":"enqueue_user_notification","reason":"system/service enqueue of phone-free in-app notification; no anon/authenticated EXECUTE","callerDerivation":"trusted job or definer callers; anon/authenticated EXECUTE revoked","schoolScope":"recipient and school supplied by trusted caller","searchPath":"pg_catalog"}
+    {"name":"enqueue_user_notification","reason":"system/service enqueue of phone-free in-app notification; no anon/authenticated EXECUTE","callerDerivation":"trusted job or definer callers; anon/authenticated EXECUTE revoked","schoolScope":"recipient and school supplied by trusted caller","searchPath":"pg_catalog"},
+    {"name":"notify_user_event_once","reason":"internal idempotent event fan-out into owner notifications; no anon/authenticated EXECUTE","callerDerivation":"definer system-event RPCs and triggers only","schoolScope":"recipient and school supplied by trusted caller","searchPath":"pg_catalog"},
+    {"name":"notify_handover_confirmation","reason":"trigger-only partner inbox row on pickup or arrival confirmation","callerDerivation":"trigger NEW only","schoolScope":"leg school; partner user_id from swap_legs","searchPath":"pg_catalog"},
+    {"name":"notify_handover_completion","reason":"trigger-only both-party inbox rows when swap_legs.completed_at is first set","callerDerivation":"trigger NEW/OLD only","schoolScope":"leg school; helper and requester user_ids","searchPath":"pg_catalog"}
   ]
 }
