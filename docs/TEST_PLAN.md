@@ -215,6 +215,14 @@ School-scoped free giveaway/lending listings with restricted-item enforcement, s
 
 Listing collected/fulfilled/withdraw author transitions, reporting with auto-hide, and own-school moderator review on TEST. Migration `0047_day9_listing_status_moderation.sql`. Live suite `npm run test:listing-moderation:live`: **4/4** pass. Raw: `docs/evidence/TASK_9_2_LISTING_MODERATION_LIVE_RAW.txt`. Allowlist after: `187` public / `99` authenticated / `72` internal. Author status closes search visibility; third unique report auto-hides; moderator restore/remove/hide/queue; parents cannot forge moderator actions; School B denied School A mutations and sees empty foreign queue/search; direct DML denied; no amount/price/currency/payment/photo columns. DEV not migrated. Task 9.3 not started.
 
+## Task 9.3 — restricted items admin edit — 2026-11-07 (TEST only)
+
+Global administrator create/update/soft-deactivate of restricted listing catalogue on TEST. Migration `0048_day9_restricted_items_admin.sql`. Live suite `npm run test:restricted-items-admin:live`: **3/3** pass. Raw: `docs/evidence/TASK_9_3_RESTRICTED_ITEMS_ADMIN_LIVE_RAW.txt`. Allowlist after: `193` public / `102` authenticated / `75` internal. Admin create blocks listings matching new terms; deactivate lifts enforcement; parents and School A/B moderators denied mutate/list-all; RLS retained; no amount/price/currency/payment/photo columns. DEV not migrated.
+
+## Day 9 wrap-up — 2026-11-07 (TEST only)
+
+Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 193 public functions, 102 authenticated entries, 75 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **482/482** across 21 files (prior Day 8 suites plus listings-live, listing-moderation-live, restricted-items-admin-live). Raw: `docs/evidence/DAY9_WRAPUP_VERIFY_RAW.txt`. Migrations `0045`–`0048` on TEST. DEV not migrated. Aggregate Day 9 `[x]`. Aggregate Day 8 `[x]`. Aggregate Day 7 `[x]`. Aggregate Day 6 `[x]`. Aggregate Day 5 `[x]`. Day 10 waits for **`GO DAY 10`**.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

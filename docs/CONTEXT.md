@@ -67,7 +67,7 @@ Authorised by **TASK DAY 9**. Work branch `wip/day9-listings` from Day 8 wrap ti
 
 ## Current scope — Day 9
 
-Authorised by **TASK DAY 9**. Work branch `wip/day9-listings`. School-scoped free giveaway/lending listings, status fulfilment without payment, admin-editable restricted items, and own-school listing moderation. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 9.1–9.2 evidenced; Task 9.3 remains open.
+Authorised by **TASK DAY 9**. Work branch `wip/day9-listings`. School-scoped free giveaway/lending listings, status fulfilment without payment, admin-editable restricted items, and own-school listing moderation. Child data remains nickname + year level only; no amount/price/currency; safety features stay free; no live location. Tasks 9.1–9.3 evidenced; aggregate Day 9 `[x]`.
 
 ### Task 9.1 — school-scoped free listings
 
@@ -76,6 +76,14 @@ Migrations `0045`–`0046` add `listing_restricted_items`, `item_listings`, `lis
 ### Task 9.2 — listing status, withdrawal, and moderation
 
 Migration `0047` expands listing status to collected/fulfilled/hidden/withdrawn, adds `listing_reports` and append-only `listing_moderation_actions`, author status RPCs, report auto-hide, and moderator hide/restore/remove/queue. Live **4/4** on TEST. Raw: `docs/evidence/TASK_9_2_LISTING_MODERATION_LIVE_RAW.txt`. Allowlist after: `187` public / `99` authenticated / `72` internal.
+
+### Task 9.3 — restricted items admin edit
+
+Migration `0048` adds global-admin create/update/list RPCs for `listing_restricted_items` (soft deactivate; no hard delete). Live **3/3** on TEST. Raw: `docs/evidence/TASK_9_3_RESTRICTED_ITEMS_ADMIN_LIVE_RAW.txt`. Allowlist after: `193` public / `102` authenticated / `75` internal. Parents and school moderators denied; enforcement follows active terms only.
+
+## Day 9 wrap-up — 2026-11-07
+
+Full TEST `npm run verify` exit 0 (47 unit, 482 RLS, allowlist 193/102/75). Tasks 9.1–9.3 evidenced; aggregate Day 9 `[x]`. Raw: `docs/evidence/DAY9_WRAPUP_VERIFY_RAW.txt`. DEV not migrated. Day 10 waits for **`GO DAY 10`**.
 
 ### Task 8.1 — school-scoped discussion community
 

@@ -98,7 +98,10 @@
     {"name":"hide_item_listing","reason":"own-school moderator hides active listing","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school only","searchPath":"pg_catalog"},
     {"name":"restore_item_listing","reason":"own-school moderator restores hidden listing","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school hidden listing","searchPath":"pg_catalog"},
     {"name":"remove_item_listing","reason":"own-school moderator permanently withdraws listing","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school active or hidden listing","searchPath":"pg_catalog"},
-    {"name":"list_listing_moderation_queue","reason":"own-school moderator lists hidden listings with report counts","callerDerivation":"auth.uid(); school from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"}
+    {"name":"list_listing_moderation_queue","reason":"own-school moderator lists hidden listings with report counts","callerDerivation":"auth.uid(); school from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
+    {"name":"create_restricted_listing_item","reason":"global admin creates restricted catalogue entry with match terms","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue; no school argument","searchPath":"pg_catalog"},
+    {"name":"update_restricted_listing_item","reason":"global admin updates label match terms or soft-deactivates restricted entry","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue; no school argument","searchPath":"pg_catalog"},
+    {"name":"list_all_restricted_listing_items","reason":"global admin lists full restricted catalogue including inactive and match terms","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -172,6 +175,9 @@
     {"name":"listing_apply_status","reason":"internal gated listing status transition helper","callerDerivation":"definer listing status/moderation RPCs only","schoolScope":"authorised listing","searchPath":"pg_catalog"},
     {"name":"listing_require_moderator_membership","reason":"internal verified moderator membership derivation for listing moderation","callerDerivation":"definer listing moderation RPCs only","schoolScope":"caller moderator school","searchPath":"pg_catalog"},
     {"name":"listing_moderation_queue_item_json","reason":"internal moderation queue projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised queue row","searchPath":"pg_catalog"},
-    {"name":"listing_author_transition","reason":"internal author collected fulfilled withdraw transition helper","callerDerivation":"definer author status RPCs only","schoolScope":"own listing","searchPath":"pg_catalog"}
+    {"name":"listing_author_transition","reason":"internal author collected fulfilled withdraw transition helper","callerDerivation":"definer author status RPCs only","schoolScope":"own listing","searchPath":"pg_catalog"},
+    {"name":"listing_restricted_item_json","reason":"internal restricted catalogue projection without money fields","callerDerivation":"definer admin RPCs only","schoolScope":"authorised catalogue row","searchPath":"pg_catalog"},
+    {"name":"listing_require_admin","reason":"internal global admin gate for restricted catalogue mutations","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"},
+    {"name":"listing_normalise_match_terms","reason":"internal match-term normalisation and privacy filter for restricted catalogue","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"}
   ]
 }

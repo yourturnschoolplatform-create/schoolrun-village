@@ -189,6 +189,12 @@ const calls: Record<string, string> = {
   listing_require_moderator_membership: 'select public.listing_require_moderator_membership()',
   listing_moderation_queue_item_json: 'select public.listing_moderation_queue_item_json(null::public.item_listings, 0)',
   listing_author_transition: `select public.listing_author_transition('${instance}'::uuid, 'withdrawn', 'withdrawn')`,
+  create_restricted_listing_item: "select public.create_restricted_listing_item('smoke_item', 'Smoke restricted item', array['smoke item'])",
+  update_restricted_listing_item: `select public.update_restricted_listing_item('${instance}'::uuid, 'Smoke label', array['smoke term'], true)`,
+  list_all_restricted_listing_items: 'select public.list_all_restricted_listing_items()',
+  listing_restricted_item_json: 'select public.listing_restricted_item_json(null::public.listing_restricted_items)',
+  listing_require_admin: 'select public.listing_require_admin()',
+  listing_normalise_match_terms: "select public.listing_normalise_match_terms(array['term one'])",
 };
 
 describe('allowlist RPC call coverage', () => {

@@ -48,6 +48,7 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0045_day9_item_listings.sql'), 'utf8'),
   readFile(resolve('db/migrations/0046_day9_listing_audit_payload.sql'), 'utf8'),
   readFile(resolve('db/migrations/0047_day9_listing_status_moderation.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0048_day9_restricted_items_admin.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -422,6 +423,20 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(moderation).toMatch(/collected|fulfilled/i);
     expect(moderation).toMatch(/set search_path = pg_catalog/i);
     expect(moderation).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds administrator restricted catalogue create update and full list without money fields', async () => {
+    const admin = (await readFile(resolve('db/migrations/0048_day9_restricted_items_admin.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(admin).toMatch(/function public\.create_restricted_listing_item/i);
+    expect(admin).toMatch(/function public\.update_restricted_listing_item/i);
+    expect(admin).toMatch(/function public\.list_all_restricted_listing_items/i);
+    expect(admin).toMatch(/listing_require_admin/i);
+    expect(admin).toMatch(/yourturn\.listing_restricted_admin/i);
+    expect(admin).toMatch(/set search_path = pg_catalog/i);
+    expect(admin).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
