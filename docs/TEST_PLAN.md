@@ -151,7 +151,13 @@ Trust holds, appeals, no-show/false-report on TEST. Migration `0032_day6_trust_h
 
 ## Day 6 wrap-up — 2026-11-07 (TEST only)
 
-Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 97 public functions, 58 authenticated entries, 23 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **306/306** across 11 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. DEV not migrated. Contact privacy scan includes Day 6 RPCs; only `accept_current_consent` remains known legacy `42702` (not a phone leak). Aggregate Day 6 stays `[~]` for undelivered running-late notice posting. **Day 7 is not started.**
+Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 97 public functions, 58 authenticated entries, 23 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **306/306** across 11 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. DEV not migrated. Contact privacy scan includes Day 6 RPCs; only `accept_current_consent` remains known legacy `42702` (not a phone leak). Aggregate Day 6 stays `[~]` for undelivered running-late notice posting (moved to Day 7 Task 7.4).
+
+## Day 7 start — 2026-11-07 (TEST only)
+
+**TASK DAY 7** opened work on branch `wip/day7-notices-retention` from the Day 6 wrap tip. Scope (from Day 5/6 residuals in `docs/DECISIONS.md` / `TODO.md`): phone-free school notice; outbound email relay transport; 90-day purge of departure/contact/notice logs; running-late notice store for late trust deltas. **Handover reminder delivery remains Day 8 and is not started.**
+
+Baseline milestone verification reused the green Day 6 wrap-up gate and re-ran `npm run verify` on TEST at Day 7 start: exit **0**; unit **47/47**; allowlist `97/58/23`; RLS **306/306**. Raw: `docs/evidence/DAY7_START_VERIFY_RAW.txt`. No new migration in this start task. Tasks 7.1–7.4 are open; no Day 7 feature SQL or live suite exists yet at branch open.
 
 ## G4 evidence — 2026-11-06 (TEST only)
 

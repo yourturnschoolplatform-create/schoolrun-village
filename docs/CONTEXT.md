@@ -43,11 +43,15 @@ Full TEST `npm run verify` exit 0 (47 unit, 252 RLS). Tasks 5.1 / 5.2 backend / 
 
 ## Day 6 wrap-up — 2026-11-07
 
-Full TEST `npm run verify` exit 0 (47 unit, 306 RLS, allowlist 97/58/23). Tasks 6.1–6.3 evidenced; aggregate Day 6 remains `[~]` (running-late notice store). Wait for **`GO DAY 7`**. Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`.
+Full TEST `npm run verify` exit 0 (47 unit, 306 RLS, allowlist 97/58/23). Tasks 6.1–6.3 evidenced; aggregate Day 6 remains `[~]` until running-late notice posting lands under Day 7 Task 7.4. Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`.
 
-## Current scope — Day 6
+## Day 7 start — 2026-11-07
 
-Authorised by **TASK DAY 6** (wrap-up). Work branch `wip/day6-trust`. Scope: trust scoring under published policy, band-only disclosure, no-show/false-report, safety hold and appeals. TEST only; no Day 7. See `TODO.md` Tasks 6.1–6.3.
+Authorised by **TASK DAY 7**. Work branch `wip/day7-notices-retention` from Day 6 wrap tip. Baseline `npm run verify` on TEST exit 0 (47 unit, 306 RLS, allowlist 97/58/23). Raw: `docs/evidence/DAY7_START_VERIFY_RAW.txt`. No new migration at start. Scope: school notice, outbound email relay transport, 90-day purge, running-late notices. TEST only; **no Day 8** (handover reminder delivery). See `TODO.md` Tasks 7.1–7.4.
+
+## Current scope — Day 7
+
+Authorised by **TASK DAY 7**. Work branch `wip/day7-notices-retention`. Closing Day 5/6 residuals that are not reminder delivery. Child data remains nickname + year level only; notices stay phone-free; no amount/price/currency; safety features stay free; no live location.
 
 ### Task 6.1 — score ledger and band projection
 

@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** Day 6 wrap-up complete on `wip/day6-trust` (TEST only). Aggregate Day 5 remains `[~]`. Aggregate Day 6 remains `[~]` (running-late notice store still open). **Do not start Day 7** until **`GO DAY 7`**. Mark `[x]` only with passing live names and raw output.
+> **Current authorised scope:** Day 7 started on `wip/day7-notices-retention` (TEST only). Aggregate Day 5 remains `[~]`. Aggregate Day 6 remains `[~]` until running-late notice posting is evidenced under Day 7. **Do not start Day 8** (handover reminder delivery) until **`GO DAY 8`**. Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -209,7 +209,7 @@ The four new public tables and private mobile table all have RLS and live covera
 
 Branch: `wip/day6-trust` (from `main` @ Day 5 wrap-up tip). Apply new SQL/fixtures to TEST only. Exact trust scores never leave the database to other parents; clients see **bands** only (`Trusted` / `Standard` / `Caution` / `Restricted` / `Suspended`). No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only.
 
-**Day 6 wrap-up — 2026-11-07, TEST only.** Full `npm run verify` exit **0**: unit **47/47**; allowlist `97/58/23`; RLS **306/306** (migration-contract, live-rls, rpc-smoke, invitation/g3, ledger, contact, handover, trust, trust-deltas, trust-holds). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. Tasks 6.1–6.3 evidenced `[x]`. Aggregate Day 6 stays `[~]` until running-late notice posting is evidenced. **Do not start Day 7** without **`GO DAY 7`**.
+**Day 6 wrap-up — 2026-11-07, TEST only.** Full `npm run verify` exit **0**: unit **47/47**; allowlist `97/58/23`; RLS **306/306** (migration-contract, live-rls, rpc-smoke, invitation/g3, ledger, contact, handover, trust, trust-deltas, trust-holds). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. Tasks 6.1–6.3 evidenced `[x]`. Aggregate Day 6 stays `[~]` until running-late notice posting is evidenced under Day 7 Task 7.4. Day 7 authorised by **TASK DAY 7**.
 
 **Baseline (Day 6 start):** Day 5 wrap-up `npm run verify` exit 0 on TEST (47 unit / 252 RLS). Day 6 start verification raw: `docs/evidence/DAY6_START_VERIFY_RAW.txt`.
 
@@ -228,4 +228,30 @@ Published-policy deltas on completion (+1 helper), schedule/swap cancels (−3/�
 
 ### [x] Task 6.3 — no-show, false-report, safety hold, and appeal
 
-Provisional no-show/false-report; moderator confirm/reject and 24h sweep; safety hold (swap-only disable); 48h appeals; no-show trip penalties (+2) via `trust_trip_penalties`; append-only audit. Live **6/6** (`npm run test:trust-holds:live`). Raw: `docs/evidence/TASK_6_3_TRUST_HOLDS_LIVE_RAW.txt`. Migration `0032`. Stop after Day 6; wait for **`GO DAY 7`**.
+Provisional no-show/false-report; moderator confirm/reject and 24h sweep; safety hold (swap-only disable); 48h appeals; no-show trip penalties (+2) via `trust_trip_penalties`; append-only audit. Live **6/6** (`npm run test:trust-holds:live`). Raw: `docs/evidence/TASK_6_3_TRUST_HOLDS_LIVE_RAW.txt`. Migration `0032`. Running-late notice store deferred to Day 7 Task 7.4.
+
+## [~] Day 7 — school notice, email relay, retention purge, and running-late notices
+
+Branch: `wip/day7-notices-retention` (from Day 6 wrap tip `5f9de3d` on `wip/day6-trust`). Apply new SQL/fixtures to TEST only. No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only. School notices never include phone, email, address, nickname, trust score, or contact data. **Handover reminder delivery is Day 8 and is out of scope.**
+
+**Baseline (Day 7 start):** Day 6 wrap-up `npm run verify` exit 0 on TEST (47 unit / 306 RLS; allowlist 97/58/23). Day 7 start verification raw: `docs/evidence/DAY7_START_VERIFY_RAW.txt`. No new migration in this start task.
+
+- Close Day 5/6 operational residuals that are not Day 8 delivery: phone-free school notice copy, configurable outbound email relay transport (server admin module only), 90-day purge of departure/contact/notice logs after a swap ends, and running-late notice posting that feeds late trust deltas (−2 with prior notice before window start, else −5).
+- Every new table: RLS + live test. Every new function: explicit grants, `search_path = pg_catalog` only, allowlist entry, cross-school live test. Non-privileged `authenticated` + synthetic JWT claims.
+
+### [ ] Task 7.1 — phone-free school notice
+
+- Generate a copyable school notice from an accepted swap using only year level, date, and collector display name. Exclude phone number, email, address, child nickname, trust score, price, and contact data.
+- Persist notice generation/access logs needed for the 90-day retention policy without storing forbidden fields. RLS + live cross-school denial. Explicit grants, pg_catalog-only path, allowlist entry.
+
+### [ ] Task 7.2 — outbound email relay transport
+
+- Configure server-admin outbound email transport for the declared email-relay default channel so accepted-swap partner notifications can leave the in-app-only limitation. No secrets in client bundles. No claim of Day 8 reminder delivery. Live/unit evidence that relay send paths stay server-scoped and do not leak mobiles into public tables/views.
+
+### [ ] Task 7.3 — 90-day retention purge
+
+- Enforce deletion of departure checks, contact disclosures, and notice logs 90 days after a swap ends. Scheduled/sweep job with fixed search_path helpers, allowlist entries, and live proof that in-window rows remain and expired rows are purged without touching ledger/trust history or child profiles.
+
+### [ ] Task 7.4 — running-late notice store
+
+- Persist a prior running-late notice before the pickup window start so Day 6 late-arrival scoring can apply −2 instead of −5. Participant-scoped post/read; School B denied School A notices; clients cannot forge notices after window start for score relief. Wire into existing late trust delta path. RLS + live tests. Stop after Day 7; wait for **`GO DAY 8`**.
