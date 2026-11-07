@@ -41,9 +41,13 @@ The user confirmed G1–G5 evidence and authorised merging `wip/day4-stabilisati
 
 Full TEST `npm run verify` exit 0 (47 unit, 252 RLS). Tasks 5.1 / 5.2 backend / 5.3 live scopes are evidenced; aggregate Day 5 remains `[~]` (school notice, email relay transport, 90-day purge, Day 8 reminder delivery).
 
+## Day 6 wrap-up — 2026-11-07
+
+Full TEST `npm run verify` exit 0 (47 unit, 306 RLS, allowlist 97/58/23). Tasks 6.1–6.3 evidenced; aggregate Day 6 remains `[~]` (running-late notice store). Wait for **`GO DAY 7`**. Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`.
+
 ## Current scope — Day 6
 
-Authorised by **TASK DAY 6**. Work branch `wip/day6-trust`. Scope: trust scoring under published policy, band-only disclosure, no-show/false-report, safety hold and appeals. TEST only; no Day 7. See `TODO.md` Tasks 6.1–6.3.
+Authorised by **TASK DAY 6** (wrap-up). Work branch `wip/day6-trust`. Scope: trust scoring under published policy, band-only disclosure, no-show/false-report, safety hold and appeals. TEST only; no Day 7. See `TODO.md` Tasks 6.1–6.3.
 
 ### Task 6.1 — score ledger and band projection
 

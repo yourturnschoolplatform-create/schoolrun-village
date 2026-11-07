@@ -149,6 +149,10 @@ Policy-driven trust deltas on TEST. Migration `0031_day6_trust_policy_deltas.sql
 
 Trust holds, appeals, no-show/false-report on TEST. Migration `0032_day6_trust_holds_appeals.sql`. Live suite `npm run test:trust-holds:live`: **6/6** pass. Raw: `docs/evidence/TASK_6_3_TRUST_HOLDS_LIVE_RAW.txt`. Allowlist after: `97` public / `58` authenticated / `23` internal. Confirmed no-show −20 (−10 with backup) plus two trip penalties; false-report −15; upheld hold −25 (`reviewed_safety_violation`); active hold blocks swap accept; appeal uplift lifts hold; School B denied School A resolution/reads. Running-late notice store not added. DEV not migrated. Day 7 not started.
 
+## Day 6 wrap-up — 2026-11-07 (TEST only)
+
+Full `npm run verify` on TEST exit **0**. TypeScript and ESLint clean. Unit **47/47**. Allowlist `Function allowlist verified: 97 public functions, 58 authenticated entries, 23 internal declarations.` RLS config `tests/rls/**/*.test.ts`: **306/306** across 11 files (migration-contract, live-rls incl. C3/G1, rpc-smoke, invitation/g3, ledger-live, contact-live, handover-live, trust-live, trust-deltas-live, trust-holds-live). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. No new migration in this wrap-up. DEV not migrated. Contact privacy scan includes Day 6 RPCs; only `accept_current_consent` remains known legacy `42702` (not a phone leak). Aggregate Day 6 stays `[~]` for undelivered running-late notice posting. **Day 7 is not started.**
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** Day 6 trust engine on `wip/day6-trust` (TEST only). Aggregate Day 5 remains `[~]`. **Do not start Day 7.** Mark `[x]` only with passing live names and raw output.
+> **Current authorised scope:** Day 6 wrap-up complete on `wip/day6-trust` (TEST only). Aggregate Day 5 remains `[~]`. Aggregate Day 6 remains `[~]` (running-late notice store still open). **Do not start Day 7** until **`GO DAY 7`**. Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -209,7 +209,9 @@ The four new public tables and private mobile table all have RLS and live covera
 
 Branch: `wip/day6-trust` (from `main` @ Day 5 wrap-up tip). Apply new SQL/fixtures to TEST only. Exact trust scores never leave the database to other parents; clients see **bands** only (`Trusted` / `Standard` / `Caution` / `Restricted` / `Suspended`). No amount/price/currency. Safety features stay free. No live location. Child data remains nickname + year level only.
 
-**Baseline (Day 6 start):** Day 5 wrap-up `npm run verify` exit 0 on TEST (47 unit / 252 RLS). Day 6 start verification raw: `docs/evidence/DAY6_START_VERIFY_RAW.txt`. Existing inputs already present: `profiles.trust_score` (default 70), published `trust_policy_versions`, immutable `schedule_cancellation_events`, completed-leg ledger/handover facts. Scoring engine and hold/appeal workflows are **not** implemented yet.
+**Day 6 wrap-up — 2026-11-07, TEST only.** Full `npm run verify` exit **0**: unit **47/47**; allowlist `97/58/23`; RLS **306/306** (migration-contract, live-rls, rpc-smoke, invitation/g3, ledger, contact, handover, trust, trust-deltas, trust-holds). Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`. Tasks 6.1–6.3 evidenced `[x]`. Aggregate Day 6 stays `[~]` until running-late notice posting is evidenced. **Do not start Day 7** without **`GO DAY 7`**.
+
+**Baseline (Day 6 start):** Day 5 wrap-up `npm run verify` exit 0 on TEST (47 unit / 252 RLS). Day 6 start verification raw: `docs/evidence/DAY6_START_VERIFY_RAW.txt`.
 
 - Consume Day 3 `schedule_cancellation_events` and Day 5 completion/cancellation facts under the published trust policy: completed trip +1; eligible urgent cover +3 (within four hours of pickup, max two/week, no same-household); cancel under 24 hours -3, under two hours -8; late 15+ minutes after window start -2 with prior running-late notice else -5; confirmed no-show -20 (or -10 if backup accepts) plus two trips owed; confirmed false report -15; reviewed safety violation -25.
 - Keep scores server-side; expose band only to other parents. Thresholds/actions only via immutable published `trust_policy_versions`.
