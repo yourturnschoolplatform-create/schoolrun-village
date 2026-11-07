@@ -13,6 +13,7 @@ const foundationTables = [
   'swap_leg_confirmations', 'swap_leg_reminders', 'trust_score_events',
   'trust_incident_reports', 'trust_safety_holds', 'trust_appeals', 'trust_trip_penalties',
   'school_notices', 'school_notice_access_logs',
+  'email_relay_delivery_policies', 'email_relay_queue', 'email_relay_delivery_events',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -29,6 +30,7 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0027_day6_trust_score_engine.sql'), 'utf8'),
   readFile(resolve('db/migrations/0032_day6_trust_holds_appeals.sql'), 'utf8'),
   readFile(resolve('db/migrations/0033_day7_school_notices.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0035_day7_email_relay_queue.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -247,6 +249,26 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(notices).toMatch(/set search_path = pg_catalog/i);
     expect(notices).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|email|address)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds email relay queue masking and delivery policy without SMTP secrets', async () => {
+    const relay = (await readFile(resolve('db/migrations/0035_day7_email_relay_queue.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(relay).toMatch(/create table public\.email_relay_delivery_policies/i);
+    expect(relay).toMatch(/create table public\.email_relay_queue/i);
+    expect(relay).toMatch(/create table public\.email_relay_delivery_events/i);
+    expect(relay).toMatch(/alter table public\.email_relay_queue enable row level security/i);
+    expect(relay).toMatch(/function public\.mask_email_address/i);
+    expect(relay).toMatch(/function public\.enqueue_email_relay/i);
+    expect(relay).toMatch(/function public\.claim_email_relay_batch/i);
+    expect(relay).toMatch(/handover_reminder/i);
+    expect(relay).toMatch(/server_admin_only/i);
+    expect(relay).toMatch(/grant execute on function public\.claim_email_relay_batch\(integer\) to service_role/i);
+    expect(relay).toMatch(/set search_path = pg_catalog/i);
+    expect(relay).not.toMatch(/\b(smtp_password|api_key|secret_key)\b/i);
+    expect(relay).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
 });

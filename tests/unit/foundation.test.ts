@@ -72,6 +72,17 @@ describe('Supabase key boundary', () => {
 
     const adminContent = await readFile(resolve('server/admin/service-role.ts'), 'utf8');
     expect(adminContent).toContain(serviceKeyName);
+
+    const relayTransport = await readFile(resolve('server/admin/email-relay.ts'), 'utf8');
+    expect(relayTransport).toContain("from './service-role.js'");
+    expect(relayTransport).toContain('claim_email_relay_batch');
+    expect(relayTransport).toContain('handover_reminder');
+    expect(relayTransport).not.toContain('SMTP_PASSWORD');
+    for (const file of clientFiles) {
+      const content = await readFile(resolve(file), 'utf8');
+      expect(content).not.toContain('email-relay');
+      expect(content).not.toContain('claim_email_relay_batch');
+    }
   });
 });
 

@@ -163,6 +163,10 @@ Baseline milestone verification reused the green Day 6 wrap-up gate and re-ran `
 
 Phone-free school notices and school-scoped moderation on TEST. Migrations `0033_day7_school_notices.sql`, `0034_day7_school_notice_ambiguity.sql`. Live suite `npm run test:school-notice:live`: **6/6** pass. Raw: `docs/evidence/TASK_7_1_SCHOOL_NOTICE_LIVE_RAW.txt`. Allowlist after: `107` public / `63` authenticated / `28` internal. Participants generate/get/list notices with year levels + date + collector display name only; moderator queue and withdraw; School B denied School A; direct DML denied; append-only access logs; pg_catalog paths. DEV not migrated. Tasks 7.2–7.4 and Day 8 not started.
 
+## Task 7.2 — 2026-11-07 (TEST only)
+
+Outbound email relay queue, masking, and delivery policy on TEST. Migrations `0035_day7_email_relay_queue.sql`, `0036_day7_email_relay_policy_grants.sql`. Live suite `npm run test:email-relay:live`: **6/6** pass. Raw: `docs/evidence/TASK_7_2_EMAIL_RELAY_LIVE_RAW.txt`. Allowlist after: `120` public / `68` authenticated / `36` internal. Masked recipient only on authenticated paths; raw email only via service-role claim; `handover_reminder` blocked; School B denied School A; server module `server/admin/email-relay.ts` stays out of client bundles. DEV not migrated. Tasks 7.3–7.4 and Day 8 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

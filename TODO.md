@@ -253,9 +253,18 @@ Branch: `wip/day7-notices-retention` (from Day 6 wrap tip `5f9de3d` on `wip/day6
 - `listMineAndGet: participants list and get own notice; payload stays phone-free`
 - `catalogAllowlistAndSearchPath: new tables RLS SELECT-only; RPCs allowlisted with pg_catalog paths; no money fields`
 
-### [ ] Task 7.2 — outbound email relay transport
+### [x] Task 7.2 — outbound email relay queue, masking, and delivery policy
 
-- Configure server-admin outbound email transport for the declared email-relay default channel so accepted-swap partner notifications can leave the in-app-only limitation. No secrets in client bundles. No claim of Day 8 reminder delivery. Live/unit evidence that relay send paths stay server-scoped and do not leak mobiles into public tables/views.
+- Published `email_relay_delivery_policies` with server_admin_only transport; `handover_reminder` excluded (Day 8). Outbound `email_relay_queue` + append-only delivery events. Masked recipient displays only; raw email only via service-role claim. Server module `server/admin/email-relay.ts`. No secrets in client bundles. No mobiles/amount/price/currency in relay tables.
+
+**Passing live evidence:** `tests/rls/email-relay-live.test.ts`, **6/6** on TEST (`npm run test:email-relay:live`). Raw: `docs/evidence/TASK_7_2_EMAIL_RELAY_LIVE_RAW.txt`. Migrations `0035`–`0036`. Allowlist after: `120` public / `68` authenticated / `36` internal. Exact passing names:
+
+- `enqueueMasksRecipient: partner enqueue returns masked address only and never raw email or mobile`
+- `deliveryPolicyBlocksHandoverAndExposesTransport: policy excludes Day 8 reminders; handover enqueue denied`
+- `crossSchoolAndRoleDenials: stranger School B parent/moderator cannot enqueue or read School A queue`
+- `claimAndCompleteServiceOnly: authenticated denied; privileged claim exposes email once then marks sent`
+- `noDirectDmlAndCatalogPrivacy: clients cannot mutate queue; no email phone money columns`
+- `catalogAllowlistAndSearchPath: RLS SELECT-only; RPCs allowlisted; claim internal to service_role`
 
 ### [ ] Task 7.3 — 90-day retention purge
 

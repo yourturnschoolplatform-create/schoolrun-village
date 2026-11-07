@@ -55,7 +55,11 @@ Authorised by **TASK DAY 7**. Work branch `wip/day7-notices-retention`. Closing 
 
 ### Task 7.1 — phone-free school notices and moderation
 
-Migrations `0033`–`0034` add `school_notices` and `school_notice_access_logs` with RLS, phone-free generate/get/list RPCs, school moderator queue and withdraw. Live **6/6** on TEST. Raw: `docs/evidence/TASK_7_1_SCHOOL_NOTICE_LIVE_RAW.txt`. Tasks 7.2–7.4 remain open. Day 8 not started.
+Migrations `0033`–`0034` add `school_notices` and `school_notice_access_logs` with RLS, phone-free generate/get/list RPCs, school moderator queue and withdraw. Live **6/6** on TEST. Raw: `docs/evidence/TASK_7_1_SCHOOL_NOTICE_LIVE_RAW.txt`.
+
+### Task 7.2 — outbound email relay queue, masking, delivery policy
+
+Migrations `0035`–`0036` add delivery policies, outbound queue, delivery events, masking, service-role claim/complete, and server-admin transport module. Live **6/6** on TEST. Raw: `docs/evidence/TASK_7_2_EMAIL_RELAY_LIVE_RAW.txt`. Tasks 7.3–7.4 remain open. Day 8 not started.
 
 ### Task 6.1 — score ledger and band projection
 
