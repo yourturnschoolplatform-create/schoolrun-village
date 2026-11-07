@@ -15,6 +15,7 @@ const foundationTables = [
   'school_notices', 'school_notice_access_logs',
   'email_relay_delivery_policies', 'email_relay_queue', 'email_relay_delivery_events',
   'departure_check_logs', 'retention_purge_runs',
+  'running_late_notices',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -33,6 +34,7 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0033_day7_school_notices.sql'), 'utf8'),
   readFile(resolve('db/migrations/0035_day7_email_relay_queue.sql'), 'utf8'),
   readFile(resolve('db/migrations/0037_day7_retention_purge.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0039_day7_running_late_notices.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -289,6 +291,24 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(purge).toMatch(/child_profiles/i);
     expect(purge).toMatch(/set search_path = pg_catalog/i);
     expect(purge).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds running-late notices and late trust penalties without location or money fields', async () => {
+    const late = (await readFile(resolve('db/migrations/0039_day7_running_late_notices.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(late).toMatch(/create table public\.running_late_notices/i);
+    expect(late).toMatch(/alter table public\.running_late_notices enable row level security/i);
+    expect(late).toMatch(/function public\.post_running_late_notice/i);
+    expect(late).toMatch(/function public\.get_running_late_notice/i);
+    expect(late).toMatch(/function public\.list_my_running_late_notices/i);
+    expect(late).toMatch(/function public\.post_trust_late_arrival/i);
+    expect(late).toMatch(/late_with_advance_notice/i);
+    expect(late).toMatch(/late_without_advance_notice/i);
+    expect(late).toMatch(/posted_at < window_starts_at/i);
+    expect(late).toMatch(/set search_path = pg_catalog/i);
+    expect(late).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });

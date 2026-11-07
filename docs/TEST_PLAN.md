@@ -171,6 +171,10 @@ Outbound email relay queue, masking, and delivery policy on TEST. Migrations `00
 
 90-day disclosure / access-log / departure-check retention purge on TEST. Migrations `0037_day7_retention_purge.sql`, `0038_day7_retention_purge_coalesce.sql`. Live suite `npm run test:retention-purge:live`: **5/5** pass. Raw: `docs/evidence/TASK_7_3_RETENTION_PURGE_LIVE_RAW.txt`. Allowlist after: `125` public / `69` authenticated / `40` internal. Purges mobiles, backups, consents, contact notifications, notice access logs/notices, departure checks, and email-relay rows for ended swaps ≥90d; preserves ledger, trust events, children, confirmations, cancellation events. Authenticated and School B denied purge; ordinary deletes still raise 55000 without purge GUC. DEV not migrated. Task 7.4 and Day 8 not started.
 
+## Task 7.4 — 2026-11-07 (TEST only)
+
+Running-late notice store and late trust penalties on TEST. Migration `0039_day7_running_late_notices.sql`. Live suite `npm run test:running-late:live`: **6/6** pass. Raw: `docs/evidence/TASK_7_4_RUNNING_LATE_LIVE_RAW.txt`. Allowlist after: `132` public / `72` authenticated / `44` internal. Helper posts before requester pickup window start; partner read; after-window post denied (`22023`); 15+ minute late `pickup_done` posts −5 without notice or −2 with prior notice; School B denied School A; direct DML denied; no amount/price/currency/location columns. DEV not migrated. Day 8 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

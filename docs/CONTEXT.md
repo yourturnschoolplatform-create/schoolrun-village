@@ -43,7 +43,7 @@ Full TEST `npm run verify` exit 0 (47 unit, 252 RLS). Tasks 5.1 / 5.2 backend / 
 
 ## Day 6 wrap-up — 2026-11-07
 
-Full TEST `npm run verify` exit 0 (47 unit, 306 RLS, allowlist 97/58/23). Tasks 6.1–6.3 evidenced; aggregate Day 6 remains `[~]` until running-late notice posting lands under Day 7 Task 7.4. Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`.
+Full TEST `npm run verify` exit 0 (47 unit, 306 RLS, allowlist 97/58/23). Tasks 6.1–6.3 evidenced; running-late notice posting evidenced under Day 7 Task 7.4. Aggregate Day 6 remains `[~]` pending Day 7 wrap. Raw: `docs/evidence/DAY6_WRAPUP_VERIFY_RAW.txt`.
 
 ## Day 7 start — 2026-11-07
 
@@ -63,7 +63,11 @@ Migrations `0035`–`0036` add delivery policies, outbound queue, delivery event
 
 ### Task 7.3 — 90-day disclosure and access log retention purge
 
-Migrations `0037`–`0038` add `departure_check_logs`, `retention_purge_runs`, service-role `purge_expired_disclosure_retention`, policy reader `get_retention_purge_policy`, and coalesce remediation under `pg_catalog`-only path. Live **5/5** on TEST. Raw: `docs/evidence/TASK_7_3_RETENTION_PURGE_LIVE_RAW.txt`. Allowlist after: `125` public / `69` authenticated / `40` internal. Task 7.4 remains open. Day 8 not started.
+Migrations `0037`–`0038` add `departure_check_logs`, `retention_purge_runs`, service-role `purge_expired_disclosure_retention`, policy reader `get_retention_purge_policy`, and coalesce remediation under `pg_catalog`-only path. Live **5/5** on TEST. Raw: `docs/evidence/TASK_7_3_RETENTION_PURGE_LIVE_RAW.txt`. Allowlist after: `125` public / `69` authenticated / `40` internal.
+
+### Task 7.4 — running-late notices and late trust penalties
+
+Migration `0039` adds `running_late_notices` with RLS, helper-only `post_running_late_notice` before pickup window start, participant get/list, and `post_trust_late_arrival` on `pickup_done` (−2 with prior notice, else −5 at 15+ minutes). Live **6/6** on TEST. Raw: `docs/evidence/TASK_7_4_RUNNING_LATE_LIVE_RAW.txt`. Allowlist after: `132` public / `72` authenticated / `44` internal. Day 8 not started.
 
 ### Task 6.1 — score ledger and band projection
 
@@ -75,7 +79,7 @@ Migration `0031` posts published-policy deltas from completed legs, schedule/swa
 
 ### Task 6.3 — holds, appeals, no-show / false-report
 
-Migration `0032` adds `trust_incident_reports`, `trust_safety_holds`, `trust_appeals`, `trust_trip_penalties` with RLS; moderator resolution; swap-only hold guards on match/propose/accept; provisional 24h and appeal 48h windows. Late running-notice posting remains deferred (no notice store).
+Migration `0032` adds `trust_incident_reports`, `trust_safety_holds`, `trust_appeals`, `trust_trip_penalties` with RLS; moderator resolution; swap-only hold guards on match/propose/accept; provisional 24h and appeal 48h windows. Running-late notice store and late trust wiring landed in Task 7.4.
 
 ## Current scope — Task 5.1
 

@@ -2,7 +2,7 @@
 
 > Status key: `[ ]` open · `[~]` in progress · `[x]` evidenced complete
 >
-> **Current authorised scope:** Day 7 started on `wip/day7-notices-retention` (TEST only). Aggregate Day 5 remains `[~]`. Aggregate Day 6 remains `[~]` until running-late notice posting is evidenced under Day 7. **Do not start Day 8** (handover reminder delivery) until **`GO DAY 8`**. Mark `[x]` only with passing live names and raw output.
+> **Current authorised scope:** Day 7 Tasks 7.1–7.4 evidenced on `wip/day7-notices-retention` (TEST only). Aggregate Day 5/6/7 remain `[~]` until a Day 7 wrap verifies the full suite. **Do not start Day 8** (handover reminder delivery) until **`GO DAY 8`**. Mark `[x]` only with passing live names and raw output.
 
 ## [~] Day 1 — project, PWA, policy, and security foundation
 
@@ -278,6 +278,15 @@ Branch: `wip/day7-notices-retention` (from Day 6 wrap tip `5f9de3d` on `wip/day6
 - `noClientDeleteWithoutPurgeFlag: ordinary deletes of disclosures still raise 55000`
 - `catalogAllowlistAndSearchPath: new tables RLS; purge service-only; no money fields`
 
-### [ ] Task 7.4 — running-late notice store
+### [x] Task 7.4 — running-late notice store
 
-- Persist a prior running-late notice before the pickup window start so Day 6 late-arrival scoring can apply −2 instead of −5. Participant-scoped post/read; School B denied School A notices; clients cannot forge notices after window start for score relief. Wire into existing late trust delta path. RLS + live tests. Stop after Day 7; wait for **`GO DAY 8`**.
+- Persist a prior running-late notice before the pickup window start so Day 6 late-arrival scoring can apply −2 instead of −5. Helper-only post; participant read; School B denied School A; clients cannot forge notices after window start. `pickup_done` confirmation posts `late_with_advance_notice` (−2) or `late_without_advance_notice` (−5). RLS + live tests. Day 7 feature work complete; wait for **`GO DAY 8`**.
+
+**Passing live evidence:** `tests/rls/running-late-live.test.ts`, **6/6** on TEST (`npm run test:running-late:live`). Raw: `docs/evidence/TASK_7_4_RUNNING_LATE_LIVE_RAW.txt`. Migration `0039`. Allowlist after: `132` public / `72` authenticated / `44` internal. Exact passing names:
+
+- `postBeforeWindowAndRead: helper posts before window; partner reads; idempotent`
+- `rejectAfterWindowStart: helper cannot post once pickup window has started`
+- `lateWithoutNoticePenalty: 15+ minutes late without prior notice posts -5`
+- `lateWithPriorNoticePenalty: prior notice before window yields -2 on late pickup`
+- `crossSchoolAndRoleDenials: School B and requester cannot post or read School A notice`
+- `noClientMutateAndCatalog: direct DML denied; RLS on; no money or location fields`
