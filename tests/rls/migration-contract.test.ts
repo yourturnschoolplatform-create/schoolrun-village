@@ -14,6 +14,7 @@ const foundationTables = [
   'trust_incident_reports', 'trust_safety_holds', 'trust_appeals', 'trust_trip_penalties',
   'school_notices', 'school_notice_access_logs',
   'email_relay_delivery_policies', 'email_relay_queue', 'email_relay_delivery_events',
+  'departure_check_logs', 'retention_purge_runs',
 ];
 const migrations = await Promise.all([
   readFile(resolve('db/migrations/0001_day1_foundation.sql'), 'utf8'),
@@ -31,6 +32,7 @@ const migrations = await Promise.all([
   readFile(resolve('db/migrations/0032_day6_trust_holds_appeals.sql'), 'utf8'),
   readFile(resolve('db/migrations/0033_day7_school_notices.sql'), 'utf8'),
   readFile(resolve('db/migrations/0035_day7_email_relay_queue.sql'), 'utf8'),
+  readFile(resolve('db/migrations/0037_day7_retention_purge.sql'), 'utf8'),
 ]);
 const sql = migrations.join('\n').replace(/\r\n/g, '\n');
 const day3Sql = (await readFile(resolve('db/migrations/0006_day3_households_schedules_calendar.sql'), 'utf8')).replace(/\r\n/g, '\n');
@@ -269,6 +271,25 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(relay).not.toMatch(/\b(smtp_password|api_key|secret_key)\b/i);
     expect(relay).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds 90-day disclosure retention purge without touching ledger or trust', async () => {
+    const purge = (await readFile(resolve('db/migrations/0037_day7_retention_purge.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(purge).toMatch(/create table public\.departure_check_logs/i);
+    expect(purge).toMatch(/create table public\.retention_purge_runs/i);
+    expect(purge).toMatch(/alter table public\.departure_check_logs enable row level security/i);
+    expect(purge).toMatch(/function public\.purge_expired_disclosure_retention/i);
+    expect(purge).toMatch(/interval '90 days'/i);
+    expect(purge).toMatch(/yourturn\.retention_purge/i);
+    expect(purge).toMatch(/grant execute on function public\.purge_expired_disclosure_retention\(\) to service_role/i);
+    expect(purge).toMatch(/swap_ledger_entries/i);
+    expect(purge).toMatch(/trust_score_events/i);
+    expect(purge).toMatch(/child_profiles/i);
+    expect(purge).toMatch(/set search_path = pg_catalog/i);
+    expect(purge).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
 });

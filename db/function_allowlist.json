@@ -67,7 +67,8 @@
     {"name":"get_email_relay_delivery_policy","reason":"caller reads published school or global email relay delivery policy","callerDerivation":"auth.uid() verified membership school","schoolScope":"own school then global; no SMTP secrets","searchPath":"pg_catalog"},
     {"name":"enqueue_email_relay","reason":"queue outbound partner email relay under delivery policy","callerDerivation":"auth.uid() swap participant; recipient is partner","schoolScope":"accepted same-school swap; handover_reminder blocked","searchPath":"pg_catalog"},
     {"name":"list_my_email_relay_queue","reason":"list caller email relay queue items with masked recipient only","callerDerivation":"auth.uid(); no arguments","schoolScope":"creator or recipient rows only","searchPath":"pg_catalog"},
-    {"name":"list_school_email_relay_queue","reason":"moderator school email relay queue with masked recipients","callerDerivation":"auth.uid(); school derived from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"}
+    {"name":"list_school_email_relay_queue","reason":"moderator school email relay queue with masked recipients","callerDerivation":"auth.uid(); school derived from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
+    {"name":"get_retention_purge_policy","reason":"read 90-day retention targets and preserved tables","callerDerivation":"auth.uid(); no school arguments","schoolScope":"policy metadata only","searchPath":"pg_catalog"}
   ],
   "internal": [
     {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
@@ -105,6 +106,10 @@
     {"name":"email_relay_kind_allowed","reason":"internal delivery-policy kind gate excluding handover_reminder","callerDerivation":"definer helpers only","schoolScope":"school published policy","searchPath":"pg_catalog"},
     {"name":"email_relay_queue_json","reason":"internal masked queue projection; never returns raw email to clients via authenticated RPCs","callerDerivation":"definer list/enqueue only","schoolScope":"authorised queue row","searchPath":"pg_catalog"},
     {"name":"claim_email_relay_batch","reason":"service-role/server-admin claim of due relay rows including raw recipient email","callerDerivation":"service_role or non-browser privileged job; anon/authenticated EXECUTE revoked","schoolScope":"server-selected due rows under policy","searchPath":"pg_catalog"},
-    {"name":"complete_email_relay_delivery","reason":"service-role/server-admin sent or failed outcome writer","callerDerivation":"service_role or non-browser privileged job; anon/authenticated EXECUTE revoked","schoolScope":"claimed queue row school","searchPath":"pg_catalog"}
+    {"name":"complete_email_relay_delivery","reason":"service-role/server-admin sent or failed outcome writer","callerDerivation":"service_role or non-browser privileged job; anon/authenticated EXECUTE revoked","schoolScope":"claimed queue row school","searchPath":"pg_catalog"},
+    {"name":"guard_departure_check_logs","reason":"trigger-only append-only departure checks except retention purge deletes","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
+    {"name":"guard_retention_purge_runs","reason":"trigger-only retention purge run immutability","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
+    {"name":"swap_retention_ended_at","reason":"internal swap end timestamp for 90-day retention eligibility","callerDerivation":"definer purge helper only","schoolScope":"swap row","searchPath":"pg_catalog"},
+    {"name":"purge_expired_disclosure_retention","reason":"service-role/server-admin 90-day purge of disclosures notice logs departure checks and relay rows","callerDerivation":"service_role or non-browser privileged job; anon/authenticated EXECUTE revoked","schoolScope":"ended swaps only; never ledger trust children or confirmations","searchPath":"pg_catalog"}
   ]
 }

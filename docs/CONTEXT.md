@@ -59,7 +59,11 @@ Migrations `0033`–`0034` add `school_notices` and `school_notice_access_logs` 
 
 ### Task 7.2 — outbound email relay queue, masking, delivery policy
 
-Migrations `0035`–`0036` add delivery policies, outbound queue, delivery events, masking, service-role claim/complete, and server-admin transport module. Live **6/6** on TEST. Raw: `docs/evidence/TASK_7_2_EMAIL_RELAY_LIVE_RAW.txt`. Tasks 7.3–7.4 remain open. Day 8 not started.
+Migrations `0035`–`0036` add delivery policies, outbound queue, delivery events, masking, service-role claim/complete, and server-admin transport module. Live **6/6** on TEST. Raw: `docs/evidence/TASK_7_2_EMAIL_RELAY_LIVE_RAW.txt`.
+
+### Task 7.3 — 90-day disclosure and access log retention purge
+
+Migrations `0037`–`0038` add `departure_check_logs`, `retention_purge_runs`, service-role `purge_expired_disclosure_retention`, policy reader `get_retention_purge_policy`, and coalesce remediation under `pg_catalog`-only path. Live **5/5** on TEST. Raw: `docs/evidence/TASK_7_3_RETENTION_PURGE_LIVE_RAW.txt`. Allowlist after: `125` public / `69` authenticated / `40` internal. Task 7.4 remains open. Day 8 not started.
 
 ### Task 6.1 — score ledger and band projection
 

@@ -167,6 +167,10 @@ Phone-free school notices and school-scoped moderation on TEST. Migrations `0033
 
 Outbound email relay queue, masking, and delivery policy on TEST. Migrations `0035_day7_email_relay_queue.sql`, `0036_day7_email_relay_policy_grants.sql`. Live suite `npm run test:email-relay:live`: **6/6** pass. Raw: `docs/evidence/TASK_7_2_EMAIL_RELAY_LIVE_RAW.txt`. Allowlist after: `120` public / `68` authenticated / `36` internal. Masked recipient only on authenticated paths; raw email only via service-role claim; `handover_reminder` blocked; School B denied School A; server module `server/admin/email-relay.ts` stays out of client bundles. DEV not migrated. Tasks 7.3–7.4 and Day 8 not started.
 
+## Task 7.3 — 2026-11-07 (TEST only)
+
+90-day disclosure / access-log / departure-check retention purge on TEST. Migrations `0037_day7_retention_purge.sql`, `0038_day7_retention_purge_coalesce.sql`. Live suite `npm run test:retention-purge:live`: **5/5** pass. Raw: `docs/evidence/TASK_7_3_RETENTION_PURGE_LIVE_RAW.txt`. Allowlist after: `125` public / `69` authenticated / `40` internal. Purges mobiles, backups, consents, contact notifications, notice access logs/notices, departure checks, and email-relay rows for ended swaps ≥90d; preserves ledger, trust events, children, confirmations, cancellation events. Authenticated and School B denied purge; ordinary deletes still raise 55000 without purge GUC. DEV not migrated. Task 7.4 and Day 8 not started.
+
 ## G4 evidence — 2026-11-06 (TEST only)
 
 Day 4 stays `[~]`. No new migration was added. TEST already had `0001`–`0023` applied; `npm run db:migrate:test` skipped every file. DEV was not migrated. Allowlist diff is none: `Function allowlist verified: 69 public functions, 45 authenticated entries, 8 internal declarations.`

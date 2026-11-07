@@ -266,9 +266,17 @@ Branch: `wip/day7-notices-retention` (from Day 6 wrap tip `5f9de3d` on `wip/day6
 - `noDirectDmlAndCatalogPrivacy: clients cannot mutate queue; no email phone money columns`
 - `catalogAllowlistAndSearchPath: RLS SELECT-only; RPCs allowlisted; claim internal to service_role`
 
-### [ ] Task 7.3 — 90-day retention purge
+### [x] Task 7.3 — 90-day retention purge
 
-- Enforce deletion of departure checks, contact disclosures, and notice logs 90 days after a swap ends. Scheduled/sweep job with fixed search_path helpers, allowlist entries, and live proof that in-window rows remain and expired rows are purged without touching ledger/trust history or child profiles.
+- Enforce deletion of departure checks, contact disclosures, notice logs, and email-relay rows 90 days after a swap ends. Service-role `purge_expired_disclosure_retention` with GUC `yourturn.retention_purge=1`; append-only departure logs and purge-run counters; ledger/trust/children/confirmations/cancellation events preserved. Fixed search_path helpers, allowlist entries, live proof that in-window rows remain and expired rows are purged.
+
+**Passing live evidence:** `tests/rls/retention-purge-live.test.ts`, **5/5** on TEST (`npm run test:retention-purge:live`). Raw: `docs/evidence/TASK_7_3_RETENTION_PURGE_LIVE_RAW.txt`. Migrations `0037`–`0038`. Allowlist after: `125` public / `69` authenticated / `40` internal. Exact passing names:
+
+- `purgesExpiredKeepsInWindow: 91-day disclosures and logs removed; 89-day retained`
+- `preservesLedgerTrustAndChildren: purge never deletes ledger trust events or child profiles`
+- `authenticatedDeniedCrossSchool: parents and School B cannot run purge or read foreign departure logs`
+- `noClientDeleteWithoutPurgeFlag: ordinary deletes of disclosures still raise 55000`
+- `catalogAllowlistAndSearchPath: new tables RLS; purge service-only; no money fields`
 
 ### [ ] Task 7.4 — running-late notice store
 

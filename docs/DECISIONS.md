@@ -48,7 +48,7 @@ Numbers are Australian E.164 mobile strings in `yourturn_private.mobile_numbers`
 
 Grant and withdrawal lock the proposal to serialise versions/cancellation. Withdrawal records revoked_at and `cancelled_consent_revoked` while retaining accepted_at, appends one cancellation event and a fixed phone-free partner notification atomically. Repeated withdrawal is idempotent. Losing verification/safety onboarding does not remove an existing owner's right to withdraw; it does remove grant/read rights. A cancelled swap cannot be revived by granting again. Ledger history is untouched.
 
-Partner notification is a real in-app inbox row, displayed/polled while Matches is open. Email relay is the declared default channel policy; no outbound email transport is configured, so this task does not claim to send relay email or email notifications. The UI explicitly states this limitation. No contact retention/purge job is claimed; the existing 90-day post-swap disclosure retention policy still needs operational enforcement before a pilot. SQL is applied to TEST only; DEV and publication remain unchanged.
+Partner notification is a real in-app inbox row, displayed/polled while Matches is open. Email relay is the declared default channel policy; no outbound email transport is configured, so this task does not claim to send relay email or email notifications. The UI explicitly states this limitation. Task 7.3 adds operational 90-day purge of contact disclosures, notice logs, departure checks, and email-relay rows after swap end on TEST; ledger, trust history, children, and confirmations are never purged. SQL is applied to TEST only; DEV and publication remain unchanged.
 
 ## Task 5.3 — two-party handover
 
