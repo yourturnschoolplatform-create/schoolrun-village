@@ -21,6 +21,9 @@
     "sync:brand": "tsx scripts/sync-static-brand.ts",
     "db:migrate": "tsx scripts/run-migrations.ts --target=development",
     "db:migrate:test": "tsx scripts/run-migrations.ts --target=rls-test",
+    "db:mark-membership-verified": "tsx scripts/mark-membership-verified.ts",
+    "db:relax-membership-verified-check": "tsx scripts/dev-relax-membership-verified-check.ts",
+    "db:create-school-invitation": "tsx scripts/dev-create-school-invitation.ts",
     "check:secrets": "tsx scripts/check-client-boundary.ts",
     "db:rls:live": "npm run db:migrate:test && vitest run --config vitest.rls.config.ts tests/rls/live-rls.test.ts tests/rls/ledger-live.test.ts tests/rls/contact-live.test.ts tests/rls/handover-live.test.ts tests/rls/trust-live.test.ts tests/rls/trust-deltas-live.test.ts tests/rls/trust-holds-live.test.ts tests/rls/school-notice-live.test.ts tests/rls/email-relay-live.test.ts tests/rls/retention-purge-live.test.ts tests/rls/running-late-live.test.ts tests/rls/community-live.test.ts tests/rls/community-moderation-live.test.ts tests/rls/handover-reminder-delivery-live.test.ts",
     "test:ledger:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/ledger-live.test.ts --reporter=verbose",
@@ -72,5 +75,8 @@
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",
     "vitest": "^3.2.4"
+  },
+  "allowScripts": {
+    "libpg-query@18.2.2": true
   }
 }

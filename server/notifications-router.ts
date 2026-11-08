@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import { logSafeServerError } from './safe-error-log.js';
 import { createRequestScopedSupabaseClient, RequestAuthenticationError } from './supabase/request-client.js';
 
 class NotificationInputError extends Error {}
@@ -23,6 +24,7 @@ function reject(response: Response, error: unknown) {
   } else if (error instanceof NotificationInputError) {
     response.status(400).json({ error: 'invalid_notification_input' });
   } else {
+    logSafeServerError('notifications', error);
     response.status(403).json({ error: 'notification_action_unavailable' });
   }
 }

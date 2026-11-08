@@ -511,4 +511,178 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude|email)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
+
+  it('adds 1:1 schedule-pinned chat rooms with realtime messages without money fields', async () => {
+    const chat = (await readFile(resolve('db/migrations/0054_day11_direct_chat.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(chat).toMatch(/create table public\.chat_rooms/i);
+    expect(chat).toMatch(/create table public\.chat_participants/i);
+    expect(chat).toMatch(/create table public\.chat_messages/i);
+    expect(chat).toMatch(/alter table public\.chat_rooms enable row level security/i);
+    expect(chat).toMatch(/alter table public\.chat_messages enable row level security/i);
+    expect(chat).toMatch(/function public\.get_or_create_schedule_chat/i);
+    expect(chat).toMatch(/function public\.get_or_create_swap_chat/i);
+    expect(chat).toMatch(/function public\.list_my_chat_rooms/i);
+    expect(chat).toMatch(/function public\.list_chat_messages/i);
+    expect(chat).toMatch(/function public\.send_chat_message/i);
+    expect(chat).toMatch(/function public\.mark_chat_room_read/i);
+    expect(chat).toMatch(/supabase_realtime/i);
+    expect(chat).toMatch(/community_text_is_allowed/i);
+    expect(chat).toMatch(/set search_path = pg_catalog/i);
+    expect(chat).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(chat).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds same-school instant pickup board with realtime and suburb-only labels', async () => {
+    const instant = (await readFile(resolve('db/migrations/0055_day11_instant_pickup_requests.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(instant).toMatch(/create table public\.instant_pickup_requests/i);
+    expect(instant).toMatch(/alter table public\.instant_pickup_requests enable row level security/i);
+    expect(instant).toMatch(/function public\.create_instant_pickup_request/i);
+    expect(instant).toMatch(/function public\.list_instant_pickup_requests/i);
+    expect(instant).toMatch(/function public\.cancel_instant_pickup_request/i);
+    expect(instant).toMatch(/is_suburb_area_label/i);
+    expect(instant).toMatch(/community_text_is_allowed/i);
+    expect(instant).toMatch(/public\.is_member/i);
+    expect(instant).toMatch(/supabase_realtime/i);
+    expect(instant).toMatch(/set search_path = pg_catalog/i);
+    expect(instant).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(instant).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds day12 live matching, final check-in, and chat handoff for instant pickup', async () => {
+    const day12 = (await readFile(resolve('db/migrations/0056_day12_live_matching_and_reminders.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(day12).toMatch(/matched_user_id/i);
+    expect(day12).toMatch(/check_in_status/i);
+    expect(day12).toMatch(/final_check_at/i);
+    expect(day12).toMatch(/chat_room_id/i);
+    expect(day12).toMatch(/function public\.accept_instant_pickup_request/i);
+    expect(day12).toMatch(/function public\.check_in_instant_pickup/i);
+    expect(day12).toMatch(/interval '30 minutes'/i);
+    expect(day12).toMatch(/pg_catalog\.date_part\('isodow'/i);
+    expect(day12).not.toMatch(/pg_catalog\.extract\s*\(\s*isodow\s+from/i);
+    expect(day12).toMatch(/cancel_under_2h/i);
+    expect(day12).toMatch(/apply_trust_score_delta/i);
+    expect(day12).toMatch(/instant_pickup_request_id/i);
+    expect(day12).toMatch(/set search_path = pg_catalog/i);
+    expect(day12).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(day12).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds Australian suburb and primary/secondary school location fields', async () => {
+    const location = (await readFile(resolve('db/migrations/0057_day12_au_school_location.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(location).toMatch(/add column if not exists suburb text/i);
+    expect(location).toMatch(/add column if not exists school_sector text/i);
+    expect(location).toMatch(/is_suburb_area_label/i);
+    expect(location).toMatch(/school_sector in \('primary', 'secondary'\)/i);
+    expect(location).toMatch(/Chatswood High School/);
+    expect(location).toMatch(/set local search_path = pg_catalog/i);
+    expect(location).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds marketplace trade categories, text badges and listing chat without money fields', async () => {
+    const marketplace = (await readFile(resolve('db/migrations/0058_day13_marketplace_trade_categories.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(marketplace).toMatch(/listing_kind in \('giveaway', 'lending', 'sale', 'swap'\)/i);
+    expect(marketplace).toMatch(/'SALE'|display_offer_label = 'SALE'/i);
+    expect(marketplace).toMatch(/'SWAP'|display_offer_label = 'SWAP'/i);
+    expect(marketplace).toMatch(/School Uniforms/);
+    expect(marketplace).toMatch(/Books & Toys/);
+    expect(marketplace).toMatch(/Baby & Kids Gear/);
+    expect(marketplace).toMatch(/Kids Clothing/);
+    expect(marketplace).toMatch(/item_listing_id/i);
+    expect(marketplace).toMatch(/function public\.get_or_create_listing_chat/i);
+    expect(marketplace).toMatch(/schoolSuburb/);
+    expect(marketplace).toMatch(/set local search_path = pg_catalog/i);
+    expect(marketplace).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(marketplace).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds AU parent trust band labels and peer profile stats without numeric peer scores', async () => {
+    const trust = (await readFile(resolve('db/migrations/0059_day13_parent_trust_bands.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(trust).toMatch(/function public\.parent_trust_band_label/i);
+    expect(trust).toMatch(/Gold Guardian/);
+    expect(trust).toMatch(/Silver Partner/);
+    expect(trust).toMatch(/Bronze Parent/);
+    expect(trust).toMatch(/function public\.get_peer_parent_trust_profile/i);
+    expect(trust).toMatch(/authorParentTrustBand/);
+    expect(trust).toMatch(/requesterParentTrustBand/);
+    expect(trust).toMatch(/successfulPickups/);
+    expect(trust).toMatch(/communityRelayShares/);
+    expect(trust).toMatch(/set local search_path = pg_catalog/i);
+    expect(trust).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(trust).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds marketplace AUD ask cents and full kids categories without in-app payment fields', async () => {
+    const paid = (await readFile(resolve('db/migrations/0060_day14_marketplace_aud_ask.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(paid).toMatch(/ask_aud_cents integer/i);
+    expect(paid).toMatch(/Baby & Toddler Gear/);
+    expect(paid).toMatch(/Toys & Outdoor/);
+    expect(paid).toMatch(/Kids Fashion & Shoes/);
+    expect(paid).toMatch(/Books & Learning/);
+    expect(paid).toMatch(/School & Nursery/);
+    expect(paid).toMatch(/askAudDisplay/);
+    expect(paid).toMatch(/p_ask_aud_cents/i);
+    expect(paid).toMatch(/No in-app payment/i);
+    expect(paid).toMatch(/set local search_path = pg_catalog/i);
+    expect(paid).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(paid).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('adds marketplace listing images smart specs and AI-ready create payload without banned columns', async () => {
+    const images = (await readFile(resolve('db/migrations/0061_day14_marketplace_images_and_specs.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(images).toMatch(/listing_images jsonb/i);
+    expect(images).toMatch(/item_condition text/i);
+    expect(images).toMatch(/size_age_label text/i);
+    expect(images).toMatch(/household_env text\[\]/i);
+    expect(images).toMatch(/function public\.listing_images_are_valid/i);
+    expect(images).toMatch(/listingImages/);
+    expect(images).toMatch(/itemCondition/);
+    expect(images).toMatch(/sizeAgeLabel/);
+    expect(images).toMatch(/householdEnv/);
+    expect(images).toMatch(/p_listing_images/i);
+    expect(images).toMatch(/Smoke-free/);
+    expect(images).toMatch(/Pet-free/);
+    expect(images).toMatch(/Like New/);
+    expect(images).toMatch(/set local search_path = pg_catalog/i);
+    expect(images).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(images).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('hardens marketplace create payload for PostgREST jsonb env and image normalisation', async () => {
+    const fix = (await readFile(resolve('db/migrations/0062_day14_listing_create_payload_fix.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/function public\.normalize_listing_images/i);
+    expect(fix).toMatch(/p_household_env jsonb/i);
+    expect(fix).toMatch(/p_listing_images jsonb/i);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(fix).toMatch(/grant execute on function public\.create_item_listing/i);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
+    expect(fix).not.toMatch(/set search_path = pg_catalog, public/i);
+    expect(fix).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
 });

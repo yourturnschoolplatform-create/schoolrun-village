@@ -39,6 +39,9 @@ export type HouseholdLink = {
 export type ScheduleOverview = {
   schoolId: string | null;
   timezone: string;
+  schoolDisplayName: string | null;
+  schoolSuburb: string | null;
+  schoolSector: string | null;
   start: string;
   end: string;
   patterns: SchedulePattern[];

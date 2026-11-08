@@ -11,7 +11,15 @@ export type ConsentDocument = {
 
 export type OnboardingStatus = {
   emailVerified: boolean;
-  profile: { displayName: string } | null;
+  profile: {
+    displayName: string;
+    accountStatus?: string | null;
+    accountRole?: string | null;
+    schoolId?: string | null;
+    verifiedAt?: string | null;
+    suburb?: string | null;
+    schoolLabel?: string | null;
+  } | null;
   membership: { id: string; status: MembershipStatus; approved_at: string | null } | null;
   consentDocuments: ConsentDocument[];
   acceptedConsentDocumentIds: string[];
@@ -43,6 +51,7 @@ async function request<T>(client: SupabaseClient, path: string, init: RequestIni
   if (!response.ok) {
     if (response.status === 401) throw new Error('Please verify your email and sign in again to continue.');
     if (response.status === 429) throw new Error('Too many attempts. Please wait before trying another code.');
+    if (response.status === 404) throw new Error('That invitation link is unavailable or already used.');
     throw new Error('That step could not be completed. Please check the details and try again.');
   }
   if (response.status === 204) return undefined as T;
@@ -79,12 +88,19 @@ export const onboardingApi = {
     request<{ status: string }>(client, `/moderation/memberships/${membershipId}/review`, { method: 'POST', body: JSON.stringify({ state }) }),
 };
 
-/** Public invitation-link opening returns only generic state, never a school identity. */
-export async function openInvitationLink(token: string): Promise<'opened' | 'unavailable'> {
+/** Invitation-link opening returns only generic state, never a school identity. */
+export async function openInvitationLink(
+  token: string,
+  accessToken?: string | null,
+): Promise<'opened' | 'unavailable'> {
   const response = await fetch('/api/onboarding/invitations/open', {
     method: 'POST',
     cache: 'no-store',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
     body: JSON.stringify({ token }),
   });
   if (!response.ok) return 'unavailable';

@@ -1,13 +1,13 @@
 {
-  "name": "YourTurn",
-  "short_name": "YourTurn",
-  "description": "YourTurn is building a safer, school-scoped way for verified parents to share the school run.",
+  "name": "SchoolRun Village",
+  "short_name": "SchoolRun",
+  "description": "SchoolRun Village — Safe Rides, Share & Save. A joyful carpool and kids marketplace for verified Australian parents.",
   "lang": "en-AU",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#f6f6f1",
-  "theme_color": "#0f5e5a",
+  "background_color": "#F8FAFC",
+  "theme_color": "#FF6B6B",
   "icons": [
     {
       "src": "/icons/icon.svg",

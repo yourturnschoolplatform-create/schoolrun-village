@@ -54,7 +54,18 @@ try {
   const code = typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string'
     ? error.code
     : 'unknown';
-  console.error(`Migration failed while processing ${activeMigration} (safe error code: ${code}). No database URL or key was logged.`);
+  const message = typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string'
+    ? error.message.replace(/[^\x20-\x7E]/g, '?').slice(0, 240)
+    : '';
+  const position = typeof error === 'object' && error !== null && 'position' in error
+    ? String(error.position)
+    : '';
+  console.error(
+    `Migration failed while processing ${activeMigration} (safe error code: ${code}`
+    + (position ? `; position: ${position}` : '')
+    + (message ? `; message: ${message}` : '')
+    + '). No database URL or key was logged.',
+  );
   process.exitCode = 1;
 } finally {
   await client.end().catch(() => undefined);

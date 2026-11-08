@@ -49,7 +49,7 @@ describe('Supabase key boundary', () => {
 
   it('exposes only the explicitly public runtime shape to the browser', () => {
     const publicRuntime = readPublicRuntimeConfig();
-    expect(publicRuntime.appName).toBe('YourTurn');
+    expect(publicRuntime.appName).toBe('SchoolRun Village');
     expect(Object.keys(publicRuntime)).toEqual(['appName', 'supabase']);
     expect(JSON.stringify(publicRuntime)).not.toContain('SUPABASE_SERVICE_ROLE_KEY');
   });
@@ -92,7 +92,7 @@ describe('PWA cache contract', () => {
       readFile(resolve('public/manus-routes.json'), 'utf8'),
       readFile(resolve('public/sw.js'), 'utf8'),
     ]);
-    expect(JSON.parse(routes)).toEqual({ routes: [{ path: '/', title: 'YourTurn foundation' }] });
+    expect(JSON.parse(routes)).toEqual({ routes: [{ path: '/', title: 'SchoolRun Village foundation' }] });
     expect(worker).toContain("url.origin !== self.location.origin");
     expect(worker).toContain("url.pathname.startsWith('/api/')");
     expect(worker).toContain("url.pathname.startsWith('/auth/')");

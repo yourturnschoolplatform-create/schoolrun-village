@@ -1,0 +1,445 @@
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SchoolRunDirection, ScheduleIntent } from '../../shared/schedules';
+import {
+  directionLabelEnglish,
+  intentLabelEnglish,
+  statusLabelEnglish,
+} from '../../shared/au-location';
+import { nonPaymentNoticeForTrade, PICKUP_NO_SHOW_POLICY_COPY } from '../../shared/payment-tracks';
+import type { ChatRoom } from '../lib/chat-api';
+import { instantPickupApi, type InstantPickupRequest } from '../lib/instant-pickup-api';
+import { MatchChatDrawer } from './MatchChatDrawer';
+import { ParentTrustBadge } from './ParentTrustBadge';
+
+function formatClock(value: string): string {
+  return new Date(value).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
+}
+
+function needsFinalCheckIn(item: InstantPickupRequest, nowMs: number): boolean {
+  if (item.status !== 'matched' || item.checkInStatus !== 'pending' || !item.finalCheckAt) {
+    return false;
+  }
+  if (!(item.mine || item.iAmMatched)) return false;
+  const opensAt = new Date(item.finalCheckAt).getTime();
+  const closesAt = item.pickupAt
+    ? new Date(item.pickupAt).getTime()
+    : opensAt + 30 * 60 * 1000;
+  return nowMs >= opensAt && nowMs < closesAt;
+}
+
+const NOTE_CHIPS = [
+  { id: 'seat', label: '👧 1 Seat', phrase: '1 seat' },
+  { id: 'gate', label: '🎒 School Gate', phrase: 'School gate' },
+  { id: 'ontime', label: '⏱️ On-time pickup', phrase: 'On-time pickup' },
+] as const;
+
+/**
+ * Same-school today/tomorrow instant help board. Australian English. Suburb only.
+ */
+export function InstantPickupBoard({
+  client,
+  userId,
+  defaultSuburb = '',
+  onOpenChat,
+}: {
+  client: SupabaseClient;
+  userId?: string;
+  defaultSuburb?: string;
+  onOpenChat: (room: ChatRoom) => void;
+}) {
+  const [items, setItems] = useState<InstantPickupRequest[]>([]);
+  const [intent, setIntent] = useState<ScheduleIntent>('need_help');
+  const [direction, setDirection] = useState<SchoolRunDirection>('pickup');
+  const [areaLabel, setAreaLabel] = useState(defaultSuburb.trim());
+  const [suburbEditing, setSuburbEditing] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [matchRoom, setMatchRoom] = useState<ChatRoom | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const resolvedUserId = userId ?? '';
+  const registeredSuburb = useMemo(() => {
+    const fromProp = defaultSuburb.trim();
+    if (fromProp) return fromProp;
+    const fromBoard = items.find((item) => item.schoolSuburb?.trim())?.schoolSuburb?.trim();
+    return fromBoard ?? '';
+  }, [defaultSuburb, items]);
+
+  const refresh = useCallback(async () => {
+    try {
+      setItems(await instantPickupApi.list(client));
+      setMessage(null);
+    } catch {
+      setMessage('Instant pickup requests are available after school verification.');
+    }
+  }, [client]);
+
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  useEffect(() => {
+    if (!registeredSuburb) return;
+    setAreaLabel((current) => (current.trim() ? current : registeredSuburb));
+  }, [registeredSuburb]);
+
+  useEffect(() => {
+    const schoolId = items[0]?.schoolId;
+    if (!schoolId) return;
+    const channel = instantPickupApi.subscribe(client, schoolId, () => { void refresh(); });
+    return () => { void client.removeChannel(channel); };
+  }, [client, items[0]?.schoolId, refresh]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 15_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const checkInItem = useMemo(
+    () => items.find((item) => needsFinalCheckIn(item, nowMs)) ?? null,
+    [items, nowMs],
+  );
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!areaLabel.trim() || busy) return;
+    setBusy(true);
+    try {
+      await instantPickupApi.create(client, {
+        intent,
+        direction,
+        areaLabel: areaLabel.trim(),
+        notes: notes.trim() || null,
+      });
+      setNotes('');
+      setMessage('Your instant request is on the school board.');
+      await refresh();
+    } catch {
+      setMessage('That request could not be posted. Use a suburb label and keep notes phone-free.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function cancel(id: string) {
+    setBusy(true);
+    try {
+      await instantPickupApi.cancel(client, id);
+      await refresh();
+    } catch {
+      setMessage('That request could not be cancelled.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function requestMatch(id: string) {
+    setBusy(true);
+    try {
+      const result = await instantPickupApi.accept(client, id);
+      await refresh();
+      setMatchRoom(result.chatRoom);
+      setToast('Private match chat opened. You can send your confirmation code.');
+      setMessage('Match requested. Share your household confirmation code in chat when ready.');
+    } catch {
+      setMessage('That match request could not be started right now.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function openMatchedChat(id: string, asDrawer = true) {
+    setBusy(true);
+    try {
+      const room = await instantPickupApi.openChat(client, id);
+      if (asDrawer) setMatchRoom(room);
+      else onOpenChat(room);
+    } catch {
+      setMessage('That chat could not be opened yet.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function respondCheckIn(confirm: boolean) {
+    if (!checkInItem || busy) return;
+    setBusy(true);
+    try {
+      await instantPickupApi.checkIn(client, checkInItem.id, confirm);
+      await refresh();
+      setMessage(confirm
+        ? 'Final check-in confirmed. Your school-run match stays active.'
+        : 'Match released back to the school board.');
+    } catch {
+      setMessage('Final check-in could not be saved right now.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function appendNoteChip(phrase: string) {
+    setNotes((current) => {
+      const trimmed = current.trim();
+      if (!trimmed) return phrase;
+      if (trimmed.toLowerCase().includes(phrase.toLowerCase())) return trimmed;
+      return `${trimmed} · ${phrase}`;
+    });
+  }
+
+  return (
+    <section className="feed-section instant-board" aria-labelledby="instant-board-title">
+      <div className="feed-section__intro">
+        <p className="eyebrow">Same-day school run</p>
+        <h2 id="instant-board-title">Ask or offer help today.</h2>
+        <p className="section-copy">
+          Post a short need-help or can-help notice for your school. Suburb only — no phones or addresses.
+          Request Match opens a private chat. Final check-in starts 30 minutes before pickup.
+        </p>
+      </div>
+
+      <div className="instant-policy-badges" aria-label="Instant pickup policies">
+        <span className="instant-policy-badge" title={nonPaymentNoticeForTrade('pickup_dropoff')}>
+          🆓 Free Handover
+        </span>
+        <button
+          type="button"
+          className="instant-policy-badge instant-policy-badge--button"
+          aria-haspopup="dialog"
+          aria-expanded={policyOpen}
+          onClick={() => setPolicyOpen(true)}
+        >
+          🛡️ Trust Score Applied <span aria-hidden="true">ℹ️</span>
+          <span className="visually-hidden">Open no-show trust policy</span>
+        </button>
+      </div>
+
+      {policyOpen ? (
+        <div className="instant-policy-overlay" role="presentation" onClick={() => setPolicyOpen(false)}>
+          <aside
+            className="instant-policy-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="instant-policy-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="instant-policy-modal__head">
+              <h3 id="instant-policy-title">No-show &amp; trust policy</h3>
+              <button type="button" className="text-button" onClick={() => setPolicyOpen(false)}>Close</button>
+            </div>
+            <p>{PICKUP_NO_SHOW_POLICY_COPY}</p>
+            <p className="field-help">{nonPaymentNoticeForTrade('pickup_dropoff')}</p>
+          </aside>
+        </div>
+      ) : null}
+
+      {message && <p className="notice notice--teal" role="status">{message}</p>}
+      {toast && <p className="notice notice--teal match-toast" role="status">{toast}</p>}
+      {checkInItem && (
+        <aside className="instant-board__checkin" role="dialog" aria-labelledby="instant-checkin-title">
+          <p className="eyebrow">Final check-in</p>
+          <h3 id="instant-checkin-title">Confirm this school-run match?</h3>
+          <p>
+            Pickup is at {checkInItem.pickupAt ? formatClock(checkInItem.pickupAt) : 'the scheduled time'}.
+            Confirm to keep the match, or cancel to return it to the board.
+          </p>
+          <button type="button" className="text-button" onClick={() => setPolicyOpen(true)}>
+            View no-show trust policy ℹ️
+          </button>
+          <div className="instant-board__checkin-actions">
+            <button className="primary-button" type="button" disabled={busy} onClick={() => void respondCheckIn(true)}>
+              Confirm I am still on
+            </button>
+            <button className="text-button" type="button" disabled={busy} onClick={() => void respondCheckIn(false)}>
+              Cancel match
+            </button>
+          </div>
+        </aside>
+      )}
+
+      <form className="stack-form feed-compose instant-compose" onSubmit={(event) => void submit(event)}>
+        <div className="friendly-field" role="group" aria-label="Request type">
+          <span className="friendly-field__label">Request type</span>
+          <div className="segmented-toggle" role="radiogroup" aria-label="Request type">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={intent === 'need_help'}
+              className={intent === 'need_help' ? 'segmented-toggle__btn segmented-toggle__btn--navy' : 'segmented-toggle__btn'}
+              onClick={() => setIntent('need_help')}
+            >
+              🙋‍♂️ I need help
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={intent === 'can_help'}
+              className={intent === 'can_help' ? 'segmented-toggle__btn segmented-toggle__btn--coral' : 'segmented-toggle__btn'}
+              onClick={() => setIntent('can_help')}
+            >
+              🤝 I can help
+            </button>
+          </div>
+        </div>
+
+        <div className="friendly-field" role="group" aria-label="School run">
+          <span className="friendly-field__label">School run</span>
+          <div className="icon-tabs" role="radiogroup" aria-label="School run direction">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={direction === 'dropoff'}
+              className={direction === 'dropoff' ? 'icon-tab icon-tab--active' : 'icon-tab'}
+              onClick={() => setDirection('dropoff')}
+            >
+              <span aria-hidden="true">☀️</span>
+              Drop-off
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={direction === 'pickup'}
+              className={direction === 'pickup' ? 'icon-tab icon-tab--active' : 'icon-tab'}
+              onClick={() => setDirection('pickup')}
+            >
+              <span aria-hidden="true">🏫</span>
+              Pickup
+            </button>
+          </div>
+        </div>
+
+        <div className="friendly-field" role="group" aria-label="Suburb-level area label">
+          <span className="friendly-field__label">Suburb-level area label</span>
+          {!suburbEditing && areaLabel.trim() ? (
+            <div className="suburb-autofill">
+              <span className="suburb-autofill__value">📍 {areaLabel}{/\bVIC\b/i.test(areaLabel) ? '' : ' VIC'}</span>
+              <button type="button" className="text-button" onClick={() => setSuburbEditing(true)}>Edit</button>
+            </div>
+          ) : (
+            <>
+              <input
+                required
+                maxLength={64}
+                value={areaLabel}
+                onChange={(event) => setAreaLabel(event.target.value)}
+                placeholder={registeredSuburb || 'e.g. Docklands'}
+              />
+              {registeredSuburb ? (
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => {
+                    setAreaLabel(registeredSuburb);
+                    setSuburbEditing(false);
+                  }}
+                >
+                  Use registered suburb ({registeredSuburb})
+                </button>
+              ) : null}
+            </>
+          )}
+        </div>
+
+        <div className="friendly-field" role="group" aria-label="Optional note">
+          <span className="friendly-field__label">Optional note</span>
+          <div className="note-chips" role="group" aria-label="Quick note presets">
+            {NOTE_CHIPS.map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                className="note-chip"
+                onClick={() => appendNoteChip(chip.phrase)}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+          <input
+            maxLength={500}
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            placeholder="Keep it brief and phone-free"
+          />
+        </div>
+
+        <button className="primary-button instant-compose__cta" type="submit" disabled={busy || !areaLabel.trim()}>
+          {busy ? 'Posting…' : 'Post to school board'}
+        </button>
+      </form>
+      <ul className="feed-list">
+        {items.length === 0 && (
+          <li className="section-copy">No open instant requests for your school right now.</li>
+        )}
+        {items.map((item) => (
+          <li key={item.id} className="feed-card">
+            <div className="feed-card__top">
+              <ParentTrustBadge
+                client={client}
+                peerUserId={item.requesterId}
+                displayName={item.requesterDisplayName}
+                band={item.requesterParentTrustBand || item.requesterTrustBand}
+                suburb={item.schoolSuburb || item.areaLabel}
+              />
+              <span className="feed-card__status">{statusLabelEnglish(item.status)}</span>
+            </div>
+            <p className="feed-card__meta">
+              {intentLabelEnglish(item.intent)}
+              {' · '}
+              {directionLabelEnglish(item.direction)}
+              {' · '}
+              {item.areaLabel}
+            </p>
+            <small className="feed-card__byline">
+              {item.targetDate}
+              {item.pickupAt ? ` · pickup ${formatClock(item.pickupAt)}` : ''}
+              {item.notes ? ` · ${item.notes}` : ''}
+              {item.status === 'matched' && item.matchedDisplayName
+                ? ` · matched with ${item.matchedDisplayName}`
+                : ''}
+            </small>
+            <div className="feed-card__actions">
+              {!item.mine && item.status === 'open' && (
+                <button
+                  className="primary-button feed-card__cta"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void requestMatch(item.id)}
+                >
+                  Request Match
+                </button>
+              )}
+              {item.mine && item.status === 'open' && (
+                <button className="text-button" type="button" disabled={busy} onClick={() => void cancel(item.id)}>
+                  Cancel my request
+                </button>
+              )}
+              {(item.mine || item.iAmMatched) && item.status === 'matched' && item.chatRoomId && (
+                <button
+                  className="secondary-button feed-card__cta"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void openMatchedChat(item.id, true)}
+                >
+                  Open match chat
+                </button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {matchRoom && resolvedUserId ? (
+        <MatchChatDrawer
+          client={client}
+          userId={resolvedUserId}
+          room={matchRoom}
+          onClose={() => setMatchRoom(null)}
+          onToast={(text) => {
+            setToast(text);
+            window.setTimeout(() => setToast(null), 3200);
+          }}
+        />
+      ) : null}
+    </section>
+  );
+}

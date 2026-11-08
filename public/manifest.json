@@ -1,0 +1,25 @@
+{
+  "name": "SchoolRun Village",
+  "short_name": "SchoolRun",
+  "description": "SchoolRun Village — Safe Rides, Share & Save. A joyful carpool and kids marketplace for verified Australian parents.",
+  "lang": "en-AU",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#FF6B6B",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

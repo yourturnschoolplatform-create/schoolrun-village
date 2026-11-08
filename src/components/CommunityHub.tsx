@@ -1,22 +1,48 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { statusLabelEnglish } from '../../shared/au-location';
 import {
   communityApi,
   type CommunityComment,
   type CommunityPost,
   type CommunityThread,
 } from '../lib/community-api';
+import type { ChatRoom } from '../lib/chat-api';
+import { HotDealsBoard } from './HotDealsBoard';
+import { InstantPickupBoard } from './InstantPickupBoard';
+import { MarketplaceBoard } from './MarketplaceBoard';
+import { ParentTrustPanel } from './ParentTrustPanel';
+import { PartnerHub } from './PartnerHub';
+
+export type CommunityPanel = 'pickup' | 'market' | 'trust' | 'relay' | 'deals' | 'discussions';
+
+const MODULE_TABS: Array<{ id: CommunityPanel; label: string }> = [
+  { id: 'pickup', label: 'Instant Pickup' },
+  { id: 'market', label: 'Marketplace' },
+  { id: 'trust', label: 'Parent Trust' },
+  { id: 'relay', label: 'Relay Share' },
+  { id: 'deals', label: 'Hot Deals' },
+];
 
 /**
- * School discussion community. Australian English copy. No child full names or photos.
+ * Five core SchoolRun Village modules + discussions + Partner Hub.
+ * Australian English copy. No child full names in discussion posts.
  */
 export function CommunityHub({
   client,
+  userId,
   onBack,
+  onOpenChat,
+  initialPanel = 'market',
 }: {
   client: SupabaseClient;
+  userId: string;
   onBack: () => void;
+  onOpenChat?: (room: ChatRoom) => void;
+  initialPanel?: CommunityPanel;
 }) {
+  const [panel, setPanel] = useState<CommunityPanel>(initialPanel);
+  const [partnerOpen, setPartnerOpen] = useState(false);
   const [threads, setThreads] = useState<CommunityThread[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -27,6 +53,10 @@ export function CommunityHub({
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPanel(initialPanel);
+  }, [initialPanel]);
 
   const refreshThreads = useCallback(async () => {
     try {
@@ -117,133 +147,244 @@ export function CommunityHub({
   }
 
   return (
-    <section className="onboarding-card" aria-labelledby="community-title">
-      <button className="text-button" type="button" onClick={onBack}>Back to schedule</button>
-      <p className="eyebrow">School community</p>
-      <h1 id="community-title">Discussion board</h1>
-      <p className="section-copy">
-        Share practical school-run tips with verified parents at your organisation only.
-        Do not post child full names, photos, mobile numbers or email addresses.
-      </p>
-      <p className="notice notice--teal" role="status">
-        Privacy reminder: nickname and year level belong in swaps, not here. Photos are never allowed.
-      </p>
+    <section className="community-hub" aria-labelledby="community-title">
+      <button className="text-button" type="button" onClick={onBack}>Back to Today</button>
+      <div className="feed-section__intro">
+        <p className="eyebrow">School community</p>
+        <h1 id="community-title">Your SchoolRun Village hub</h1>
+        <p className="section-copy">
+          SchoolRun Village guidelines: keep chat school-scoped, be kind at the gate,
+          and use in-app payment only for Sell and Hot Deals. Instant Pickup, Marketplace,
+          Parent Trust, Relay Share and Hot Deals stay with verified parents at your school.
+        </p>
+      </div>
+
+      <div className="community-banner-slider" aria-label="Community highlights">
+        <article className="community-banner-slide">
+          <strong>Marketplace</strong>
+          <p>Kids secondhand and paid Sell with Parent Trust Bands visible.</p>
+          <button type="button" className="commercial-cta commercial-cta--compact" onClick={() => setPanel('market')}>
+            Open Marketplace
+          </button>
+        </article>
+        <article className="community-banner-slide community-banner-slide--deals">
+          <strong>Hot Deals</strong>
+          <p>Group-buy exclusive AUD asks from local brands this term.</p>
+          <button type="button" className="commercial-cta commercial-cta--compact" onClick={() => setPanel('deals')}>
+            View Hot Deals
+          </button>
+        </article>
+        <article className="community-banner-slide community-banner-slide--partner">
+          <strong>Partner Hub</strong>
+          <p>Local merchants: launch a goods deal, tutoring pack or sponsorship.</p>
+          <button type="button" className="commercial-cta commercial-cta--compact" onClick={() => setPartnerOpen(true)}>
+            Become a Partner
+          </button>
+        </article>
+      </div>
+
+      <div className="community-panel-tabs community-panel-tabs--modules" role="tablist" aria-label="Community modules">
+        {MODULE_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={panel === tab.id}
+            className={panel === tab.id ? 'community-panel-tab community-panel-tab--active' : 'community-panel-tab'}
+            data-community-panel={tab.id}
+            onClick={() => setPanel(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={panel === 'discussions'}
+          className={panel === 'discussions' ? 'community-panel-tab community-panel-tab--active' : 'community-panel-tab'}
+          data-community-panel="discussions"
+          onClick={() => setPanel('discussions')}
+        >
+          Discussions
+        </button>
+      </div>
+
       {message && <p className="notice notice--red" role="alert">{message}</p>}
 
-      <form className="stack-form" onSubmit={createThread}>
-        <label>
-          Thread title
-          <input
-            required
-            minLength={3}
-            maxLength={120}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="e.g. Wet-weather pickup tips"
-          />
-        </label>
-        <label>
-          Opening post
-          <textarea
-            required
-            minLength={1}
-            maxLength={2000}
-            rows={4}
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-            placeholder="Write practical guidance without naming children or attaching photos."
-          />
-        </label>
-        <button className="primary-button" type="submit" disabled={busy}>Start discussion</button>
-      </form>
+      {panel === 'pickup' ? (
+        <InstantPickupBoard
+          client={client}
+          userId={userId}
+          onOpenChat={onOpenChat ?? (() => undefined)}
+        />
+      ) : null}
 
-      <h2 className="section-heading">Your school threads</h2>
-      {threads.length === 0 ? (
-        <p className="section-copy">No discussions yet. Start one for your school community.</p>
-      ) : (
-        <ul className="queue-list">
-          {threads.map((thread) => (
-            <li key={thread.id}>
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => setSelectedThreadId(thread.id)}
-              >
-                {thread.title}
-              </button>
-              <span>{thread.author_display_name}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {panel === 'market' ? (
+        <MarketplaceBoard client={client} userId={userId} onOpenChat={onOpenChat} boardMode="market" />
+      ) : null}
 
-      {selectedThreadId && (
-        <div className="stack-form">
-          <h2 className="section-heading">Thread posts</h2>
-          {posts.map((post) => (
-            <article key={post.id} className="onboarding-card">
-              <p className="eyebrow">{post.author_display_name}</p>
-              <p className="section-copy">{post.body}</p>
-              <button
-                className="secondary-button"
-                type="button"
-                disabled={busy}
-                onClick={() => void toggleLike('post', post.id)}
-              >
-                {post.liked_by_me ? 'Unlike' : 'Like'} ({post.like_count})
-              </button>
-              <ul className="queue-list">
-                {(commentsByPost[post.id] ?? []).map((comment) => (
-                  <li key={comment.id}>
-                    <span>{comment.author_display_name}: {comment.body}</span>
+      {panel === 'trust' ? (
+        <ParentTrustPanel client={client} />
+      ) : null}
+
+      {panel === 'relay' ? (
+        <MarketplaceBoard client={client} userId={userId} onOpenChat={onOpenChat} boardMode="relay" />
+      ) : null}
+
+      {panel === 'deals' ? (
+        <HotDealsBoard onBecomePartner={() => setPartnerOpen(true)} />
+      ) : null}
+
+      {panel === 'discussions' ? (
+        <section className="feed-section" aria-labelledby="community-discussions-title">
+          <div className="feed-section__intro">
+            <p className="eyebrow">Discussions</p>
+            <h2 id="community-discussions-title">Your school threads</h2>
+            <p className="section-copy">
+              Do not post child full names, photos, mobile numbers or email addresses.
+            </p>
+          </div>
+          <form className="stack-form feed-compose" onSubmit={(event) => void createThread(event)}>
+            <label>
+              Thread title
+              <input
+                required
+                minLength={3}
+                maxLength={120}
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="e.g. Wet-weather pickup tips"
+              />
+            </label>
+            <label>
+              Opening post
+              <textarea
+                required
+                minLength={1}
+                maxLength={2000}
+                rows={4}
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+                placeholder="Write practical guidance without naming children or attaching photos."
+              />
+            </label>
+            <button className="primary-button" type="submit" disabled={busy}>Start discussion</button>
+          </form>
+
+          {threads.length === 0 ? (
+            <p className="section-copy">No discussions yet. Start one for your school community.</p>
+          ) : (
+            <ul className="feed-list">
+              {threads.map((thread) => (
+                <li key={thread.id} className="feed-card">
+                  <div className="feed-card__top">
+                    <strong>{thread.title}</strong>
+                    <span className="feed-card__status">{statusLabelEnglish(thread.status)}</span>
+                  </div>
+                  <small className="feed-card__byline">{thread.author_display_name}</small>
+                  <div className="feed-card__actions">
                     <button
-                      className="text-button"
+                      className="primary-button feed-card__cta"
+                      type="button"
+                      onClick={() => setSelectedThreadId(thread.id)}
+                    >
+                      Open thread
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {selectedThreadId && (
+            <section className="feed-section" aria-labelledby="thread-posts-title">
+              <h2 id="thread-posts-title" className="section-heading">Thread posts</h2>
+              <ul className="feed-list">
+                {posts.map((post) => (
+                  <li key={post.id} className="feed-card">
+                    <div className="feed-card__top">
+                      <strong>{post.author_display_name}</strong>
+                      <span className="feed-card__status">{statusLabelEnglish(post.status)}</span>
+                    </div>
+                    <p className="feed-card__body">{post.body}</p>
+                    <div className="feed-card__actions">
+                      <button
+                        className="secondary-button feed-card__cta"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void toggleLike('post', post.id)}
+                      >
+                        {post.liked_by_me ? 'Unlike' : 'Like'} ({post.like_count})
+                      </button>
+                    </div>
+                    <ul className="feed-card__comments">
+                      {(commentsByPost[post.id] ?? []).map((comment) => (
+                        <li key={comment.id}>
+                          <span>{comment.author_display_name}: {comment.body}</span>
+                          <button
+                            className="text-button"
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void toggleLike('comment', comment.id)}
+                          >
+                            {comment.liked_by_me ? 'Unlike' : 'Like'} ({comment.like_count})
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <label>
+                      Add a comment
+                      <input
+                        maxLength={1000}
+                        value={commentDrafts[post.id] ?? ''}
+                        onChange={(event) => setCommentDrafts((current) => ({
+                          ...current, [post.id]: event.target.value,
+                        }))}
+                        placeholder="Keep it practical and photo-free."
+                      />
+                    </label>
+                    <button
+                      className="secondary-button feed-card__cta"
                       type="button"
                       disabled={busy}
-                      onClick={() => void toggleLike('comment', comment.id)}
+                      onClick={() => void addComment(post.id)}
                     >
-                      {comment.liked_by_me ? 'Unlike' : 'Like'} ({comment.like_count})
+                      Comment
                     </button>
                   </li>
                 ))}
               </ul>
-              <label>
-                Add a comment
-                <input
-                  maxLength={1000}
-                  value={commentDrafts[post.id] ?? ''}
-                  onChange={(event) => setCommentDrafts((current) => ({
-                    ...current, [post.id]: event.target.value,
-                  }))}
-                  placeholder="Keep it practical and photo-free."
-                />
-              </label>
-              <button
-                className="secondary-button"
-                type="button"
-                disabled={busy}
-                onClick={() => void addComment(post.id)}
-              >
-                Comment
-              </button>
-            </article>
-          ))}
-          <form className="stack-form" onSubmit={addPost}>
-            <label>
-              Add another post
-              <textarea
-                required
-                maxLength={2000}
-                rows={3}
-                value={reply}
-                onChange={(event) => setReply(event.target.value)}
-                placeholder="Continue the discussion without photos or surnames."
-              />
-            </label>
-            <button className="primary-button" type="submit" disabled={busy}>Post</button>
-          </form>
-        </div>
-      )}
+              <form className="stack-form feed-compose" onSubmit={(event) => void addPost(event)}>
+                <label>
+                  Add another post
+                  <textarea
+                    required
+                    maxLength={2000}
+                    rows={3}
+                    value={reply}
+                    onChange={(event) => setReply(event.target.value)}
+                    placeholder="Continue the discussion without photos or surnames."
+                  />
+                </label>
+                <button className="primary-button" type="submit" disabled={busy}>Post</button>
+              </form>
+            </section>
+          )}
+        </section>
+      ) : null}
+
+      <footer className="community-partner-footer">
+        <button
+          type="button"
+          className="partner-banner-chip"
+          onClick={() => setPartnerOpen(true)}
+        >
+          Become a Partner
+        </button>
+        <p>Local brands and tutoring providers can pitch school-scoped Hot Deals.</p>
+      </footer>
+
+      <PartnerHub open={partnerOpen} onClose={() => setPartnerOpen(false)} />
     </section>
   );
 }

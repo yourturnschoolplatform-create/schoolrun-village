@@ -23,9 +23,13 @@ export function onboardingAccessState(input: {
   hasCurrentConsents: boolean;
   hasChild: boolean;
   hasSafetyDeclaration: boolean;
+  accountStatus?: string | null;
 }): 'account' | 'consent' | 'school' | 'waiting' | 'profile-and-safety' | 'ready' | 'rejected' | 'suspended' {
-  if (input.membershipStatus === 'rejected') return 'rejected';
+  const accountStatus = String(input.accountStatus ?? '').trim().toUpperCase();
+  if (accountStatus === 'REJECTED' || input.membershipStatus === 'rejected') return 'rejected';
   if (input.membershipStatus === 'suspended') return 'suspended';
+  // Dual-signup gate: pending account verification blocks Instant Pickup / Marketplace.
+  if (accountStatus === 'PENDING_VERIFICATION') return 'waiting';
   if (isPendingMembership(input.membershipStatus)) return 'waiting';
   if (!input.hasCurrentConsents) return 'consent';
   if (!input.membershipStatus) return 'school';

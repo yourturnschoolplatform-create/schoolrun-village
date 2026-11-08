@@ -2,6 +2,7 @@ import { Router, type Request } from 'express';
 import type { User } from '@supabase/supabase-js';
 import { buildConfirmedTripsIcs } from '../shared/ics.js';
 import { addDays, isIsoDate, isLocalTime, isSuburbAreaLabel, type SchoolRunDirection, type ScheduleIntent } from '../shared/schedules.js';
+import { databaseErrorCode } from './safe-error-log.js';
 import { createRequestScopedSupabaseClient, RequestAuthenticationError } from './supabase/request-client.js';
 
 export class ScheduleInputError extends Error {
@@ -109,10 +110,34 @@ export function createSchedulesRouter(): Router {
         const start = typeof request.query.start === 'string' && isIsoDate(request.query.start) ? request.query.start : localDateInTimeZone('Australia/Melbourne');
         const end = addDays(start, 27);
         noStore(response);
-        response.json({ schoolId: null, start, end, patterns: [], instances: [], calendarPeriods: [], householdLinks: [] });
+        response.json({
+          schoolId: null,
+          timezone: 'Australia/Melbourne',
+          schoolDisplayName: null,
+          schoolSuburb: null,
+          schoolSector: null,
+          start,
+          end,
+          patterns: [],
+          instances: [],
+          calendarPeriods: [],
+          householdLinks: [],
+        });
         return;
       }
-      const school = await context.client.from('schools').select('timezone').eq('id', schoolId).maybeSingle();
+      let school = await context.client
+        .from('schools')
+        .select('timezone, display_name, suburb, school_sector')
+        .eq('id', schoolId)
+        .maybeSingle();
+      if (school.error) {
+        // Pre-0057 databases may not have suburb/school_sector yet.
+        school = await context.client
+          .from('schools')
+          .select('timezone, display_name')
+          .eq('id', schoolId)
+          .maybeSingle();
+      }
       if (school.error) throw school.error;
       const timezone = school.data?.timezone ?? 'Australia/Melbourne';
       const start = typeof request.query.start === 'string' && isIsoDate(request.query.start) ? request.query.start : localDateInTimeZone(timezone);
@@ -126,10 +151,19 @@ export function createSchedulesRouter(): Router {
         context.client.from('household_links').select('id, status, requested_by, requester_confirmed_at, other_parent_confirmed_at, created_at').eq('school_id', schoolId).or(`first_parent_id.eq.${context.user.id},second_parent_id.eq.${context.user.id}`).order('created_at', { ascending: false }),
       ]);
       for (const result of [patterns, instances, calendarPeriods, householdLinks]) if (result.error) throw result.error;
+      const schoolRow = school.data as {
+        timezone?: string;
+        display_name?: string;
+        suburb?: string | null;
+        school_sector?: string | null;
+      } | null;
       noStore(response);
       response.json({
         schoolId,
         timezone,
+        schoolDisplayName: schoolRow?.display_name ?? null,
+        schoolSuburb: schoolRow?.suburb ?? null,
+        schoolSector: schoolRow?.school_sector ?? null,
         start,
         end,
         patterns: patterns.data ?? [],
@@ -251,6 +285,11 @@ export function createSchedulesRouter(): Router {
       noStore(response);
       response.status(201).json({ householdLinkId: data });
     } catch (error) {
+      if (databaseErrorCode(error) === 'P0002') {
+        noStore(response);
+        response.status(404).json({ error: 'invitation_unavailable' });
+        return;
+      }
       next(error);
     }
   });

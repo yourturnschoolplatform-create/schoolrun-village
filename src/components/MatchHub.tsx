@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { statusLabelEnglish } from '../../shared/au-location';
+import { chatApi, type ChatRoom } from '../lib/chat-api';
 import { matchApi, type MatchCandidate, type Swap } from '../lib/match-api';
 import { ContactNotifications, ContactSharing } from './ContactSharing';
 import { Handover } from './Handover';
 import { NotificationFeed } from './NotificationFeed';
+import { ParentTrustBadge } from './ParentTrustBadge';
 
 type Child = { nickname: string; yearLevel: number };
 
-export function MatchHub({ client }: { client: SupabaseClient }) {
+export function MatchHub({
+  client,
+  onOpenChat,
+}: {
+  client: SupabaseClient;
+  onOpenChat: (room: ChatRoom) => void;
+}) {
   const [differentDates, setDifferentDates] = useState(false);
   const [candidates, setCandidates] = useState<MatchCandidate[]>([]);
   const [swaps, setSwaps] = useState<Swap[]>([]);
@@ -48,6 +57,19 @@ export function MatchHub({ client }: { client: SupabaseClient }) {
     }, 'Accepted-swap child details are visible only to participants.');
   }
 
+  async function openSwapChat(swapId: string) {
+    setBusy(true);
+    try {
+      const room = await chatApi.openSwapChat(client, swapId);
+      onOpenChat(room);
+      setMessage('');
+    } catch {
+      setMessage('A chat could not be opened for this swap yet.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className="match-hub" aria-labelledby="match-title">
       <div className="schedule-hero">
@@ -65,12 +87,20 @@ export function MatchHub({ client }: { client: SupabaseClient }) {
       <section>
         <h2>Suggested reciprocal options</h2>
         {candidates.length ? <div className="match-list">{candidates.map((candidate) => (
-          <article className="match-card" key={`${candidate.viewer_need_instance_id}-${candidate.candidate_id}-${candidate.reciprocal_date}`}>
-            <div><strong>{candidate.candidate_name}</strong><span className="trust-band">{candidate.trust_band}</span></div>
-            <p>{candidate.area_label} · {candidate.time_overlap_minutes} min overlap</p>
-            <small>Your requested trip: {candidate.first_date}; reciprocal trip: {candidate.reciprocal_date}.</small>
-            <div>
-              <button className="primary-button" disabled={busy} onClick={() => void run(
+          <article className="feed-card match-card" key={`${candidate.viewer_need_instance_id}-${candidate.candidate_id}-${candidate.reciprocal_date}`}>
+            <div className="feed-card__top">
+              <ParentTrustBadge
+                client={client}
+                peerUserId={candidate.candidate_id}
+                displayName={candidate.candidate_name}
+                band={candidate.trust_band}
+                suburb={candidate.area_label}
+              />
+            </div>
+            <p className="feed-card__meta">{candidate.area_label} · {candidate.time_overlap_minutes} min overlap</p>
+            <small className="feed-card__byline">Your requested trip: {candidate.first_date}; reciprocal trip: {candidate.reciprocal_date}.</small>
+            <div className="feed-card__actions">
+              <button className="primary-button feed-card__cta" disabled={busy} onClick={() => void run(
                 () => matchApi.propose(client, candidate).then(() => undefined),
                 'Proposal sent. A swap exists only if the other parent accepts.',
               )}>Propose swap</button>
@@ -85,8 +115,8 @@ export function MatchHub({ client }: { client: SupabaseClient }) {
       <section>
         <h2>Your swap proposals</h2>
         {swaps.length ? <div className="match-list">{swaps.map((swap) => (
-          <article className="match-card" key={swap.id}>
-            <div><strong>{swap.partnerName}</strong><span className="instance-status">{swap.status === 'cancelled_consent_revoked' ? 'Ended: consent withdrawn' : swap.status}</span></div>
+          <article className="feed-card match-card" key={swap.id}>
+            <div className="feed-card__top"><strong>{swap.partnerName}</strong><span className="instance-status">{swap.status === 'cancelled_consent_revoked' ? 'Ended: consent withdrawn' : statusLabelEnglish(swap.status)}</span></div>
             <p>{swap.isIncoming ? 'Incoming proposal' : 'Your proposal'} · {swap.status === 'proposed'
               ? `expires ${new Date(swap.expiresAt).toLocaleString('en-AU')}`
               : 'No contact details are shared in this summary.'}</p>
@@ -102,8 +132,9 @@ export function MatchHub({ client }: { client: SupabaseClient }) {
               () => matchApi.action(client, swap.id, 'withdraw').then(() => undefined), 'Proposal withdrawn.',
             )}>Withdraw</button>)}
             {swap.status === 'accepted' && <>
-              <div>
+              <div className="match-card__actions">
                 <button className="secondary-button" disabled={busy} onClick={() => void reveal(swap.id)}>Show child nickname and year level</button>
+                <button className="secondary-button" disabled={busy} onClick={() => void openSwapChat(swap.id)}>Message about this school run</button>
                 {children[swap.id]?.map((child) => <p key={`${swap.id}-${child.nickname}`} className="child-reveal">{child.nickname} · Year {child.yearLevel}</p>)}
               </div>
               <ContactSharing client={client} swapId={swap.id} onChanged={refresh} />

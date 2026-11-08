@@ -1,201 +1,1602 @@
 {
   "authenticated": [
-    {"name":"accept_current_consent","reason":"record current consent","callerDerivation":"auth.uid()","schoolScope":"document/version only"},
-    {"name":"add_onboarding_child","reason":"add caller child","callerDerivation":"auth.uid()","schoolScope":"membership ownership"},
-    {"name":"approve_school_membership","reason":"moderator approval","callerDerivation":"auth.uid()","schoolScope":"own-school moderator/admin"},
-    {"name":"block_match_user","reason":"block match candidate","callerDerivation":"auth.uid()","schoolScope":"verified same school"},
-    {"name":"cancel_availability_instance","reason":"cancel own instance","callerDerivation":"auth.uid()","schoolScope":"instance ownership"},
-    {"name":"cancel_availability_pattern","reason":"cancel own pattern","callerDerivation":"auth.uid()","schoolScope":"pattern ownership"},
-    {"name":"claim_household_link_invitation","reason":"claim household code","callerDerivation":"auth.uid()","schoolScope":"verified same school","searchPath":"pg_catalog"},
-    {"name":"claim_school_invitation","reason":"claim school invite","callerDerivation":"auth.uid()","schoolScope":"invite target","searchPath":"pg_catalog"},
-    {"name":"confirm_household_link","reason":"confirm household link","callerDerivation":"auth.uid()","schoolScope":"link participant"},
-    {"name":"create_availability_pattern","reason":"create own schedule","callerDerivation":"auth.uid()","schoolScope":"verified membership"},
-    {"name":"create_household_link_invitation","reason":"create household code","callerDerivation":"auth.uid()","schoolScope":"caller membership"},
-    {"name":"create_school_invitation","reason":"moderator invite","callerDerivation":"auth.uid()","schoolScope":"own-school moderator"},
-    {"name":"expire_my_swap_proposals","reason":"expire caller swaps","callerDerivation":"auth.uid()","schoolScope":"swap participant"},
-    {"name":"get_accepted_swap_children","reason":"accepted swap child reveal","callerDerivation":"auth.uid()","schoolScope":"accepted participant"},
-    {"name":"get_my_ledger","reason":"read own immutable trip entries and pair-netted counts","callerDerivation":"auth.uid(); no caller or school arguments","schoolScope":"oldest fully onboarded verified membership; pair participant only","searchPath":"pg_catalog"},
-    {"name":"get_my_trust","reason":"caller reads own numeric trust score, band and admin_suspended flag","callerDerivation":"auth.uid(); no arguments","schoolScope":"caller profile only; never another parent's score","searchPath":"pg_catalog"},
-    {"name":"get_peer_trust_band","reason":"same-school verified peer band-only disclosure","callerDerivation":"auth.uid() derives viewer; p_peer_user_id is the peer never the caller","schoolScope":"shared verified membership school; payload is trust_band only","searchPath":"pg_catalog"},
-    {"name":"grant_contact_sharing","reason":"version caller consent and privately store a mobile after acceptance","callerDerivation":"auth.uid() derives consenting membership; no caller identity argument","schoolScope":"accepted participant in same verified school; chosen backup memberships validated in that school","searchPath":"pg_catalog"},
-    {"name":"revoke_contact_sharing","reason":"withdraw own consent, end swap and atomically notify its partner","callerDerivation":"auth.uid() derives consenting participant even after suspension","schoolScope":"owns consent for supplied swap; another school or nonparticipant cannot cancel","searchPath":"pg_catalog"},
-    {"name":"get_shared_contact","reason":"only intentional mobile-number disclosure surface","callerDerivation":"auth.uid() derives reader; p_member identifies the consenting owner, never the caller","schoolScope":"accepted active consent; verified same-school partner or version-specific chosen backup only","searchPath":"pg_catalog"},
-    {"name":"confirm_pickup_done","reason":"timestamp provider-only pickup confirmation; complete only with recipient confirmation","callerDerivation":"auth.uid() derives provider membership; leg UUID is not caller identity","schoolScope":"accepted same-school leg helper; active verified membership","searchPath":"pg_catalog"},
-    {"name":"confirm_child_arrived","reason":"timestamp recipient-only safe arrival confirmation; complete only with provider confirmation","callerDerivation":"auth.uid() derives recipient membership; no actor, school or timestamp arguments","schoolScope":"accepted same-school leg requester; active verified membership","searchPath":"pg_catalog"},
-    {"name":"refresh_my_handover_reminders","reason":"create overdue missing-second-confirmation records for caller own accepted trips","callerDerivation":"auth.uid(); no arguments or caller-supplied clock","schoolScope":"own active-school participant legs only; no data returned for another school","searchPath":"pg_catalog"},
-    {"name":"get_reciprocal_match_candidates","reason":"list caller candidates","callerDerivation":"auth.uid()","schoolScope":"verified membership"},
-    {"name":"list_my_swaps","reason":"list caller swaps","callerDerivation":"auth.uid()","schoolScope":"swap participant"},
-    {"name":"list_my_trust_cases","reason":"caller reads own trust reports holds and appeals without peer scores","callerDerivation":"auth.uid(); no arguments","schoolScope":"reporter/subject/appellant rows only","searchPath":"pg_catalog"},
-    {"name":"list_onboarding_school_options","reason":"list onboarding schools","callerDerivation":"auth.uid()","schoolScope":"verified email only"},
-    {"name":"list_pending_school_memberships","reason":"moderation queue","callerDerivation":"auth.uid()","schoolScope":"own-school moderator/admin"},
-    {"name":"list_school_trust_queue","reason":"moderator trust case queue","callerDerivation":"auth.uid(); school derived from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
-    {"name":"open_school_invitation","reason":"open opaque invitation token","callerDerivation":"token only","schoolScope":"returns no school detail","searchPath":"pg_catalog"},
-    {"name":"has_current_onboarding_consents","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"membership input verified internally"},
-    {"name":"is_admin","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"global role"},
-    {"name":"is_approved_school_member","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"membership input verified internally"},
-    {"name":"is_member","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"school input verified internally"},
-    {"name":"is_moderator","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"school input verified internally"},
-    {"name":"is_same_household","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"both IDs checked internally"},
-    {"name":"is_verified_email_user","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"caller only"},
-    {"name":"propose_reciprocal_swap","reason":"propose reciprocal swap","callerDerivation":"auth.uid()","schoolScope":"all instances verified same-school"},
-    {"name":"record_email_verified_event","reason":"analytics","callerDerivation":"auth.uid()","schoolScope":"caller only"},
-    {"name":"record_first_match_viewed","reason":"analytics","callerDerivation":"auth.uid()","schoolScope":"caller membership"},
-    {"name":"redeem_school_invite_code","reason":"redeem code","callerDerivation":"auth.uid()","schoolScope":"requested school verified internally","searchPath":"pg_catalog"},
-    {"name":"refresh_my_availability_instances","reason":"refresh caller instances","callerDerivation":"auth.uid()","schoolScope":"caller membership"},
-    {"name":"request_household_link","reason":"request household","callerDerivation":"auth.uid()","schoolScope":"verified same school"},
-    {"name":"school_local_today","reason":"RLS policy helper","callerDerivation":"auth.uid()","schoolScope":"school input verified internally"},
-    {"name":"set_school_membership_review_state","reason":"moderator state change","callerDerivation":"auth.uid()","schoolScope":"own-school moderator"},
-    {"name":"sign_onboarding_safety_declaration","reason":"sign caller declaration","callerDerivation":"auth.uid()","schoolScope":"membership ownership"},
-    {"name":"transition_swap_proposal","reason":"swap transition","callerDerivation":"auth.uid()","schoolScope":"swap participant"},
-    {"name":"update_availability_pattern","reason":"update own schedule","callerDerivation":"auth.uid()","schoolScope":"pattern ownership"},
-    {"name":"update_onboarding_parent_profile","reason":"update caller profile","callerDerivation":"auth.uid()","schoolScope":"caller only"},
-    {"name":"report_no_show","reason":"file provisional no-show against accepted leg partner","callerDerivation":"auth.uid() as reporter; leg participants only","schoolScope":"accepted same-school swap leg","searchPath":"pg_catalog"},
-    {"name":"dispute_trust_report","reason":"subject disputes provisional report within 24h","callerDerivation":"auth.uid() must be subject","schoolScope":"own school report","searchPath":"pg_catalog"},
-    {"name":"report_false_report","reason":"subject files false-report case against original no-show reporter","callerDerivation":"auth.uid() must be no-show subject","schoolScope":"linked same-school no-show report","searchPath":"pg_catalog"},
-    {"name":"resolve_trust_report","reason":"moderator confirms or rejects provisional/disputed report","callerDerivation":"auth.uid() moderator/admin","schoolScope":"own-school case","searchPath":"pg_catalog"},
-    {"name":"place_safety_hold","reason":"moderator places swap-only safety hold","callerDerivation":"auth.uid() moderator/admin; subject is argument","schoolScope":"verified subject in moderator school","searchPath":"pg_catalog"},
-    {"name":"resolve_safety_hold","reason":"moderator lifts or upholds active safety hold","callerDerivation":"auth.uid() moderator/admin","schoolScope":"own-school hold","searchPath":"pg_catalog"},
-    {"name":"file_trust_appeal","reason":"penalised parent appeals confirmed report or hold within 48h","callerDerivation":"auth.uid() as appellant","schoolScope":"own school target","searchPath":"pg_catalog"},
-    {"name":"resolve_trust_appeal","reason":"moderator upholds or dismisses open appeal","callerDerivation":"auth.uid() moderator/admin","schoolScope":"own-school appeal","searchPath":"pg_catalog"},
-    {"name":"user_has_active_safety_hold","reason":"RLS/helper swap-disable check","callerDerivation":"auth.uid() via matching RPCs","schoolScope":"school-scoped hold lookup","searchPath":"pg_catalog"},
-    {"name":"generate_school_notice","reason":"create or return phone-free school collection notice for accepted swap leg","callerDerivation":"auth.uid() must be helper or requester","schoolScope":"accepted same-school participant; year levels and collector display name only","searchPath":"pg_catalog"},
-    {"name":"get_school_notice","reason":"read phone-free school notice and log access","callerDerivation":"auth.uid() participant moderator or admin","schoolScope":"own-school notice only","searchPath":"pg_catalog"},
-    {"name":"list_my_school_notices","reason":"list caller school notices for own accepted legs","callerDerivation":"auth.uid(); no arguments","schoolScope":"generator or leg participant","searchPath":"pg_catalog"},
-    {"name":"list_school_notice_moderation_queue","reason":"moderator school notice queue","callerDerivation":"auth.uid(); school derived from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
-    {"name":"withdraw_school_notice","reason":"generator or school moderator withdraws an active notice","callerDerivation":"auth.uid() generator moderator or admin","schoolScope":"own-school notice","searchPath":"pg_catalog"},
-    {"name":"mask_email_address","reason":"pure email masking helper for relay displays","callerDerivation":"no identity lookup; masks supplied text only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"get_email_relay_delivery_policy","reason":"caller reads published school or global email relay delivery policy","callerDerivation":"auth.uid() verified membership school","schoolScope":"own school then global; no SMTP secrets","searchPath":"pg_catalog"},
-    {"name":"enqueue_email_relay","reason":"queue outbound partner email relay under delivery policy","callerDerivation":"auth.uid() swap participant; recipient is partner","schoolScope":"accepted same-school swap; handover_reminder blocked","searchPath":"pg_catalog"},
-    {"name":"list_my_email_relay_queue","reason":"list caller email relay queue items with masked recipient only","callerDerivation":"auth.uid(); no arguments","schoolScope":"creator or recipient rows only","searchPath":"pg_catalog"},
-    {"name":"list_school_email_relay_queue","reason":"moderator school email relay queue with masked recipients","callerDerivation":"auth.uid(); school derived from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
-    {"name":"get_retention_purge_policy","reason":"read 90-day retention targets and preserved tables","callerDerivation":"auth.uid(); no school arguments","schoolScope":"policy metadata only","searchPath":"pg_catalog"},
-    {"name":"post_running_late_notice","reason":"helper posts prior running-late notice before pickup window start","callerDerivation":"auth.uid() must be accepted swap helper","schoolScope":"accepted same-school leg; no location payload","searchPath":"pg_catalog"},
-    {"name":"get_running_late_notice","reason":"participant reads running-late notice for own accepted leg","callerDerivation":"auth.uid() helper or requester","schoolScope":"own-school participant only","searchPath":"pg_catalog"},
-    {"name":"list_my_running_late_notices","reason":"list running-late notices for caller as poster or leg participant","callerDerivation":"auth.uid(); no arguments","schoolScope":"own membership schools only","searchPath":"pg_catalog"},
-    {"name":"create_community_thread","reason":"verified member creates same-school discussion thread with opening post","callerDerivation":"auth.uid() verified membership school","schoolScope":"own school only; privacy-filtered text","searchPath":"pg_catalog"},
-    {"name":"create_community_post","reason":"verified member posts in own-school active thread","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active thread","searchPath":"pg_catalog"},
-    {"name":"create_community_comment","reason":"verified member comments on own-school active post","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active post","searchPath":"pg_catalog"},
-    {"name":"toggle_community_like","reason":"verified member likes or unlikes own-school post or comment","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active target","searchPath":"pg_catalog"},
-    {"name":"list_community_threads","reason":"list active discussion threads for caller school","callerDerivation":"auth.uid(); no school arguments","schoolScope":"own verified school only","searchPath":"pg_catalog"},
-    {"name":"list_community_posts","reason":"list active posts in an own-school thread","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active thread","searchPath":"pg_catalog"},
-    {"name":"list_community_comments","reason":"list active comments on an own-school post","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active post","searchPath":"pg_catalog"},
-    {"name":"report_community_content","reason":"verified member files unique report; auto-hides after three unique reports","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active content; privacy-filtered reason","searchPath":"pg_catalog"},
-    {"name":"hide_community_content","reason":"own-school moderator hides active community content","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school only","searchPath":"pg_catalog"},
-    {"name":"restore_community_content","reason":"own-school moderator restores hidden community content","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school hidden content","searchPath":"pg_catalog"},
-    {"name":"remove_community_content","reason":"own-school moderator permanently withdraws community content","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school active or hidden content","searchPath":"pg_catalog"},
-    {"name":"list_community_moderation_queue","reason":"own-school moderator lists hidden community content with report counts","callerDerivation":"auth.uid(); school from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
-    {"name":"list_my_handover_reminder_deliveries","reason":"recipient reads own handover reminder delivery decisions without email","callerDerivation":"auth.uid(); no arguments","schoolScope":"own membership schools only","searchPath":"pg_catalog"},
-    {"name":"create_item_listing","reason":"verified member creates same-school free giveaway or lending listing with free-only offer label","callerDerivation":"auth.uid() verified membership school","schoolScope":"own school only; restricted items rejected; no money fields","searchPath":"pg_catalog"},
-    {"name":"search_item_listings","reason":"search and filter active own-school free listings","callerDerivation":"auth.uid(); school from membership","schoolScope":"own verified school only","searchPath":"pg_catalog"},
-    {"name":"get_item_listing","reason":"read one active own-school free listing","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
-    {"name":"create_listing_enquiry","reason":"same-school parent enquires on an active free listing without payment","callerDerivation":"auth.uid() verified membership; not the author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
-    {"name":"list_listing_enquiries","reason":"author lists all enquiries or enquirer lists own on a listing","callerDerivation":"auth.uid() verified membership","schoolScope":"own-school listing participants only","searchPath":"pg_catalog"},
-    {"name":"list_restricted_listing_items","reason":"verified member reads active restricted-item catalogue labels","callerDerivation":"auth.uid() verified membership","schoolScope":"global catalogue; membership gate only","searchPath":"pg_catalog"},
-    {"name":"mark_item_listing_collected","reason":"author marks own active free listing collected without payment","callerDerivation":"auth.uid() must be listing author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
-    {"name":"mark_item_listing_fulfilled","reason":"author marks own active free listing fulfilled without payment","callerDerivation":"auth.uid() must be listing author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
-    {"name":"withdraw_item_listing","reason":"author withdraws own active free listing","callerDerivation":"auth.uid() must be listing author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
-    {"name":"report_item_listing","reason":"verified member files unique listing report; auto-hides after three unique reports","callerDerivation":"auth.uid() verified membership; not author","schoolScope":"own-school active listing","searchPath":"pg_catalog"},
-    {"name":"hide_item_listing","reason":"own-school moderator hides active listing","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school only","searchPath":"pg_catalog"},
-    {"name":"restore_item_listing","reason":"own-school moderator restores hidden listing","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school hidden listing","searchPath":"pg_catalog"},
-    {"name":"remove_item_listing","reason":"own-school moderator permanently withdraws listing","callerDerivation":"auth.uid() moderator membership","schoolScope":"own-school active or hidden listing","searchPath":"pg_catalog"},
-    {"name":"list_listing_moderation_queue","reason":"own-school moderator lists hidden listings with report counts","callerDerivation":"auth.uid(); school from moderator membership","schoolScope":"own-school moderator/admin only","searchPath":"pg_catalog"},
-    {"name":"create_restricted_listing_item","reason":"global admin creates restricted catalogue entry with match terms","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue; no school argument","searchPath":"pg_catalog"},
-    {"name":"update_restricted_listing_item","reason":"global admin updates label match terms or soft-deactivates restricted entry","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue; no school argument","searchPath":"pg_catalog"},
-    {"name":"list_all_restricted_listing_items","reason":"global admin lists full restricted catalogue including inactive and match terms","callerDerivation":"auth.uid() must be admin","schoolScope":"global catalogue","searchPath":"pg_catalog"},
-    {"name":"list_my_notifications","reason":"caller lists own in-app notifications optionally unread-only","callerDerivation":"auth.uid(); no school arguments","schoolScope":"own user_id rows only","searchPath":"pg_catalog"},
-    {"name":"mark_notification_read","reason":"caller marks one own notification read","callerDerivation":"auth.uid(); notification id is not caller identity","schoolScope":"own user_id row only","searchPath":"pg_catalog"},
-    {"name":"mark_all_notifications_read","reason":"caller marks all own unread notifications read","callerDerivation":"auth.uid(); no arguments","schoolScope":"own user_id rows only","searchPath":"pg_catalog"},
-    {"name":"list_admin_safety_holds","reason":"global admin lists active safety holds without phones or nicknames","callerDerivation":"auth.uid() must be admin","schoolScope":"cross-school admin read; no school argument","searchPath":"pg_catalog"},
-    {"name":"list_admin_suspended_users","reason":"global admin lists platform-suspended profiles without display names phones or nicknames","callerDerivation":"auth.uid() must be admin","schoolScope":"global; no school argument","searchPath":"pg_catalog"},
-    {"name":"list_admin_audit_actions","reason":"global admin lists recent admin.* audit_logs with safe payload keys only","callerDerivation":"auth.uid() must be admin","schoolScope":"global admin actions; optional school_id on rows","searchPath":"pg_catalog"},
-    {"name":"admin_suspend_user","reason":"global admin sets profiles.admin_suspended with append-only audit","callerDerivation":"auth.uid() must be admin; target is not caller identity","schoolScope":"global profile flag; school moderators denied","searchPath":"pg_catalog"},
-    {"name":"admin_unsuspend_user","reason":"global admin clears profiles.admin_suspended with append-only audit","callerDerivation":"auth.uid() must be admin; target is not caller identity","schoolScope":"global profile flag; school moderators denied","searchPath":"pg_catalog"},
-    {"name":"admin_resolve_safety_hold","reason":"global admin resolves subject active safety hold; school moderators must use resolve_safety_hold","callerDerivation":"auth.uid() must be admin; subject user id is not caller identity","schoolScope":"hold school derived from row; moderator forge denied","searchPath":"pg_catalog"}
+    {
+      "name": "accept_current_consent",
+      "reason": "record current consent",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "document/version only"
+    },
+    {
+      "name": "add_onboarding_child",
+      "reason": "add caller child",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "membership ownership"
+    },
+    {
+      "name": "approve_school_membership",
+      "reason": "moderator approval",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "own-school moderator/admin"
+    },
+    {
+      "name": "block_match_user",
+      "reason": "block match candidate",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "verified same school"
+    },
+    {
+      "name": "cancel_availability_instance",
+      "reason": "cancel own instance",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "instance ownership"
+    },
+    {
+      "name": "cancel_availability_pattern",
+      "reason": "cancel own pattern",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "pattern ownership"
+    },
+    {
+      "name": "claim_household_link_invitation",
+      "reason": "claim household code",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "verified same school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "claim_school_invitation",
+      "reason": "claim school invite",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "invite target",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "confirm_household_link",
+      "reason": "confirm household link",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "link participant"
+    },
+    {
+      "name": "create_availability_pattern",
+      "reason": "create own schedule",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "verified membership"
+    },
+    {
+      "name": "create_household_link_invitation",
+      "reason": "create household code",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "caller membership"
+    },
+    {
+      "name": "create_school_invitation",
+      "reason": "moderator invite",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "own-school moderator"
+    },
+    {
+      "name": "expire_my_swap_proposals",
+      "reason": "expire caller swaps",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "swap participant"
+    },
+    {
+      "name": "get_accepted_swap_children",
+      "reason": "accepted swap child reveal",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "accepted participant"
+    },
+    {
+      "name": "get_my_ledger",
+      "reason": "read own immutable trip entries and pair-netted counts",
+      "callerDerivation": "auth.uid(); no caller or school arguments",
+      "schoolScope": "oldest fully onboarded verified membership; pair participant only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_my_trust",
+      "reason": "caller reads own numeric trust score, band and admin_suspended flag",
+      "callerDerivation": "auth.uid(); no arguments",
+      "schoolScope": "caller profile only; never another parent's score",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_peer_trust_band",
+      "reason": "same-school verified peer band-only disclosure with AU parent trust label",
+      "callerDerivation": "auth.uid() derives viewer; p_peer_user_id is the peer never the caller",
+      "schoolScope": "shared verified membership school; payload is trust_band and parentTrustBand only; no numeric score",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_peer_parent_trust_profile",
+      "reason": "same-school peer AU parent trust band plus pickup and relay share counts",
+      "callerDerivation": "auth.uid() derives viewer; p_peer_user_id is the peer",
+      "schoolScope": "shared verified membership school; counts only; no numeric trust_score",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "grant_contact_sharing",
+      "reason": "version caller consent and privately store a mobile after acceptance",
+      "callerDerivation": "auth.uid() derives consenting membership; no caller identity argument",
+      "schoolScope": "accepted participant in same verified school; chosen backup memberships validated in that school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "revoke_contact_sharing",
+      "reason": "withdraw own consent, end swap and atomically notify its partner",
+      "callerDerivation": "auth.uid() derives consenting participant even after suspension",
+      "schoolScope": "owns consent for supplied swap; another school or nonparticipant cannot cancel",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_shared_contact",
+      "reason": "only intentional mobile-number disclosure surface",
+      "callerDerivation": "auth.uid() derives reader; p_member identifies the consenting owner, never the caller",
+      "schoolScope": "accepted active consent; verified same-school partner or version-specific chosen backup only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "confirm_pickup_done",
+      "reason": "timestamp provider-only pickup confirmation; complete only with recipient confirmation",
+      "callerDerivation": "auth.uid() derives provider membership; leg UUID is not caller identity",
+      "schoolScope": "accepted same-school leg helper; active verified membership",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "confirm_child_arrived",
+      "reason": "timestamp recipient-only safe arrival confirmation; complete only with provider confirmation",
+      "callerDerivation": "auth.uid() derives recipient membership; no actor, school or timestamp arguments",
+      "schoolScope": "accepted same-school leg requester; active verified membership",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "refresh_my_handover_reminders",
+      "reason": "create overdue missing-second-confirmation records for caller own accepted trips",
+      "callerDerivation": "auth.uid(); no arguments or caller-supplied clock",
+      "schoolScope": "own active-school participant legs only; no data returned for another school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_reciprocal_match_candidates",
+      "reason": "list caller candidates",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "verified membership"
+    },
+    {
+      "name": "list_my_swaps",
+      "reason": "list caller swaps",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "swap participant"
+    },
+    {
+      "name": "list_my_trust_cases",
+      "reason": "caller reads own trust reports holds and appeals without peer scores",
+      "callerDerivation": "auth.uid(); no arguments",
+      "schoolScope": "reporter/subject/appellant rows only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_onboarding_school_options",
+      "reason": "list onboarding schools",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "verified email only"
+    },
+    {
+      "name": "list_pending_school_memberships",
+      "reason": "moderation queue",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "own-school moderator/admin"
+    },
+    {
+      "name": "list_school_trust_queue",
+      "reason": "moderator trust case queue",
+      "callerDerivation": "auth.uid(); school derived from moderator membership",
+      "schoolScope": "own-school moderator/admin only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "open_school_invitation",
+      "reason": "open opaque invitation token",
+      "callerDerivation": "token only",
+      "schoolScope": "returns no school detail",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "has_current_onboarding_consents",
+      "reason": "RLS policy helper",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "membership input verified internally"
+    },
+    {
+      "name": "is_admin",
+      "reason": "RLS policy helper",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "global role"
+    },
+    {
+      "name": "is_approved_school_member",
+      "reason": "RLS policy helper",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "membership input verified internally"
+    },
+    {
+      "name": "is_member",
+      "reason": "RLS policy helper",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "school input verified internally"
+    },
+    {
+      "name": "is_moderator",
+      "reason": "RLS policy helper",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "school input verified internally"
+    },
+    {
+      "name": "is_same_household",
+      "reason": "RLS policy helper",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "both IDs checked internally"
+    },
+    {
+      "name": "is_verified_email_user",
+      "reason": "RLS policy helper",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "caller only"
+    },
+    {
+      "name": "propose_reciprocal_swap",
+      "reason": "propose reciprocal swap",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "all instances verified same-school"
+    },
+    {
+      "name": "record_email_verified_event",
+      "reason": "analytics",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "caller only"
+    },
+    {
+      "name": "record_first_match_viewed",
+      "reason": "analytics",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "caller membership"
+    },
+    {
+      "name": "redeem_school_invite_code",
+      "reason": "redeem code",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "requested school verified internally",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "refresh_my_availability_instances",
+      "reason": "refresh caller instances",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "caller membership"
+    },
+    {
+      "name": "request_household_link",
+      "reason": "request household",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "verified same school"
+    },
+    {
+      "name": "school_local_today",
+      "reason": "RLS policy helper",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "school input verified internally"
+    },
+    {
+      "name": "set_school_membership_review_state",
+      "reason": "moderator state change",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "own-school moderator"
+    },
+    {
+      "name": "sign_onboarding_safety_declaration",
+      "reason": "sign caller declaration",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "membership ownership"
+    },
+    {
+      "name": "transition_swap_proposal",
+      "reason": "swap transition",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "swap participant"
+    },
+    {
+      "name": "update_availability_pattern",
+      "reason": "update own schedule",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "pattern ownership"
+    },
+    {
+      "name": "update_onboarding_parent_profile",
+      "reason": "update caller profile",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "caller only"
+    },
+    {
+      "name": "report_no_show",
+      "reason": "file provisional no-show against accepted leg partner",
+      "callerDerivation": "auth.uid() as reporter; leg participants only",
+      "schoolScope": "accepted same-school swap leg",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "dispute_trust_report",
+      "reason": "subject disputes provisional report within 24h",
+      "callerDerivation": "auth.uid() must be subject",
+      "schoolScope": "own school report",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "report_false_report",
+      "reason": "subject files false-report case against original no-show reporter",
+      "callerDerivation": "auth.uid() must be no-show subject",
+      "schoolScope": "linked same-school no-show report",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "resolve_trust_report",
+      "reason": "moderator confirms or rejects provisional/disputed report",
+      "callerDerivation": "auth.uid() moderator/admin",
+      "schoolScope": "own-school case",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "place_safety_hold",
+      "reason": "moderator places swap-only safety hold",
+      "callerDerivation": "auth.uid() moderator/admin; subject is argument",
+      "schoolScope": "verified subject in moderator school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "resolve_safety_hold",
+      "reason": "moderator lifts or upholds active safety hold",
+      "callerDerivation": "auth.uid() moderator/admin",
+      "schoolScope": "own-school hold",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "file_trust_appeal",
+      "reason": "penalised parent appeals confirmed report or hold within 48h",
+      "callerDerivation": "auth.uid() as appellant",
+      "schoolScope": "own school target",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "resolve_trust_appeal",
+      "reason": "moderator upholds or dismisses open appeal",
+      "callerDerivation": "auth.uid() moderator/admin",
+      "schoolScope": "own-school appeal",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "user_has_active_safety_hold",
+      "reason": "RLS/helper swap-disable check",
+      "callerDerivation": "auth.uid() via matching RPCs",
+      "schoolScope": "school-scoped hold lookup",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "generate_school_notice",
+      "reason": "create or return phone-free school collection notice for accepted swap leg",
+      "callerDerivation": "auth.uid() must be helper or requester",
+      "schoolScope": "accepted same-school participant; year levels and collector display name only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_school_notice",
+      "reason": "read phone-free school notice and log access",
+      "callerDerivation": "auth.uid() participant moderator or admin",
+      "schoolScope": "own-school notice only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_my_school_notices",
+      "reason": "list caller school notices for own accepted legs",
+      "callerDerivation": "auth.uid(); no arguments",
+      "schoolScope": "generator or leg participant",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_school_notice_moderation_queue",
+      "reason": "moderator school notice queue",
+      "callerDerivation": "auth.uid(); school derived from moderator membership",
+      "schoolScope": "own-school moderator/admin only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "withdraw_school_notice",
+      "reason": "generator or school moderator withdraws an active notice",
+      "callerDerivation": "auth.uid() generator moderator or admin",
+      "schoolScope": "own-school notice",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "mask_email_address",
+      "reason": "pure email masking helper for relay displays",
+      "callerDerivation": "no identity lookup; masks supplied text only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_email_relay_delivery_policy",
+      "reason": "caller reads published school or global email relay delivery policy",
+      "callerDerivation": "auth.uid() verified membership school",
+      "schoolScope": "own school then global; no SMTP secrets",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "enqueue_email_relay",
+      "reason": "queue outbound partner email relay under delivery policy",
+      "callerDerivation": "auth.uid() swap participant; recipient is partner",
+      "schoolScope": "accepted same-school swap; handover_reminder blocked",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_my_email_relay_queue",
+      "reason": "list caller email relay queue items with masked recipient only",
+      "callerDerivation": "auth.uid(); no arguments",
+      "schoolScope": "creator or recipient rows only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_school_email_relay_queue",
+      "reason": "moderator school email relay queue with masked recipients",
+      "callerDerivation": "auth.uid(); school derived from moderator membership",
+      "schoolScope": "own-school moderator/admin only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_retention_purge_policy",
+      "reason": "read 90-day retention targets and preserved tables",
+      "callerDerivation": "auth.uid(); no school arguments",
+      "schoolScope": "policy metadata only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "post_running_late_notice",
+      "reason": "helper posts prior running-late notice before pickup window start",
+      "callerDerivation": "auth.uid() must be accepted swap helper",
+      "schoolScope": "accepted same-school leg; no location payload",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_running_late_notice",
+      "reason": "participant reads running-late notice for own accepted leg",
+      "callerDerivation": "auth.uid() helper or requester",
+      "schoolScope": "own-school participant only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_my_running_late_notices",
+      "reason": "list running-late notices for caller as poster or leg participant",
+      "callerDerivation": "auth.uid(); no arguments",
+      "schoolScope": "own membership schools only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "create_community_thread",
+      "reason": "verified member creates same-school discussion thread with opening post",
+      "callerDerivation": "auth.uid() verified membership school",
+      "schoolScope": "own school only; privacy-filtered text",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "create_community_post",
+      "reason": "verified member posts in own-school active thread",
+      "callerDerivation": "auth.uid() verified membership",
+      "schoolScope": "own-school active thread",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "create_community_comment",
+      "reason": "verified member comments on own-school active post",
+      "callerDerivation": "auth.uid() verified membership",
+      "schoolScope": "own-school active post",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "toggle_community_like",
+      "reason": "verified member likes or unlikes own-school post or comment",
+      "callerDerivation": "auth.uid() verified membership",
+      "schoolScope": "own-school active target",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_community_threads",
+      "reason": "list active discussion threads for caller school",
+      "callerDerivation": "auth.uid(); no school arguments",
+      "schoolScope": "own verified school only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_community_posts",
+      "reason": "list active posts in an own-school thread",
+      "callerDerivation": "auth.uid() verified membership",
+      "schoolScope": "own-school active thread",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_community_comments",
+      "reason": "list active comments on an own-school post",
+      "callerDerivation": "auth.uid() verified membership",
+      "schoolScope": "own-school active post",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "report_community_content",
+      "reason": "verified member files unique report; auto-hides after three unique reports",
+      "callerDerivation": "auth.uid() verified membership",
+      "schoolScope": "own-school active content; privacy-filtered reason",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "hide_community_content",
+      "reason": "own-school moderator hides active community content",
+      "callerDerivation": "auth.uid() moderator membership",
+      "schoolScope": "own-school only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "restore_community_content",
+      "reason": "own-school moderator restores hidden community content",
+      "callerDerivation": "auth.uid() moderator membership",
+      "schoolScope": "own-school hidden content",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "remove_community_content",
+      "reason": "own-school moderator permanently withdraws community content",
+      "callerDerivation": "auth.uid() moderator membership",
+      "schoolScope": "own-school active or hidden content",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_community_moderation_queue",
+      "reason": "own-school moderator lists hidden community content with report counts",
+      "callerDerivation": "auth.uid(); school from moderator membership",
+      "schoolScope": "own-school moderator/admin only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_my_handover_reminder_deliveries",
+      "reason": "recipient reads own handover reminder delivery decisions without email",
+      "callerDerivation": "auth.uid(); no arguments",
+      "schoolScope": "own membership schools only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "create_item_listing",
+      "reason": "verified member creates same-school sale with AUD ask cents, optional listing_images jsonb, item_condition, size_age_label and household_env jsonb; free-share/swap without ask",
+      "callerDerivation": "auth.uid() verified membership school",
+      "schoolScope": "own school only via SECURITY DEFINER RPC; no direct INSERT policy; restricted items rejected; ask display only; no in-app payment",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "search_item_listings",
+      "reason": "search and filter active own-school marketplace listings by trade type and category",
+      "callerDerivation": "auth.uid(); school from membership",
+      "schoolScope": "own verified school only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_item_listing",
+      "reason": "read one active own-school free listing",
+      "callerDerivation": "auth.uid() verified membership",
+      "schoolScope": "own-school active listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "create_listing_enquiry",
+      "reason": "same-school parent enquires on an active free listing without payment",
+      "callerDerivation": "auth.uid() verified membership; not the author",
+      "schoolScope": "own-school active listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_listing_enquiries",
+      "reason": "author lists all enquiries or enquirer lists own on a listing",
+      "callerDerivation": "auth.uid() verified membership",
+      "schoolScope": "own-school listing participants only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_restricted_listing_items",
+      "reason": "verified member reads active restricted-item catalogue labels",
+      "callerDerivation": "auth.uid() verified membership",
+      "schoolScope": "global catalogue; membership gate only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "mark_item_listing_collected",
+      "reason": "author marks own active free listing collected without payment",
+      "callerDerivation": "auth.uid() must be listing author",
+      "schoolScope": "own-school active listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "mark_item_listing_fulfilled",
+      "reason": "author marks own active free listing fulfilled without payment",
+      "callerDerivation": "auth.uid() must be listing author",
+      "schoolScope": "own-school active listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "withdraw_item_listing",
+      "reason": "author withdraws own active free listing",
+      "callerDerivation": "auth.uid() must be listing author",
+      "schoolScope": "own-school active listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "report_item_listing",
+      "reason": "verified member files unique listing report; auto-hides after three unique reports",
+      "callerDerivation": "auth.uid() verified membership; not author",
+      "schoolScope": "own-school active listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "hide_item_listing",
+      "reason": "own-school moderator hides active listing",
+      "callerDerivation": "auth.uid() moderator membership",
+      "schoolScope": "own-school only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "restore_item_listing",
+      "reason": "own-school moderator restores hidden listing",
+      "callerDerivation": "auth.uid() moderator membership",
+      "schoolScope": "own-school hidden listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "remove_item_listing",
+      "reason": "own-school moderator permanently withdraws listing",
+      "callerDerivation": "auth.uid() moderator membership",
+      "schoolScope": "own-school active or hidden listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_listing_moderation_queue",
+      "reason": "own-school moderator lists hidden listings with report counts",
+      "callerDerivation": "auth.uid(); school from moderator membership",
+      "schoolScope": "own-school moderator/admin only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "create_restricted_listing_item",
+      "reason": "global admin creates restricted catalogue entry with match terms",
+      "callerDerivation": "auth.uid() must be admin",
+      "schoolScope": "global catalogue; no school argument",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "update_restricted_listing_item",
+      "reason": "global admin updates label match terms or soft-deactivates restricted entry",
+      "callerDerivation": "auth.uid() must be admin",
+      "schoolScope": "global catalogue; no school argument",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_all_restricted_listing_items",
+      "reason": "global admin lists full restricted catalogue including inactive and match terms",
+      "callerDerivation": "auth.uid() must be admin",
+      "schoolScope": "global catalogue",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_my_notifications",
+      "reason": "caller lists own in-app notifications optionally unread-only",
+      "callerDerivation": "auth.uid(); no school arguments",
+      "schoolScope": "own user_id rows only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "mark_notification_read",
+      "reason": "caller marks one own notification read",
+      "callerDerivation": "auth.uid(); notification id is not caller identity",
+      "schoolScope": "own user_id row only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "mark_all_notifications_read",
+      "reason": "caller marks all own unread notifications read",
+      "callerDerivation": "auth.uid(); no arguments",
+      "schoolScope": "own user_id rows only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_admin_safety_holds",
+      "reason": "global admin lists active safety holds without phones or nicknames",
+      "callerDerivation": "auth.uid() must be admin",
+      "schoolScope": "cross-school admin read; no school argument",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_admin_suspended_users",
+      "reason": "global admin lists platform-suspended profiles without display names phones or nicknames",
+      "callerDerivation": "auth.uid() must be admin",
+      "schoolScope": "global; no school argument",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_admin_audit_actions",
+      "reason": "global admin lists recent admin.* audit_logs with safe payload keys only",
+      "callerDerivation": "auth.uid() must be admin",
+      "schoolScope": "global admin actions; optional school_id on rows",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "admin_suspend_user",
+      "reason": "global admin sets profiles.admin_suspended with append-only audit",
+      "callerDerivation": "auth.uid() must be admin; target is not caller identity",
+      "schoolScope": "global profile flag; school moderators denied",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "admin_unsuspend_user",
+      "reason": "global admin clears profiles.admin_suspended with append-only audit",
+      "callerDerivation": "auth.uid() must be admin; target is not caller identity",
+      "schoolScope": "global profile flag; school moderators denied",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "admin_resolve_safety_hold",
+      "reason": "global admin resolves subject active safety hold; school moderators must use resolve_safety_hold",
+      "callerDerivation": "auth.uid() must be admin; subject user id is not caller identity",
+      "schoolScope": "hold school derived from row; moderator forge denied",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_or_create_schedule_chat",
+      "reason": "open or create 1:1 chat pinned to a school availability pattern",
+      "callerDerivation": "auth.uid() plus peer user id",
+      "schoolScope": "verified same-school peer; pattern school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_or_create_swap_chat",
+      "reason": "open or create 1:1 chat for an accepted swap using a leg schedule pattern",
+      "callerDerivation": "auth.uid() must be swap participant",
+      "schoolScope": "accepted same-school swap",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_or_create_listing_chat",
+      "reason": "open or create 1:1 marketplace chat with listing author pinned to the listing",
+      "callerDerivation": "auth.uid() as enquiring parent; not the author",
+      "schoolScope": "own verified school active listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_my_chat_rooms",
+      "reason": "list caller 1:1 chat rooms with schedule pin and unread counts",
+      "callerDerivation": "auth.uid(); no arguments",
+      "schoolScope": "participant rooms in verified schools only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_chat_messages",
+      "reason": "list recent messages in a room the caller participates in",
+      "callerDerivation": "auth.uid(); room id is not caller identity",
+      "schoolScope": "participant of own-school room",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "send_chat_message",
+      "reason": "send phone-free text message in a participant room",
+      "callerDerivation": "auth.uid() as sender",
+      "schoolScope": "participant of own-school room",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "mark_chat_room_read",
+      "reason": "advance caller last_read_at for read receipts",
+      "callerDerivation": "auth.uid(); room id is not caller identity",
+      "schoolScope": "participant of own-school room",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "create_instant_pickup_request",
+      "reason": "post same-school today/tomorrow need-help or can-help board item",
+      "callerDerivation": "auth.uid() as requester; school from membership",
+      "schoolScope": "own verified school only; suburb label only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_instant_pickup_requests",
+      "reason": "list same-school instant pickup board items",
+      "callerDerivation": "auth.uid(); school from membership",
+      "schoolScope": "own verified school only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "cancel_instant_pickup_request",
+      "reason": "requester cancels own open instant pickup board item",
+      "callerDerivation": "auth.uid() must be requester",
+      "schoolScope": "own verified school request",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "accept_instant_pickup_request",
+      "reason": "accept open same-school instant pickup and open 1:1 chat",
+      "callerDerivation": "auth.uid() as matched accepter; not requester",
+      "schoolScope": "own verified school open request",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "check_in_instant_pickup",
+      "reason": "final check-in 30 minutes before pickup; confirm or release with trust penalty",
+      "callerDerivation": "auth.uid() must be requester or matched user",
+      "schoolScope": "own verified school matched request",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_instant_pickup_chat",
+      "reason": "open existing 1:1 chat for a matched instant pickup",
+      "callerDerivation": "auth.uid() must be requester or matched user",
+      "schoolScope": "own verified school matched request",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "complete_parent_signup",
+      "reason": "parent dual-signup profile suburb school and optional invitation code; status PENDING_VERIFICATION",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "optional signup_school_id; invite redeem best-effort",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "get_my_account_verification",
+      "reason": "caller reads own account verification status role and signup metadata",
+      "callerDerivation": "auth.uid(); no arguments",
+      "schoolScope": "caller profile only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_pending_account_verifications",
+      "reason": "global admin lists pending parent verifications optionally filtered by school",
+      "callerDerivation": "auth.uid() must be admin",
+      "schoolScope": "optional p_school_id filter",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "verify_account_user",
+      "reason": "global admin approve or reject parent account verification",
+      "callerDerivation": "auth.uid() must be admin; target is not caller identity",
+      "schoolScope": "optional membership approve for signup_school_id",
+      "searchPath": "pg_catalog"
+    }
   ],
   "internal": [
-    {"name":"guard_swap_ledger_entry","reason":"trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only; never a caller-supplied actor","schoolScope":"entry, completed leg and both membership school IDs must agree","searchPath":"pg_catalog"},
-    {"name":"record_completed_swap_leg","reason":"trigger-only exactly-once obligation when a trusted accepted leg completes; no anon/authenticated EXECUTE","callerDerivation":"trusted completed leg participants; auth.uid() for audit only","schoolScope":"accepted proposal, both instances and verified memberships in the leg school","searchPath":"pg_catalog"},
-    {"name":"guard_contact_history","reason":"trigger-only immutable consent facts, selected backups, cancellation and notification history","callerDerivation":"trigger NEW/OLD only","schoolScope":"no caller execution; scoped RPCs own one-way consent transitions","searchPath":"pg_catalog"},
-    {"name":"contact_member_is_active","reason":"internal eligibility check for a specific membership, not an identity oracle","callerDerivation":"invoked only by auth.uid()-derived definer RPCs; no anon/authenticated EXECUTE","schoolScope":"membership, email, current consent and school-specific safety declaration must agree","searchPath":"pg_catalog"},
-    {"name":"guard_handover_history","reason":"trigger-only immutable handover facts and source expected-arrival integrity","callerDerivation":"trigger NEW/OLD; no client execution","schoolScope":"source leg, proposal and role-specific membership school must agree","searchPath":"pg_catalog"},
-    {"name":"record_leg_confirmation","reason":"private shared two-party completion transaction; no client execution","callerDerivation":"auth.uid() plus fixed kind supplied only by the two public wrappers","schoolScope":"active same-school leg role and accepted proposal; completion analytics from immutable confirmations","searchPath":"pg_catalog"},
-    {"name":"maybe_record_handover_reminder","reason":"private proposal/leg-locked due-record operation; no client execution","callerDerivation":"scoped participant wrapper or service sweep; no arbitrary authenticated calls","schoolScope":"accepted source leg with exactly one confirmation; missing role membership derived from source","searchPath":"pg_catalog"},
-    {"name":"enqueue_due_handover_reminders","reason":"service-role/native-cron-only reminder-record sweep; no notification delivery","callerDerivation":"trusted job, not a browser identity; anon/authenticated EXECUTE revoked","schoolScope":"server-selected accepted overdue legs, never caller-supplied school or recipient","searchPath":"pg_catalog"},
-    {"name":"guard_trust_score_events","reason":"trigger-only append-only trust score history; no anon/authenticated EXECUTE","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"apply_trust_score_delta","reason":"internal idempotent score posting for Task 6.1/6.2; no browser EXECUTE","callerDerivation":"server/trusted callers only; never auth.uid() as subject argument from clients","schoolScope":"verified membership school of the subject; clamps -100..150","searchPath":"pg_catalog"},
-    {"name":"trust_band_for_user","reason":"internal band projection including admin_suspended override","callerDerivation":"definer RPCs only","schoolScope":"profile lookup by subject user id","searchPath":"pg_catalog"},
-    {"name":"trust_published_policy","reason":"internal published policy JSON lookup for scoring","callerDerivation":"definer helpers only","schoolScope":"school-specific then global published version","searchPath":"pg_catalog"},
-    {"name":"trust_policy_delta","reason":"internal reason-code to smallint delta from published policy","callerDerivation":"definer helpers only","schoolScope":"school published policy changes map","searchPath":"pg_catalog"},
-    {"name":"trust_hours_until_instance","reason":"internal lead-time helper for cancel and urgent cover windows","callerDerivation":"definer helpers only","schoolScope":"school timezone pickup instant","searchPath":"pg_catalog"},
-    {"name":"trust_cancel_reason_for_hours","reason":"internal cancel reason projection from lead hours","callerDerivation":"immutable helper; no client execution","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"post_trust_completed_trip","reason":"trigger-only completed-trip policy posting","callerDerivation":"swap_legs completion trigger","schoolScope":"helper membership school of completed leg","searchPath":"pg_catalog"},
-    {"name":"post_trust_schedule_cancellation","reason":"trigger-only schedule cancel policy posting","callerDerivation":"schedule_cancellation_events insert trigger","schoolScope":"owner and cancelled instance school","searchPath":"pg_catalog"},
-    {"name":"post_trust_swap_cancellation","reason":"trigger-only consent-revoke cancel policy posting","callerDerivation":"swap_cancellation_events insert trigger","schoolScope":"actor membership school and incomplete legs","searchPath":"pg_catalog"},
-    {"name":"post_trust_urgent_cover_for_swap","reason":"internal urgent-cover eligibility posting on accept","callerDerivation":"transition_swap_proposal accept path only","schoolScope":"accepted same-school legs; household and weekly limits","searchPath":"pg_catalog"},
-    {"name":"guard_trust_trip_penalties","reason":"trigger-only append-only no-show trip obligations","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"apply_confirmed_no_show_effects","reason":"internal confirm path for no-show score and trip penalties","callerDerivation":"resolve/sweep only","schoolScope":"confirmed report school","searchPath":"pg_catalog"},
-    {"name":"apply_confirmed_false_report_effects","reason":"internal confirm path for false-report score delta","callerDerivation":"resolve/sweep only","schoolScope":"confirmed report school","searchPath":"pg_catalog"},
-    {"name":"sweep_provisional_trust_reports","reason":"service/cron undisputed provisional auto-confirm","callerDerivation":"trusted job; anon/authenticated EXECUTE revoked","schoolScope":"server-selected provisional rows past deadline","searchPath":"pg_catalog"},
-    {"name":"guard_school_notice_history","reason":"trigger-only notice immutability and append-only access logs","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"school_notice_year_label","reason":"internal year-level label formatter without nicknames","callerDerivation":"definer helpers only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"school_notice_build_body","reason":"internal phone-free notice body builder","callerDerivation":"definer helpers only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"school_notice_json","reason":"internal phone-free notice JSON projection","callerDerivation":"definer RPCs only","schoolScope":"notice row already authorised by caller RPC","searchPath":"pg_catalog"},
-    {"name":"log_school_notice_access","reason":"internal append-only access log writer","callerDerivation":"auth.uid() via public notice RPCs only","schoolScope":"notice school","searchPath":"pg_catalog"},
-    {"name":"email_relay_policy_definition_is_valid","reason":"check-constraint-only delivery policy shape validator; no anon/authenticated EXECUTE","callerDerivation":"table check only","schoolScope":"none"},
-    {"name":"guard_email_relay_policy","reason":"trigger-only published email relay policy immutability","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"guard_email_relay_history","reason":"trigger-only queue transition and append-only delivery events","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"email_relay_published_policy","reason":"internal published policy lookup school then global","callerDerivation":"definer helpers only","schoolScope":"school-specific then global","searchPath":"pg_catalog"},
-    {"name":"email_relay_kind_allowed","reason":"internal delivery-policy kind gate excluding handover_reminder","callerDerivation":"definer helpers only","schoolScope":"school published policy","searchPath":"pg_catalog"},
-    {"name":"email_relay_queue_json","reason":"internal masked queue projection; never returns raw email to clients via authenticated RPCs","callerDerivation":"definer list/enqueue only","schoolScope":"authorised queue row","searchPath":"pg_catalog"},
-    {"name":"claim_email_relay_batch","reason":"service-role/server-admin claim of due relay rows including raw recipient email","callerDerivation":"service_role or non-browser privileged job; anon/authenticated EXECUTE revoked","schoolScope":"server-selected due rows under policy","searchPath":"pg_catalog"},
-    {"name":"complete_email_relay_delivery","reason":"service-role/server-admin sent or failed outcome writer","callerDerivation":"service_role or non-browser privileged job; anon/authenticated EXECUTE revoked","schoolScope":"claimed queue row school","searchPath":"pg_catalog"},
-    {"name":"guard_departure_check_logs","reason":"trigger-only append-only departure checks except retention purge deletes","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"guard_retention_purge_runs","reason":"trigger-only retention purge run immutability","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"swap_retention_ended_at","reason":"internal swap end timestamp for 90-day retention eligibility","callerDerivation":"definer purge helper only","schoolScope":"swap row","searchPath":"pg_catalog"},
-    {"name":"purge_expired_disclosure_retention","reason":"service-role/server-admin 90-day purge of disclosures notice logs departure checks and relay rows","callerDerivation":"service_role or non-browser privileged job; anon/authenticated EXECUTE revoked","schoolScope":"ended swaps only; never ledger trust children or confirmations","searchPath":"pg_catalog"},
-    {"name":"guard_running_late_notices","reason":"trigger-only append-only running-late notices before window start","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"running_late_pickup_window_start","reason":"internal pickup window instant from requester need instance","callerDerivation":"definer helpers only","schoolScope":"leg school timezone","searchPath":"pg_catalog"},
-    {"name":"running_late_notice_json","reason":"internal running-late notice projection without location or contact","callerDerivation":"definer RPCs only","schoolScope":"authorised notice row","searchPath":"pg_catalog"},
-    {"name":"post_trust_late_arrival","reason":"trigger-only late pickup trust delta with or without prior notice","callerDerivation":"swap_leg_confirmations pickup_done insert","schoolScope":"helper membership school of confirmed leg","searchPath":"pg_catalog"},
-    {"name":"community_text_is_allowed","reason":"internal privacy filter rejecting phones emails photos and child full-name phrasing","callerDerivation":"definer helpers and guards only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"guard_community_discussion","reason":"trigger-only community immutability and unlike GUC gate","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"community_caller_membership","reason":"internal verified membership derivation for community RPCs","callerDerivation":"definer community RPCs only","schoolScope":"caller verified school","searchPath":"pg_catalog"},
-    {"name":"community_thread_json","reason":"internal thread projection with parent display name only","callerDerivation":"definer RPCs only","schoolScope":"authorised thread","searchPath":"pg_catalog"},
-    {"name":"community_post_json","reason":"internal post projection without nickname phone or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised post","searchPath":"pg_catalog"},
-    {"name":"community_comment_json","reason":"internal comment projection without nickname phone or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised comment","searchPath":"pg_catalog"},
-    {"name":"guard_community_moderation","reason":"trigger-only append-only community reports and moderation actions","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"community_target_school_and_author","reason":"internal community target school author status lookup","callerDerivation":"definer community moderation RPCs only","schoolScope":"target row school","searchPath":"pg_catalog"},
-    {"name":"community_apply_status","reason":"internal gated community status transition helper","callerDerivation":"definer moderation RPCs only","schoolScope":"authorised target","searchPath":"pg_catalog"},
-    {"name":"community_moderation_queue_item_json","reason":"internal moderation queue projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised queue row","searchPath":"pg_catalog"},
-    {"name":"community_require_moderator_membership","reason":"internal verified moderator membership derivation","callerDerivation":"definer community moderation RPCs only","schoolScope":"caller moderator school","searchPath":"pg_catalog"},
-    {"name":"guard_handover_reminder_deliveries","reason":"trigger-only append-only handover reminder delivery ledger","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"handover_reminder_live_eligibility","reason":"internal live eligibility recheck before reminder delivery","callerDerivation":"definer delivery sweep only","schoolScope":"reminder source leg school","searchPath":"pg_catalog"},
-    {"name":"handover_reminder_delivery_json","reason":"internal delivery projection without email phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised delivery row","searchPath":"pg_catalog"},
-    {"name":"deliver_due_handover_reminders","reason":"service-role/server-admin enqueue of eligible handover reminders onto email relay","callerDerivation":"trusted job; anon/authenticated EXECUTE revoked","schoolScope":"server-selected due reminders after live recheck; never caller-supplied school","searchPath":"pg_catalog"},
-    {"name":"listing_text_is_allowed","reason":"internal privacy filter reuse for listing and enquiry text","callerDerivation":"definer helpers and guards only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"listing_contains_restricted_item","reason":"internal active restricted-term scan for listing create","callerDerivation":"definer create/guard only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"guard_listing_restricted_items","reason":"trigger-only admin-gated restricted catalogue mutations","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"guard_item_listings","reason":"trigger-only listing immutability privacy and restricted-item enforcement","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"guard_listing_enquiries","reason":"trigger-only append-only listing enquiries","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"listing_caller_membership","reason":"internal verified membership derivation for listing RPCs","callerDerivation":"definer listing RPCs only","schoolScope":"caller verified school","searchPath":"pg_catalog"},
-    {"name":"item_listing_json","reason":"internal listing projection with free offer label only; no money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised listing","searchPath":"pg_catalog"},
-    {"name":"listing_enquiry_json","reason":"internal enquiry projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised enquiry","searchPath":"pg_catalog"},
-    {"name":"guard_listing_moderation","reason":"trigger-only append-only listing reports and moderation actions","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"listing_apply_status","reason":"internal gated listing status transition helper","callerDerivation":"definer listing status/moderation RPCs only","schoolScope":"authorised listing","searchPath":"pg_catalog"},
-    {"name":"listing_require_moderator_membership","reason":"internal verified moderator membership derivation for listing moderation","callerDerivation":"definer listing moderation RPCs only","schoolScope":"caller moderator school","searchPath":"pg_catalog"},
-    {"name":"listing_moderation_queue_item_json","reason":"internal moderation queue projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised queue row","searchPath":"pg_catalog"},
-    {"name":"listing_author_transition","reason":"internal author collected fulfilled withdraw transition helper","callerDerivation":"definer author status RPCs only","schoolScope":"own listing","searchPath":"pg_catalog"},
-    {"name":"listing_restricted_item_json","reason":"internal restricted catalogue projection without money fields","callerDerivation":"definer admin RPCs only","schoolScope":"authorised catalogue row","searchPath":"pg_catalog"},
-    {"name":"listing_require_admin","reason":"internal global admin gate for restricted catalogue mutations","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"listing_normalise_match_terms","reason":"internal match-term normalisation and privacy filter for restricted catalogue","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"notification_metadata_is_safe","reason":"internal safe metadata shape check for notifications","callerDerivation":"definer helpers and guards only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"guard_notifications","reason":"trigger-only notification immutability and system enqueue gate","callerDerivation":"trigger NEW/OLD only","schoolScope":"no client execution","searchPath":"pg_catalog"},
-    {"name":"notification_json","reason":"internal notification projection without phone nickname or money fields","callerDerivation":"definer RPCs only","schoolScope":"authorised notification","searchPath":"pg_catalog"},
-    {"name":"enqueue_user_notification","reason":"system/service enqueue of phone-free in-app notification; no anon/authenticated EXECUTE","callerDerivation":"trusted job or definer callers; anon/authenticated EXECUTE revoked","schoolScope":"recipient and school supplied by trusted caller","searchPath":"pg_catalog"},
-    {"name":"notify_user_event_once","reason":"internal idempotent event fan-out into owner notifications; no anon/authenticated EXECUTE","callerDerivation":"definer system-event RPCs and triggers only","schoolScope":"recipient and school supplied by trusted caller","searchPath":"pg_catalog"},
-    {"name":"notify_handover_confirmation","reason":"trigger-only partner inbox row on pickup or arrival confirmation","callerDerivation":"trigger NEW only","schoolScope":"leg school; partner user_id from swap_legs","searchPath":"pg_catalog"},
-    {"name":"notify_handover_completion","reason":"trigger-only both-party inbox rows when swap_legs.completed_at is first set","callerDerivation":"trigger NEW/OLD only","schoolScope":"leg school; helper and requester user_ids","searchPath":"pg_catalog"},
-    {"name":"admin_require","reason":"internal global-admin gate for console RPCs; no anon/authenticated EXECUTE","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"},
-    {"name":"admin_reason_code_is_valid","reason":"internal reason_code shape check for admin console mutations","callerDerivation":"definer admin RPCs only","schoolScope":"none","searchPath":"pg_catalog"}
+    {
+      "name": "guard_swap_ledger_entry",
+      "reason": "trigger-only immutable ledger and source-pair validation; no anon/authenticated EXECUTE",
+      "callerDerivation": "trigger NEW/OLD only; never a caller-supplied actor",
+      "schoolScope": "entry, completed leg and both membership school IDs must agree",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "record_completed_swap_leg",
+      "reason": "trigger-only exactly-once obligation when a trusted accepted leg completes; no anon/authenticated EXECUTE",
+      "callerDerivation": "trusted completed leg participants; auth.uid() for audit only",
+      "schoolScope": "accepted proposal, both instances and verified memberships in the leg school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_contact_history",
+      "reason": "trigger-only immutable consent facts, selected backups, cancellation and notification history",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no caller execution; scoped RPCs own one-way consent transitions",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "contact_member_is_active",
+      "reason": "internal eligibility check for a specific membership, not an identity oracle",
+      "callerDerivation": "invoked only by auth.uid()-derived definer RPCs; no anon/authenticated EXECUTE",
+      "schoolScope": "membership, email, current consent and school-specific safety declaration must agree",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_handover_history",
+      "reason": "trigger-only immutable handover facts and source expected-arrival integrity",
+      "callerDerivation": "trigger NEW/OLD; no client execution",
+      "schoolScope": "source leg, proposal and role-specific membership school must agree",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "record_leg_confirmation",
+      "reason": "private shared two-party completion transaction; no client execution",
+      "callerDerivation": "auth.uid() plus fixed kind supplied only by the two public wrappers",
+      "schoolScope": "active same-school leg role and accepted proposal; completion analytics from immutable confirmations",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "maybe_record_handover_reminder",
+      "reason": "private proposal/leg-locked due-record operation; no client execution",
+      "callerDerivation": "scoped participant wrapper or service sweep; no arbitrary authenticated calls",
+      "schoolScope": "accepted source leg with exactly one confirmation; missing role membership derived from source",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "enqueue_due_handover_reminders",
+      "reason": "service-role/native-cron-only reminder-record sweep; no notification delivery",
+      "callerDerivation": "trusted job, not a browser identity; anon/authenticated EXECUTE revoked",
+      "schoolScope": "server-selected accepted overdue legs, never caller-supplied school or recipient",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_trust_score_events",
+      "reason": "trigger-only append-only trust score history; no anon/authenticated EXECUTE",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "apply_trust_score_delta",
+      "reason": "internal idempotent score posting for Task 6.1/6.2; no browser EXECUTE",
+      "callerDerivation": "server/trusted callers only; never auth.uid() as subject argument from clients",
+      "schoolScope": "verified membership school of the subject; clamps -100..150",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "trust_band_for_user",
+      "reason": "internal band projection including admin_suspended override",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "profile lookup by subject user id",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "parent_trust_band_label",
+      "reason": "internal AU parent trust label mapping from engine band",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "label translation only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "trust_published_policy",
+      "reason": "internal published policy JSON lookup for scoring",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "school-specific then global published version",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "trust_policy_delta",
+      "reason": "internal reason-code to smallint delta from published policy",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "school published policy changes map",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "trust_hours_until_instance",
+      "reason": "internal lead-time helper for cancel and urgent cover windows",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "school timezone pickup instant",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "trust_cancel_reason_for_hours",
+      "reason": "internal cancel reason projection from lead hours",
+      "callerDerivation": "immutable helper; no client execution",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "post_trust_completed_trip",
+      "reason": "trigger-only completed-trip policy posting",
+      "callerDerivation": "swap_legs completion trigger",
+      "schoolScope": "helper membership school of completed leg",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "post_trust_schedule_cancellation",
+      "reason": "trigger-only schedule cancel policy posting",
+      "callerDerivation": "schedule_cancellation_events insert trigger",
+      "schoolScope": "owner and cancelled instance school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "post_trust_swap_cancellation",
+      "reason": "trigger-only consent-revoke cancel policy posting",
+      "callerDerivation": "swap_cancellation_events insert trigger",
+      "schoolScope": "actor membership school and incomplete legs",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "post_trust_urgent_cover_for_swap",
+      "reason": "internal urgent-cover eligibility posting on accept",
+      "callerDerivation": "transition_swap_proposal accept path only",
+      "schoolScope": "accepted same-school legs; household and weekly limits",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_trust_trip_penalties",
+      "reason": "trigger-only append-only no-show trip obligations",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "apply_confirmed_no_show_effects",
+      "reason": "internal confirm path for no-show score and trip penalties",
+      "callerDerivation": "resolve/sweep only",
+      "schoolScope": "confirmed report school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "apply_confirmed_false_report_effects",
+      "reason": "internal confirm path for false-report score delta",
+      "callerDerivation": "resolve/sweep only",
+      "schoolScope": "confirmed report school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "sweep_provisional_trust_reports",
+      "reason": "service/cron undisputed provisional auto-confirm",
+      "callerDerivation": "trusted job; anon/authenticated EXECUTE revoked",
+      "schoolScope": "server-selected provisional rows past deadline",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_school_notice_history",
+      "reason": "trigger-only notice immutability and append-only access logs",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "school_notice_year_label",
+      "reason": "internal year-level label formatter without nicknames",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "school_notice_build_body",
+      "reason": "internal phone-free notice body builder",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "school_notice_json",
+      "reason": "internal phone-free notice JSON projection",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "notice row already authorised by caller RPC",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "log_school_notice_access",
+      "reason": "internal append-only access log writer",
+      "callerDerivation": "auth.uid() via public notice RPCs only",
+      "schoolScope": "notice school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "email_relay_policy_definition_is_valid",
+      "reason": "check-constraint-only delivery policy shape validator; no anon/authenticated EXECUTE",
+      "callerDerivation": "table check only",
+      "schoolScope": "none"
+    },
+    {
+      "name": "guard_email_relay_policy",
+      "reason": "trigger-only published email relay policy immutability",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_email_relay_history",
+      "reason": "trigger-only queue transition and append-only delivery events",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "email_relay_published_policy",
+      "reason": "internal published policy lookup school then global",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "school-specific then global",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "email_relay_kind_allowed",
+      "reason": "internal delivery-policy kind gate excluding handover_reminder",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "school published policy",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "email_relay_queue_json",
+      "reason": "internal masked queue projection; never returns raw email to clients via authenticated RPCs",
+      "callerDerivation": "definer list/enqueue only",
+      "schoolScope": "authorised queue row",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "claim_email_relay_batch",
+      "reason": "service-role/server-admin claim of due relay rows including raw recipient email",
+      "callerDerivation": "service_role or non-browser privileged job; anon/authenticated EXECUTE revoked",
+      "schoolScope": "server-selected due rows under policy",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "complete_email_relay_delivery",
+      "reason": "service-role/server-admin sent or failed outcome writer",
+      "callerDerivation": "service_role or non-browser privileged job; anon/authenticated EXECUTE revoked",
+      "schoolScope": "claimed queue row school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_departure_check_logs",
+      "reason": "trigger-only append-only departure checks except retention purge deletes",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_retention_purge_runs",
+      "reason": "trigger-only retention purge run immutability",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "swap_retention_ended_at",
+      "reason": "internal swap end timestamp for 90-day retention eligibility",
+      "callerDerivation": "definer purge helper only",
+      "schoolScope": "swap row",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "purge_expired_disclosure_retention",
+      "reason": "service-role/server-admin 90-day purge of disclosures notice logs departure checks and relay rows",
+      "callerDerivation": "service_role or non-browser privileged job; anon/authenticated EXECUTE revoked",
+      "schoolScope": "ended swaps only; never ledger trust children or confirmations",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_running_late_notices",
+      "reason": "trigger-only append-only running-late notices before window start",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "running_late_pickup_window_start",
+      "reason": "internal pickup window instant from requester need instance",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "leg school timezone",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "running_late_notice_json",
+      "reason": "internal running-late notice projection without location or contact",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised notice row",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "post_trust_late_arrival",
+      "reason": "trigger-only late pickup trust delta with or without prior notice",
+      "callerDerivation": "swap_leg_confirmations pickup_done insert",
+      "schoolScope": "helper membership school of confirmed leg",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "community_text_is_allowed",
+      "reason": "internal privacy filter rejecting phones emails photos and child full-name phrasing",
+      "callerDerivation": "definer helpers and guards only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_community_discussion",
+      "reason": "trigger-only community immutability and unlike GUC gate",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "community_caller_membership",
+      "reason": "internal verified membership derivation for community RPCs",
+      "callerDerivation": "definer community RPCs only",
+      "schoolScope": "caller verified school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "community_thread_json",
+      "reason": "internal thread projection with parent display name only",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised thread",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "community_post_json",
+      "reason": "internal post projection without nickname phone or money fields",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised post",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "community_comment_json",
+      "reason": "internal comment projection without nickname phone or money fields",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised comment",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_community_moderation",
+      "reason": "trigger-only append-only community reports and moderation actions",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "community_target_school_and_author",
+      "reason": "internal community target school author status lookup",
+      "callerDerivation": "definer community moderation RPCs only",
+      "schoolScope": "target row school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "community_apply_status",
+      "reason": "internal gated community status transition helper",
+      "callerDerivation": "definer moderation RPCs only",
+      "schoolScope": "authorised target",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "community_moderation_queue_item_json",
+      "reason": "internal moderation queue projection without phone nickname or money fields",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised queue row",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "community_require_moderator_membership",
+      "reason": "internal verified moderator membership derivation",
+      "callerDerivation": "definer community moderation RPCs only",
+      "schoolScope": "caller moderator school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_handover_reminder_deliveries",
+      "reason": "trigger-only append-only handover reminder delivery ledger",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "handover_reminder_live_eligibility",
+      "reason": "internal live eligibility recheck before reminder delivery",
+      "callerDerivation": "definer delivery sweep only",
+      "schoolScope": "reminder source leg school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "handover_reminder_delivery_json",
+      "reason": "internal delivery projection without email phone nickname or money fields",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised delivery row",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "deliver_due_handover_reminders",
+      "reason": "service-role/server-admin enqueue of eligible handover reminders onto email relay",
+      "callerDerivation": "trusted job; anon/authenticated EXECUTE revoked",
+      "schoolScope": "server-selected due reminders after live recheck; never caller-supplied school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_text_is_allowed",
+      "reason": "internal privacy filter reuse for listing and enquiry text",
+      "callerDerivation": "definer helpers and guards only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_images_are_valid",
+      "reason": "validates up to six compressed listing image data URLs with exactly one cover",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "create_item_listing validation helper",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "normalize_listing_images",
+      "reason": "normalises listing image jsonb to max six entries with one cover before validate/insert",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "create_item_listing helper",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_contains_restricted_item",
+      "reason": "internal active restricted-term scan for listing create",
+      "callerDerivation": "definer create/guard only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_listing_restricted_items",
+      "reason": "trigger-only admin-gated restricted catalogue mutations",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_item_listings",
+      "reason": "trigger-only listing immutability privacy and restricted-item enforcement",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_listing_enquiries",
+      "reason": "trigger-only append-only listing enquiries",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_caller_membership",
+      "reason": "internal verified membership derivation for listing RPCs",
+      "callerDerivation": "definer listing RPCs only",
+      "schoolScope": "caller verified school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "item_listing_json",
+      "reason": "internal listing projection with AUD ask display, listingImages, smart specs and seller suburb school fields; no payment fields",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "chat_listing_pin_json",
+      "reason": "internal marketplace pin JSON for listing-backed chat rooms",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised listing pin",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_enquiry_json",
+      "reason": "internal enquiry projection without phone nickname or money fields",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised enquiry",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_listing_moderation",
+      "reason": "trigger-only append-only listing reports and moderation actions",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_apply_status",
+      "reason": "internal gated listing status transition helper",
+      "callerDerivation": "definer listing status/moderation RPCs only",
+      "schoolScope": "authorised listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_require_moderator_membership",
+      "reason": "internal verified moderator membership derivation for listing moderation",
+      "callerDerivation": "definer listing moderation RPCs only",
+      "schoolScope": "caller moderator school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_moderation_queue_item_json",
+      "reason": "internal moderation queue projection without phone nickname or money fields",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised queue row",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_author_transition",
+      "reason": "internal author collected fulfilled withdraw transition helper",
+      "callerDerivation": "definer author status RPCs only",
+      "schoolScope": "own listing",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_restricted_item_json",
+      "reason": "internal restricted catalogue projection without money fields",
+      "callerDerivation": "definer admin RPCs only",
+      "schoolScope": "authorised catalogue row",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_require_admin",
+      "reason": "internal global admin gate for restricted catalogue mutations",
+      "callerDerivation": "definer admin RPCs only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "listing_normalise_match_terms",
+      "reason": "internal match-term normalisation and privacy filter for restricted catalogue",
+      "callerDerivation": "definer admin RPCs only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "notification_metadata_is_safe",
+      "reason": "internal safe metadata shape check for notifications",
+      "callerDerivation": "definer helpers and guards only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_notifications",
+      "reason": "trigger-only notification immutability and system enqueue gate",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "notification_json",
+      "reason": "internal notification projection without phone nickname or money fields",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "authorised notification",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "enqueue_user_notification",
+      "reason": "system/service enqueue of phone-free in-app notification; no anon/authenticated EXECUTE",
+      "callerDerivation": "trusted job or definer callers; anon/authenticated EXECUTE revoked",
+      "schoolScope": "recipient and school supplied by trusted caller",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "notify_user_event_once",
+      "reason": "internal idempotent event fan-out into owner notifications; no anon/authenticated EXECUTE",
+      "callerDerivation": "definer system-event RPCs and triggers only",
+      "schoolScope": "recipient and school supplied by trusted caller",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "notify_handover_confirmation",
+      "reason": "trigger-only partner inbox row on pickup or arrival confirmation",
+      "callerDerivation": "trigger NEW only",
+      "schoolScope": "leg school; partner user_id from swap_legs",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "notify_handover_completion",
+      "reason": "trigger-only both-party inbox rows when swap_legs.completed_at is first set",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "leg school; helper and requester user_ids",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "admin_require",
+      "reason": "internal global-admin gate for console RPCs; no anon/authenticated EXECUTE",
+      "callerDerivation": "definer admin RPCs only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "admin_reason_code_is_valid",
+      "reason": "internal reason_code shape check for admin console mutations",
+      "callerDerivation": "definer admin RPCs only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_chat_messages",
+      "reason": "trigger-only chat message immutability and RPC insert gate",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_chat_rooms",
+      "reason": "trigger-only chat room RPC mutate gate",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_chat_participants",
+      "reason": "trigger-only chat participant insert and last_read update gates",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "chat_weekday_label",
+      "reason": "internal weekday label helper for chat schedule pins",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "chat_pattern_pin_json",
+      "reason": "internal schedule pin projection without address or phone fields",
+      "callerDerivation": "definer chat RPCs only",
+      "schoolScope": "authorised pattern",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "chat_room_json",
+      "reason": "internal chat room projection for participant callers",
+      "callerDerivation": "definer chat RPCs only",
+      "schoolScope": "participant room",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "chat_message_json",
+      "reason": "internal chat message projection with peer read receipt",
+      "callerDerivation": "definer chat RPCs only",
+      "schoolScope": "participant room",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "guard_instant_pickup_requests",
+      "reason": "trigger-only instant pickup immutability and RPC mutate gate",
+      "callerDerivation": "trigger NEW/OLD only",
+      "schoolScope": "no client execution",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "instant_pickup_caller_membership",
+      "reason": "internal verified membership lookup for instant pickup RPCs",
+      "callerDerivation": "auth.uid(); definer RPCs only",
+      "schoolScope": "oldest verified membership with is_member",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "instant_pickup_request_json",
+      "reason": "internal instant pickup board projection without phone or address fields",
+      "callerDerivation": "definer RPCs only",
+      "schoolScope": "own-school member viewers",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "instant_pickup_default_window",
+      "reason": "internal default pickup or drop-off wall-clock for instant board checkpoints",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "instant_pickup_pickup_at",
+      "reason": "internal school-timezone pickup instant for final check-in",
+      "callerDerivation": "definer helpers only",
+      "schoolScope": "request school timezone",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "chat_instant_pickup_pin_json",
+      "reason": "internal chat schedule pin from an instant pickup request",
+      "callerDerivation": "definer chat RPCs only",
+      "schoolScope": "authorised instant pickup",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "release_instant_pickup_match",
+      "reason": "internal reopen matched instant pickup and optional trust penalty",
+      "callerDerivation": "definer instant pickup RPCs only; no anon/authenticated EXECUTE",
+      "schoolScope": "matched request school",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "release_stale_instant_pickup_matches",
+      "reason": "internal sweep of unconfirmed matches past pickup instant",
+      "callerDerivation": "definer list/check-in/accept only",
+      "schoolScope": "server-selected matched rows",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "mark_admin_account_verified",
+      "reason": "service-role marks bootstrap or secret admin signup as verified ADMIN role",
+      "callerDerivation": "service_role only",
+      "schoolScope": "none",
+      "searchPath": "pg_catalog"
+    }
   ]
 }

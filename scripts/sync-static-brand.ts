@@ -8,25 +8,29 @@ const escapedAppName = appConfig.appName.replace(/[&<>"']/g, (character) => ({
 })[character] ?? character);
 
 const html = htmlTemplate.replaceAll('{{APP_NAME}}', escapedAppName);
+const description = `${appConfig.appName} — Safe Rides, Share & Save. A joyful carpool and kids marketplace for verified Australian parents.`;
 const manifest = {
   name: appConfig.appName,
-  short_name: appConfig.appName,
-  description: `${appConfig.appName} is building a safer, school-scoped way for verified parents to share the school run.`,
+  short_name: 'SchoolRun',
+  description,
   lang: 'en-AU',
   start_url: '/',
   scope: '/',
   display: 'standalone',
-  background_color: '#f6f6f1',
-  theme_color: '#0f5e5a',
+  background_color: '#F8FAFC',
+  theme_color: '#FF6B6B',
   icons: [
     { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
     { src: '/icons/maskable.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
   ],
 };
 
+const manifestJson = `${JSON.stringify(manifest, null, 2)}\n`;
+
 await Promise.all([
   writeFile(resolve('index.html'), html),
-  writeFile(resolve('public/manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`),
+  writeFile(resolve('public/manifest.webmanifest'), manifestJson),
+  writeFile(resolve('public/manifest.json'), manifestJson),
 ]);
 
 console.log(`Synced static brand metadata for ${appConfig.appName}.`);

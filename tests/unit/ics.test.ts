@@ -16,7 +16,7 @@ describe('confirmed trip ICS export', () => {
     expect(ics).toContain('DTSTART;TZID=Australia/Melbourne:20260405T080000');
     expect(ics).toContain('DTEND;TZID=Australia/Melbourne:20260405T083000');
     expect(ics).toContain('UID:trip\\,one@yourturn');
-    expect(ics).toContain('SUMMARY:YourTurn confirmed pickup');
+    expect(ics).toContain('SUMMARY:SchoolRun Village confirmed pickup');
     expect(ics).not.toContain('LOCATION:');
     expect(ics).not.toContain('address');
   });

@@ -906,6 +906,7 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       get_my_ledger: { sql: 'select public.get_my_ledger()' },
       get_my_trust: { sql: 'select public.get_my_trust()' },
       get_peer_trust_band: { sql: 'select public.get_peer_trust_band($1::uuid)', values: [fixture.partner.userId] },
+      get_peer_parent_trust_profile: { sql: 'select public.get_peer_parent_trust_profile($1::uuid)', values: [fixture.partner.userId] },
       get_reciprocal_match_candidates: { sql: 'select * from public.get_reciprocal_match_candidates(false)' },
       has_current_onboarding_consents: { sql: 'select public.has_current_onboarding_consents($1::uuid)', values: [fixture.owner.userId] },
       is_admin: { sql: 'select public.is_admin()' },
@@ -974,7 +975,8 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       remove_community_content: { sql: "select public.remove_community_content('post', $1::uuid)", values: [fixture.schoolA] },
       list_community_moderation_queue: { sql: 'select public.list_community_moderation_queue()' },
       list_my_handover_reminder_deliveries: { sql: 'select public.list_my_handover_reminder_deliveries()' },
-      create_item_listing: { sql: "select public.create_item_listing('giveaway', 'Contact scan jacket', 'Spare school jacket free to collect', 'clothing', 'Free')" },
+      create_item_listing: { sql: "select public.create_item_listing('sale', 'Contact scan jacket', 'Spare school jacket ready for pickup', 'School & Nursery', 'SALE', 1500)" },
+      get_or_create_listing_chat: { sql: 'select public.get_or_create_listing_chat($1::uuid)', values: [fixture.schoolA] },
       search_item_listings: { sql: "select public.search_item_listings('jacket', 'giveaway', 'clothing')" },
       get_item_listing: { sql: 'select public.get_item_listing($1::uuid)', values: [fixture.schoolA] },
       create_listing_enquiry: { sql: 'select public.create_listing_enquiry($1::uuid, $2::text)', values: [fixture.schoolA, 'Can collect Friday afternoon'] },
@@ -1000,6 +1002,18 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
       admin_suspend_user: { sql: 'select public.admin_suspend_user($1::uuid, $2::text)', values: [fixture.parentB.userId, 'contact_scan_suspend'] },
       admin_unsuspend_user: { sql: 'select public.admin_unsuspend_user($1::uuid, $2::text)', values: [fixture.parentB.userId, 'contact_scan_unsuspend'] },
       admin_resolve_safety_hold: { sql: 'select public.admin_resolve_safety_hold($1::uuid, $2::text, $3::text)', values: [fixture.parentB.userId, 'lift', 'contact_scan_hold'] },
+      get_or_create_schedule_chat: { sql: 'select public.get_or_create_schedule_chat($1::uuid, $2::uuid)', values: [fixture.partner.userId, fixture.schoolA] },
+      get_or_create_swap_chat: { sql: 'select public.get_or_create_swap_chat($1::uuid)', values: [fixture.schoolA] },
+      list_my_chat_rooms: { sql: 'select public.list_my_chat_rooms()' },
+      list_chat_messages: { sql: 'select public.list_chat_messages($1::uuid, null::timestamptz, 20)', values: [fixture.schoolA] },
+      send_chat_message: { sql: "select public.send_chat_message($1::uuid, 'Contact scan hello')", values: [fixture.schoolA] },
+      mark_chat_room_read: { sql: 'select public.mark_chat_room_read($1::uuid)', values: [fixture.schoolA] },
+      create_instant_pickup_request: { sql: "select public.create_instant_pickup_request('need_help', 'pickup', 'Carlton', current_date, 'Contact scan note')" },
+      list_instant_pickup_requests: { sql: 'select public.list_instant_pickup_requests(false)' },
+      cancel_instant_pickup_request: { sql: 'select public.cancel_instant_pickup_request($1::uuid)', values: [fixture.schoolA] },
+      accept_instant_pickup_request: { sql: 'select public.accept_instant_pickup_request($1::uuid)', values: [fixture.schoolA] },
+      check_in_instant_pickup: { sql: 'select public.check_in_instant_pickup($1::uuid, true)', values: [fixture.schoolA] },
+      get_instant_pickup_chat: { sql: 'select public.get_instant_pickup_chat($1::uuid)', values: [fixture.schoolA] },
     };
     const allowlist = JSON.parse(await readFile(new URL('../../db/function_allowlist.json', import.meta.url), 'utf8')) as {
       authenticated: Array<{ name: string }>;
@@ -1011,11 +1025,12 @@ describe('Task 5.2 live consent-gated private contact sharing', { timeout: LIVE_
     expect(names.filter((name) => !Object.hasOwn(calls, name))).toEqual([]);
     expect(names).toContain('grant_contact_sharing');
     expect(names).toContain('get_shared_contact');
-    // These two older RPCs have pre-existing ambiguous-column defects outside
-    // Task 5.2. They still must actually be called and must never echo phones in
-    // errors, but this privacy scan must not mislabel them as working or denied.
+    // refresh_my_availability_instances still has a pre-existing ambiguous-column
+    // defect outside this consent fix. It must still be called and must never echo
+    // phones; do not mislabel it as working or denied. accept_current_consent was
+    // remediated in 0052 (document_id variable/column clash → 42702).
     const knownLegacyErrors: Record<string, string> = {
-      accept_current_consent: '42702', refresh_my_availability_instances: '42702',
+      refresh_my_availability_instances: '42702',
     };
     const outcomes: Array<{
       name: string; outcome: 'success' | 'denied' | 'known_legacy_error' | 'unexpected_error'; code: string | null;

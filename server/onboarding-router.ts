@@ -1,5 +1,6 @@
 import { Router, type Request } from 'express';
 import type { User } from '@supabase/supabase-js';
+import { databaseErrorCode } from './safe-error-log.js';
 import { createPublicSupabaseClient } from './supabase/public-client.js';
 import { createRequestScopedSupabaseClient, RequestAuthenticationError } from './supabase/request-client.js';
 
@@ -67,7 +68,7 @@ export function createOnboardingRouter(): Router {
     try {
       const context = await signedInContext(request);
       const [profileResult, membershipResult, consentResult, documentResult, childResult, declarationResult, rolesResult] = await Promise.all([
-        context.client.from('profiles').select('display_name').eq('id', context.user.id).maybeSingle(),
+        context.client.from('profiles').select('display_name, account_status, account_role, signup_school_id, account_verified_at, signup_suburb, signup_school_label').eq('id', context.user.id).maybeSingle(),
         context.client.from('school_memberships').select('id, school_id, status, approved_at').eq('user_id', context.user.id).order('created_at', { ascending: true }).limit(1).maybeSingle(),
         context.client.from('consent_acceptances').select('document_id').eq('user_id', context.user.id),
         context.client.from('consent_documents').select('id, document_type, version, title, summary').eq('is_active', true).order('document_type'),
@@ -103,7 +104,15 @@ export function createOnboardingRouter(): Router {
       response.setHeader('Cache-Control', 'no-store, max-age=0');
       response.json({
         emailVerified: Boolean(context.user.email_confirmed_at),
-        profile: profileResult.data ? { displayName: profileResult.data.display_name } : null,
+        profile: profileResult.data ? {
+          displayName: profileResult.data.display_name,
+          accountStatus: String(profileResult.data.account_status ?? 'pending_verification').toUpperCase(),
+          accountRole: String(profileResult.data.account_role ?? 'parent').toUpperCase(),
+          schoolId: profileResult.data.signup_school_id ?? null,
+          verifiedAt: profileResult.data.account_verified_at ?? null,
+          suburb: profileResult.data.signup_suburb ?? null,
+          schoolLabel: profileResult.data.signup_school_label ?? null,
+        } : null,
         membership: membershipResult.data ? {
           id: membershipResult.data.id,
           status: membershipResult.data.status,
@@ -228,16 +237,23 @@ export function createOnboardingRouter(): Router {
     }
   });
 
-  router.post('/invitations/open', async (request, response, next) => {
+  router.post('/invitations/open', async (request, response) => {
     try {
       const token = stringField(request.body?.token, 'invitation token', 24, 256);
-      const client = createPublicSupabaseClient();
+      // Day 4 revoked anon EXECUTE on open_school_invitation; prefer the caller JWT
+      // when present so signed-in invite opens work. Unsigned calls still use anon.
+      const authorization = request.header('Authorization');
+      const client = authorization?.startsWith('Bearer ')
+        ? createRequestScopedSupabaseClient(request)
+        : createPublicSupabaseClient();
       const status = rpcData(await client.rpc('open_school_invitation', { p_token: token }));
       // Deliberately generic: no school name, ID, config, roster or inviter data.
       response.setHeader('Cache-Control', 'no-store, max-age=0');
       response.json({ status });
-    } catch (error) {
-      next(error);
+    } catch {
+      // Missing token row or EXECUTE denial → treat as unavailable (no school leak).
+      response.setHeader('Cache-Control', 'no-store, max-age=0');
+      response.status(200).json({ status: 'unavailable' });
     }
   });
 
@@ -250,6 +266,12 @@ export function createOnboardingRouter(): Router {
       response.setHeader('Cache-Control', 'no-store, max-age=0');
       response.status(201).json({ status });
     } catch (error) {
+      // Missing/expired/revoked/already-used invite → P0002 from claim_school_invitation.
+      if (databaseErrorCode(error) === 'P0002') {
+        response.setHeader('Cache-Control', 'no-store, max-age=0');
+        response.status(404).json({ error: 'invitation_unavailable' });
+        return;
+      }
       next(error);
     }
   });

@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('shows the mobile-first email sign-up entrypoint and three-step onboarding structure', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page).toHaveTitle('YourTurn');
+  await expect(page).toHaveTitle('SchoolRun Village');
   await expect(page.getByRole('heading', { name: 'Start with your email.' })).toBeVisible();
   await expect(page.getByLabel('Email address')).toBeVisible();
   await expect(page.getByLabel('Password')).toBeVisible();
@@ -28,5 +28,5 @@ test('exposes installable PWA and route metadata', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href', '/manifest.webmanifest');
   const routes = await page.evaluate(async () => (await fetch('/manus-routes.json')).json());
-  expect(routes).toEqual({ routes: [{ path: '/', title: 'YourTurn foundation' }] });
+  expect(routes).toEqual({ routes: [{ path: '/', title: 'SchoolRun Village foundation' }] });
 });

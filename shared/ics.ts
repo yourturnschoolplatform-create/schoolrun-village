@@ -26,7 +26,7 @@ export function buildConfirmedTripsIcs(items: ConfirmedTripCalendarItem[]): stri
       `UID:${icsEscape(item.id)}@yourturn`,
       `DTSTART;TZID=${icsEscape(item.timezone)}:${localDateTime(item.serviceDate, item.windowStart)}`,
       `DTEND;TZID=${icsEscape(item.timezone)}:${localDateTime(item.serviceDate, item.windowEnd)}`,
-      `SUMMARY:${icsEscape(`YourTurn confirmed ${direction}`)}`,
+      `SUMMARY:${icsEscape(`SchoolRun Village confirmed ${direction}`)}`,
       `DESCRIPTION:${icsEscape(`Confirmed school-run trip. Capacity ${item.capacity}. Pickup details are arranged separately.`)}`,
       'END:VEVENT',
     ].join('\r\n');
@@ -35,7 +35,7 @@ export function buildConfirmedTripsIcs(items: ConfirmedTripCalendarItem[]): stri
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//YourTurn//Confirmed school trips//EN',
+    'PRODID:-//SchoolRun Village//Confirmed school trips//EN',
     'CALSCALE:GREGORIAN',
     ...events,
     'END:VCALENDAR',

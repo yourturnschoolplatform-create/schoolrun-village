@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import { logSafeServerError } from './safe-error-log.js';
 import { createRequestScopedSupabaseClient, RequestAuthenticationError } from './supabase/request-client.js';
 
 class HandoverInputError extends Error {}
@@ -17,7 +18,10 @@ async function context(request: Request) {
 function reject(response: Response, error: unknown) {
   if (error instanceof RequestAuthenticationError) response.status(401).json({ error: 'authentication_required' });
   else if (error instanceof HandoverInputError) response.status(400).json({ error: 'invalid_handover_input' });
-  else response.status(403).json({ error: 'handover_unavailable' });
+  else {
+    logSafeServerError('handover', error);
+    response.status(403).json({ error: 'handover_unavailable' });
+  }
 }
 export function createHandoverRouter(): Router {
   const router = Router();

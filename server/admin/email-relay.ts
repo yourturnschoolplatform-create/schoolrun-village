@@ -23,19 +23,19 @@ type ClaimBatch = { items: ClaimedRelayItem[] };
 function renderTemplate(item: ClaimedRelayItem): { subject: string; body: string } {
   if (item.kind === 'contact_consent_revoked') {
     return {
-      subject: 'YourTurn swap ended',
+      subject: 'SchoolRun Village swap ended',
       body: 'Contact sharing was withdrawn. This swap has ended.',
     };
   }
   if (item.kind === 'handover_reminder') {
     return {
-      subject: 'YourTurn handover reminder',
-      body: 'A school pickup handover still needs your confirmation in YourTurn.',
+      subject: 'SchoolRun Village handover reminder',
+      body: 'A school pickup handover still needs your confirmation in SchoolRun Village.',
     };
   }
   return {
-    subject: 'YourTurn swap notice',
-    body: 'You have a new swap partner notice in YourTurn.',
+    subject: 'SchoolRun Village swap notice',
+    body: 'You have a new swap partner notice in SchoolRun Village.',
   };
 }
 

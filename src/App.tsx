@@ -1,9 +1,18 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { resolveSchoolLocation, type SchoolLocation } from '../shared/au-location';
 import { onboardingAccessState } from '../shared/onboarding';
 import { onboardingApi, openInvitationLink, type OnboardingStatus, type PendingMembership, type SchoolOption } from './lib/onboarding-api';
+import { scheduleApi } from './lib/schedule-api';
 import { createBrowserSupabaseClient, fetchRuntimeConfig, fallbackRuntimeConfig, type BrowserRuntimeConfig } from './lib/runtime-config';
+import { PENDING_VERIFICATION_NOTICE, normalizeAccountStatus } from '../shared/account-verification';
+import { FALLBACK_SCHOOL_LOCATION, LocationChip } from './components/LocationChip';
+import { MyTrustChip } from './components/MyTrustChip';
 import { ScheduleHub } from './components/ScheduleHub';
+import { AdminModerationPanel } from './components/AdminModerationPanel';
+import { AdminSignupScreen } from './components/AdminSignupScreen';
+import { AdminVerificationDashboard } from './components/AdminVerificationDashboard';
+import { accountVerificationApi } from './lib/account-verification-api';
 
 type PillTone = 'teal' | 'slate' | 'amber' | 'red';
 
@@ -11,19 +20,73 @@ function StatusPill({ children, tone = 'teal' }: { children: ReactNode; tone?: P
   return <span className={`status-pill status-pill--${tone}`}>{children}</span>;
 }
 
-function BrandMark() {
+const BRAND_TAGLINE = 'Safe Rides, Share & Save';
+
+/** Compact SchoolRun Village lockup — icon + stacked wordmark. */
+function SchoolRunWordmark({ appName }: { appName: string }) {
   return (
-    <span className="brand-mark" aria-hidden="true">
-      <svg viewBox="0 0 32 32"><path d="M6 10.8 16 5l10 5.8v10.4L16 27 6 21.2Z" fill="currentColor" opacity=".16" /><path d="M8.7 12.4 16 8.2l7.3 4.2v7.2L16 23.8l-7.3-4.2Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /><path d="m12.6 15.8 2.2 2.2 4.8-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4" /></svg>
-    </span>
+    <a className="wordmark wordmark--joyful" href="/" aria-label={`${appName} home`}>
+      <span className="wordmark__icon" aria-hidden="true">
+        <svg viewBox="0 0 40 40" focusable="false">
+          <circle cx="20" cy="20" r="18" fill="#0F172A" />
+          <path d="M12 23.5c3.2-7.2 7.4-10.4 8-10.4s4.8 3.2 8 10.4" fill="none" stroke="#FF6B6B" strokeWidth="2.4" strokeLinecap="round" />
+          <circle cx="16.4" cy="16.2" r="1.7" fill="#FFF" />
+          <path d="M22.2 15.4c1.5.35 2.8 1.45 3.3 2.9" fill="none" stroke="#FFF" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M13 27.5h14" fill="none" stroke="#FF6B6B" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+      </span>
+      <span className="wordmark__text">
+        <span className="wordmark__schoolrun">SchoolRun</span>
+        <span className="wordmark__village">Village</span>
+        <span className="wordmark__tagline">{BRAND_TAGLINE}</span>
+      </span>
+    </a>
   );
 }
 
-function AppHeader({ appName, onSignOut, signedIn }: { appName: string; onSignOut?: () => void; signedIn: boolean }) {
+function AppHeader({
+  appName,
+  onSignOut,
+  signedIn,
+  schoolLocation = null,
+  showSchoolLocation = false,
+  trustClient = null,
+  onSchoolLocationChange,
+  verificationPending = false,
+}: {
+  appName: string;
+  onSignOut?: () => void;
+  signedIn: boolean;
+  schoolLocation?: SchoolLocation | null;
+  showSchoolLocation?: boolean;
+  trustClient?: SupabaseClient | null;
+  onSchoolLocationChange?: (next: SchoolLocation) => void;
+  verificationPending?: boolean;
+}) {
   return (
-    <header className="topbar">
-      <a className="wordmark" href="/" aria-label={`${appName} home`}><BrandMark /><span>{appName}</span></a>
-      {signedIn && onSignOut ? <button className="text-button" onClick={onSignOut}>Sign out</button> : <StatusPill tone="slate">Pilot</StatusPill>}
+    <header className="topbar" data-app-header="primary">
+      <div className="topbar__brand">
+        <SchoolRunWordmark appName={appName} />
+      </div>
+      <div className="topbar__actions">
+        {showSchoolLocation ? (
+          <LocationChip
+            location={schoolLocation ?? FALLBACK_SCHOOL_LOCATION}
+            onSelect={onSchoolLocationChange}
+          />
+        ) : null}
+        {verificationPending ? (
+          <span className="status-pill status-pill--amber" data-verification-pending="true">
+            Pending Verification ⏳
+          </span>
+        ) : null}
+        {showSchoolLocation && trustClient ? <MyTrustChip client={trustClient} /> : null}
+        {signedIn && onSignOut ? (
+          <button type="button" className="topbar__sign-out" onClick={onSignOut}>Sign out</button>
+        ) : (
+          <StatusPill tone="slate">Pilot</StatusPill>
+        )}
+      </div>
     </header>
   );
 }
@@ -48,8 +111,20 @@ function PrimaryButton({ children, disabled = false, type = 'button', onClick }:
   return <button className="primary-button" type={type} disabled={disabled} onClick={onClick}>{children}</button>;
 }
 
-function AccountScreen({ client, onSession }: { client: SupabaseClient; onSession: (session: Session) => void }) {
-  const [mode, setMode] = useState<'signup' | 'signin'>('signup');
+function AccountScreen({
+  client,
+  onSession,
+  forceSignup = false,
+}: {
+  client: SupabaseClient;
+  onSession: (session: Session) => void;
+  forceSignup?: boolean;
+}) {
+  const [mode, setMode] = useState<'signup' | 'signin'>(forceSignup ? 'signup' : 'signup');
+  const [displayName, setDisplayName] = useState('');
+  const [suburb, setSuburb] = useState('');
+  const [schoolName, setSchoolName] = useState('');
+  const [invitationCode, setInvitationCode] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -64,11 +139,26 @@ function AccountScreen({ client, onSession }: { client: SupabaseClient; onSessio
         const { data, error } = await client.auth.signUp({
           email: email.trim(),
           password,
-          options: { emailRedirectTo: `${window.location.origin}/` },
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: { display_name: displayName.trim(), account_role: 'parent' },
+          },
         });
         if (error) throw error;
-        if (data.session) onSession(data.session);
-        setMessage('Check your inbox to verify your email, then return here and sign in to continue.');
+        if (data.session) {
+          try {
+            await accountVerificationApi.completeParentSignup(client, {
+              displayName: displayName.trim(),
+              suburb: suburb.trim(),
+              schoolLabel: schoolName.trim(),
+              invitationCode: invitationCode.trim() || null,
+            });
+          } catch {
+            /* profile row may lag; pending screen still applies after email verify */
+          }
+          onSession(data.session);
+        }
+        setMessage('Check your inbox to verify your email. Your profile stays under school admin verification until approved.');
       } else {
         const { data, error } = await client.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
@@ -84,18 +174,35 @@ function AccountScreen({ client, onSession }: { client: SupabaseClient; onSessio
   return (
     <section className="onboarding-card" aria-labelledby="account-title">
       <Progress current={1} />
-      <p className="eyebrow">Step 1 of 3</p>
-      <h1 id="account-title">Start with your email.</h1>
-      <p className="section-copy">We’ll use a verified email to protect school access. No payments, live location or document uploads are involved.</p>
+      <p className="eyebrow">{mode === 'signup' ? 'Parent sign up' : 'Parent sign in'}</p>
+      <h1 id="account-title">{mode === 'signup' ? 'Join your school village.' : 'Welcome back.'}</h1>
+      <p className="section-copy">
+        {mode === 'signup'
+          ? 'Parents sign up with school details. Access to Instant Pickup and Marketplace waits until your school admin verifies your profile.'
+          : 'We’ll use a verified email to protect school access in SchoolRun Village.'}
+      </p>
       <form className="stack-form" onSubmit={submit}>
+        {mode === 'signup' ? (
+          <>
+            <label>Full name<input required minLength={2} maxLength={80} autoComplete="name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>
+            <label>Suburb<input required minLength={2} maxLength={64} value={suburb} onChange={(event) => setSuburb(event.target.value)} placeholder="e.g. Harbourview" /></label>
+            <label>School name<input required minLength={2} maxLength={120} value={schoolName} onChange={(event) => setSchoolName(event.target.value)} placeholder="e.g. Harbourview Primary School" /></label>
+            <label>School invitation code (optional)<input maxLength={64} value={invitationCode} onChange={(event) => setInvitationCode(event.target.value)} placeholder="If your school issued a code" /></label>
+          </>
+        ) : null}
         <label>Email address<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
         <label>Password<input type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} /></label>
-        <PrimaryButton type="submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'signup' ? 'Create account' : 'Sign in'}</PrimaryButton>
+        <PrimaryButton type="submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'signup' ? 'Create parent account' : 'Sign in'}</PrimaryButton>
       </form>
       {message && <Notice tone={message.startsWith('Check') ? 'teal' : 'red'}>{message}</Notice>}
-      <button className="text-button text-button--lower" onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setMessage(null); }}>
-        {mode === 'signup' ? 'Already verified? Sign in' : 'Need an account? Create one'}
-      </button>
+      {!forceSignup ? (
+        <button className="text-button text-button--lower" onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setMessage(null); }}>
+          {mode === 'signup' ? 'Already verified? Sign in' : 'Need an account? Create one'}
+        </button>
+      ) : (
+        <a className="text-button text-button--lower" href="/">Already have an account? Sign in</a>
+      )}
+      <p className="demo-hint">School staff: <a href="/admin/signup">Admin sign up</a></p>
     </section>
   );
 }
@@ -127,7 +234,15 @@ function ConsentStep({ client, status, onRefresh, invitationToken }: { client: S
       await Promise.all(status.consentDocuments
         .filter((document) => !status.acceptedConsentDocumentIds.includes(document.id))
         .map((document) => onboardingApi.acceptConsent(client, document.document_type, document.version)));
-      if (invitationToken) await onboardingApi.claimInvitation(client, invitationToken);
+      if (invitationToken) {
+        try {
+          await onboardingApi.claimInvitation(client, invitationToken);
+        } catch {
+          // Consents are already saved. A stale/unknown ?invite= token must not
+          // block progress; school join can continue via invite code instead.
+          setError('That invitation link is no longer available. You can still continue and join with a school code.');
+        }
+      }
       await onRefresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'We could not save your consent.');
@@ -205,10 +320,10 @@ function WaitingScreen() {
   return (
     <section className="onboarding-card centre-card" aria-labelledby="waiting-title">
       <div className="state-icon state-icon--amber" aria-hidden="true">⌛</div>
-      <p className="eyebrow">Approval pending</p>
-      <h1 id="waiting-title">You’re in the approval queue.</h1>
-      <p className="section-copy">A school moderator will review your request within 24 business hours. Until then, school information and exchange features remain locked.</p>
-      <Notice>Your request is private to your approval team.</Notice>
+      <p className="eyebrow">Pending verification</p>
+      <h1 id="waiting-title">Hang tight — we’re checking with your school.</h1>
+      <p className="section-copy">{PENDING_VERIFICATION_NOTICE}</p>
+      <Notice>Instant Pickup and Marketplace stay locked until approval. You’ll get a welcome notice when you’re verified.</Notice>
     </section>
   );
 }
@@ -318,66 +433,277 @@ function RejectedOrSuspended({ state }: { state: 'rejected' | 'suspended' }) {
   return <section className="onboarding-card centre-card" aria-labelledby="membership-state-title"><div className="state-icon state-icon--amber" aria-hidden="true">!</div><p className="eyebrow">School access</p><h1 id="membership-state-title">{suspended ? 'Your membership is suspended.' : 'Your membership was not approved.'}</h1><p className="section-copy">Please contact your school approval team for help. School information remains unavailable in this state.</p></section>;
 }
 
-function Onboarding({ appName, client, session, invitationToken, onSignOut }: { appName: string; client: SupabaseClient; session: Session; invitationToken: string | null; onSignOut: () => void }) {
+function Onboarding({ appName, client, session, invitationToken, onSignOut, openAdminDashboard = false }: { appName: string; client: SupabaseClient; session: Session; invitationToken: string | null; onSignOut: () => void; openAdminDashboard?: boolean }) {
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModeration, setShowModeration] = useState(false);
+  const [showAdminConsole, setShowAdminConsole] = useState(false);
+  const [showAdminVerification, setShowAdminVerification] = useState(openAdminDashboard);
+  const [toast, setToast] = useState<string | null>(null);
+  const [schoolLocation, setSchoolLocation] = useState<SchoolLocation>(FALLBACK_SCHOOL_LOCATION);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try { setStatus(await onboardingApi.status(client)); } catch (reason) { setError(reason instanceof Error ? reason.message : 'We could not load your onboarding status.'); } finally { setLoading(false); }
+    try {
+      const next = await onboardingApi.status(client);
+      setStatus(next);
+      // Capture signup suburb for header while still pending verification.
+      if (next.profile?.suburb) {
+        setSchoolLocation((current) => ({
+          ...current,
+          suburb: next.profile?.suburb || current.suburb,
+          schoolName: next.profile?.schoolLabel || current.schoolName,
+        }));
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'We could not load your onboarding status.');
+    } finally {
+      setLoading(false);
+    }
   }, [client]);
 
   useEffect(() => { void refresh(); }, [refresh, session.access_token]);
 
-  if (!session.user.email_confirmed_at) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><EmailVerificationScreen email={session.user.email} /></>;
-  if (loading) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><section className="onboarding-card centre-card"><p className="section-copy">Checking your secure onboarding status…</p></section></>;
-  if (error || !status) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><section className="onboarding-card centre-card"><h1>We’re preparing your onboarding.</h1><Notice tone="red">{error ?? 'Please refresh and try again.'}</Notice><button className="secondary-button" onClick={() => void refresh()}>Try again</button></section></>;
-  if (showModeration) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><ModeratorPanel client={client} onClose={() => setShowModeration(false)} onRefresh={refresh} schoolId={status?.roles.find((role) => role.role === 'moderator')?.school_id ?? null} /></>;
+  const accountStatus = normalizeAccountStatus(status?.profile?.accountStatus);
+  const verificationPending = accountStatus === 'PENDING_VERIFICATION';
 
-  const state = onboardingAccessState({
+  const accessState = status ? onboardingAccessState({
     membershipStatus: status.membership?.status ?? null,
     hasCurrentConsents: status.consentDocuments.length > 0 && status.consentDocuments.every((document) => status.acceptedConsentDocumentIds.includes(document.id)),
     hasChild: status.childCount > 0,
     hasSafetyDeclaration: Boolean(status.currentSafetyDeclaration && status.safetyDeclarationIds.includes(status.currentSafetyDeclaration.id)),
-  });
+    accountStatus: status.profile?.accountStatus ?? null,
+  }) : null;
 
-  const canModerate = status.roles.some((role) => role.role === 'moderator' || role.role === 'admin');
-  return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} />{state === 'consent' && <ConsentStep client={client} status={status} onRefresh={refresh} invitationToken={invitationToken} />}{state === 'school' && <SchoolStep client={client} onRefresh={refresh} />}{state === 'waiting' && <WaitingScreen />}{state === 'profile-and-safety' && <FinalSafetyStep client={client} status={status} onRefresh={refresh} />}{state === 'ready' && <ScheduleHub client={client} userId={session.user.id} onModeration={canModerate ? () => setShowModeration(true) : null} />}{(state === 'rejected' || state === 'suspended') && <RejectedOrSuspended state={state} />}</>;
+  useEffect(() => {
+    if (accessState !== 'ready') return;
+    let cancelled = false;
+    // Seed immediately so the header chip never blanks while overview loads.
+    setSchoolLocation((current) => current ?? FALLBACK_SCHOOL_LOCATION);
+    void scheduleApi.overview(client).then((overview) => {
+      if (cancelled) return;
+      setSchoolLocation(resolveSchoolLocation({
+        displayName: overview.schoolDisplayName || FALLBACK_SCHOOL_LOCATION.schoolName,
+        suburb: overview.schoolSuburb || FALLBACK_SCHOOL_LOCATION.suburb,
+        schoolSector: overview.schoolSector || FALLBACK_SCHOOL_LOCATION.schoolSector,
+      }));
+    }).catch(() => {
+      if (!cancelled) setSchoolLocation(FALLBACK_SCHOOL_LOCATION);
+    });
+    return () => { cancelled = true; };
+  }, [accessState, client]);
+
+  if (!session.user.email_confirmed_at) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} verificationPending={false} /><EmailVerificationScreen email={session.user.email} /></>;
+  if (showModeration) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><ModeratorPanel client={client} onClose={() => setShowModeration(false)} onRefresh={refresh} schoolId={status?.roles.find((role) => role.role === 'moderator')?.school_id ?? null} /></>;
+  if (showAdminConsole) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><AdminModerationPanel client={client} onClose={() => setShowAdminConsole(false)} /></>;
+  if (showAdminVerification) {
+    return (
+      <>
+        <AppHeader appName={appName} signedIn onSignOut={onSignOut} />
+        <AdminVerificationDashboard
+          client={client}
+          onBack={() => {
+            setShowAdminVerification(false);
+            if (window.location.pathname.startsWith('/admin')) window.history.replaceState({}, '', '/');
+          }}
+          onToast={(text) => {
+            setToast(text);
+            void refresh();
+          }}
+        />
+        {toast ? <p className="notice notice--teal" role="status">{toast}</p> : null}
+      </>
+    );
+  }
+
+  const canModerate = Boolean(status?.roles.some((role) => role.role === 'moderator' || role.role === 'admin'));
+  const canAdmin = Boolean(status?.roles.some((role) => role.role === 'admin'));
+  const ready = accessState === 'ready';
+  const showLocation = ready || verificationPending;
+
+  // Auth is ready once email is confirmed: show header immediately; mount the
+  // 5-tab dashboard as soon as onboarding access resolves to ready.
+  return (
+    <>
+      <AppHeader
+        appName={appName}
+        signedIn
+        onSignOut={onSignOut}
+        showSchoolLocation={showLocation}
+        schoolLocation={showLocation ? (schoolLocation ?? FALLBACK_SCHOOL_LOCATION) : null}
+        trustClient={ready ? client : null}
+        onSchoolLocationChange={ready ? setSchoolLocation : undefined}
+        verificationPending={verificationPending}
+      />
+      {toast ? <p className="notice notice--teal" role="status">{toast}</p> : null}
+      {loading && !ready ? (
+        <section className="onboarding-card centre-card">
+          <p className="section-copy">Checking your secure onboarding status…</p>
+        </section>
+      ) : null}
+      {!loading && (error || !status || !accessState) ? (
+        <section className="onboarding-card centre-card">
+          <h1>We’re preparing your onboarding.</h1>
+          <Notice tone="red">{error ?? 'Please refresh and try again.'}</Notice>
+          <button className="secondary-button" onClick={() => void refresh()}>Try again</button>
+        </section>
+      ) : null}
+      {canAdmin ? (
+        <p className="demo-hint">
+          <button className="text-button" type="button" onClick={() => setShowAdminVerification(true)}>Open admin verification portal</button>
+        </p>
+      ) : null}
+      {accessState === 'consent' && status ? <ConsentStep client={client} status={status} onRefresh={refresh} invitationToken={invitationToken} /> : null}
+      {accessState === 'school' && <SchoolStep client={client} onRefresh={refresh} />}
+      {accessState === 'waiting' && <WaitingScreen />}
+      {accessState === 'profile-and-safety' && status ? <FinalSafetyStep client={client} status={status} onRefresh={refresh} /> : null}
+      {ready ? (
+        <ScheduleHub
+          client={client}
+          userId={session.user.id}
+          onModeration={canModerate ? () => setShowModeration(true) : null}
+          onAdminConsole={canAdmin ? () => setShowAdminConsole(true) : null}
+        />
+      ) : null}
+      {(accessState === 'rejected' || accessState === 'suspended') && <RejectedOrSuspended state={accessState} />}
+    </>
+  );
 }
 
 export default function App() {
   const [runtimeConfig, setRuntimeConfig] = useState<BrowserRuntimeConfig>(fallbackRuntimeConfig);
-  const [configLoading, setConfigLoading] = useState(true);
+  const [configLoading, setConfigLoading] = useState(() => !fallbackRuntimeConfig.supabase);
   const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [invitationState, setInvitationState] = useState<'idle' | 'opened' | 'unavailable'>('idle');
   const client = useMemo(() => createBrowserSupabaseClient(runtimeConfig), [runtimeConfig]);
   const invitationToken = useMemo(() => new URLSearchParams(window.location.search).get('invite'), []);
 
-  useEffect(() => { void fetchRuntimeConfig().then((config) => { setRuntimeConfig(config); setConfigLoading(false); document.title = config.appName; }); }, []);
   useEffect(() => {
-    if (!client) return;
-    void client.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
-    return () => listener.subscription.unsubscribe();
+    let cancelled = false;
+    void fetchRuntimeConfig()
+      .then((config) => {
+        if (cancelled) return;
+        setRuntimeConfig(config);
+        document.title = config.appName;
+      })
+      .finally(() => {
+        if (!cancelled) setConfigLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!client) {
+      setAuthReady(false);
+      setSession(null);
+      return;
+    }
+    let cancelled = false;
+    void client.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      setSession(data.session);
+      setAuthReady(true);
+    }).catch(() => {
+      if (!cancelled) {
+        setSession(null);
+        setAuthReady(true);
+      }
+    });
+    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setAuthReady(true);
+    });
+    return () => {
+      cancelled = true;
+      listener.subscription.unsubscribe();
+    };
   }, [client]);
+
   useEffect(() => {
     if (!invitationToken) return;
-    void openInvitationLink(invitationToken).then((result) => setInvitationState(result));
-  }, [invitationToken]);
+    // Re-open after sign-in: open_school_invitation is authenticated-EXECUTE only.
+    void openInvitationLink(invitationToken, session?.access_token).then((result) => setInvitationState(result));
+  }, [invitationToken, session?.access_token]);
 
   const signOut = () => { if (client) void client.auth.signOut(); setSession(null); };
+  const appPath = typeof window !== 'undefined'
+    ? window.location.pathname.replace(/\/+$/, '') || '/'
+    : '/';
+  const isAdminSignup = appPath === '/admin/signup';
+  const isParentSignup = appPath === '/signup';
+  const isAdminDashboard = appPath === '/admin/dashboard';
 
-  if (configLoading) return <main className="app-shell"><AppHeader appName={runtimeConfig.appName} signedIn={false} /><section className="onboarding-card centre-card"><p className="section-copy">Preparing secure onboarding…</p></section></main>;
-  if (!client) return <main className="app-shell"><AppHeader appName={runtimeConfig.appName} signedIn={false} /><section className="onboarding-card centre-card"><p className="eyebrow">Set-up required</p><h1>Secure sign-up is being connected.</h1><p className="section-copy">The onboarding interface is ready, but the public Supabase configuration has not loaded yet.</p></section></main>;
+  // Prefer env/API client immediately; never hang forever on public-config.
+  if (configLoading && !client) {
+    return (
+      <main className="app-shell">
+        <AppHeader appName={runtimeConfig.appName} signedIn={false} />
+        <section className="onboarding-card centre-card">
+          <p className="section-copy">Preparing secure onboarding…</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!client) {
+    return (
+      <main className="app-shell">
+        <AppHeader appName={runtimeConfig.appName} signedIn={false} />
+        <section className="onboarding-card centre-card">
+          <p className="eyebrow">Set-up required</p>
+          <h1>Secure sign-up is being connected.</h1>
+          <p className="section-copy">
+            The onboarding interface is ready, but the public Supabase configuration has not loaded yet.
+            Check SUPABASE_URL / SUPABASE_ANON_KEY (or NEXT_PUBLIC_ / VITE_ aliases), then refresh.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!authReady) {
+    return (
+      <main className="app-shell onboarding-shell">
+        <AppHeader appName={runtimeConfig.appName} signedIn={Boolean(session)} onSignOut={session ? signOut : undefined} />
+        <section className="onboarding-card centre-card">
+          <p className="section-copy">Restoring your secure session…</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (isAdminSignup && !session) {
+    return (
+      <main className="app-shell onboarding-shell">
+        <AppHeader appName={runtimeConfig.appName} signedIn={false} />
+        <AdminSignupScreen />
+        <footer className="footer-note"><span>SchoolRun Village</span><span aria-hidden="true">•</span><span>Admin registration</span></footer>
+      </main>
+    );
+  }
 
   return (
     <main className="app-shell onboarding-shell">
       {invitationState === 'unavailable' && <Notice tone="red">This invitation link is unavailable. No school details were revealed.</Notice>}
-      {!session ? <><AppHeader appName={runtimeConfig.appName} signedIn={false} /><AccountScreen client={client} onSession={setSession} /></> : <Onboarding appName={runtimeConfig.appName} client={client} session={session} invitationToken={invitationState === 'opened' ? invitationToken : null} onSignOut={signOut} />}
-      <footer className="footer-note"><span>No payments</span><span aria-hidden="true">•</span><span>No live location tracking</span><span aria-hidden="true">•</span><span>Safety included</span></footer>
+      {!session ? (
+        <>
+          <AppHeader appName={runtimeConfig.appName} signedIn={false} />
+          <AccountScreen client={client} onSession={setSession} forceSignup={isParentSignup} />
+        </>
+      ) : (
+        <Onboarding
+          appName={runtimeConfig.appName}
+          client={client}
+          session={session}
+          invitationToken={invitationState === 'opened' ? invitationToken : null}
+          onSignOut={signOut}
+          openAdminDashboard={isAdminDashboard}
+        />
+      )}
+      <footer className="footer-note"><span>SchoolRun Village</span><span aria-hidden="true">•</span><span>Safe Rides, Share &amp; Save</span><span aria-hidden="true">•</span><span>No live location tracking</span><span aria-hidden="true">•</span><span>Safety included</span></footer>
     </main>
   );
 }
