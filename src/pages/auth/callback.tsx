@@ -6,11 +6,10 @@ type AuthCallbackProps = {
   onResolved: (session: Session | null) => void;
 };
 
-let exchangeStarted = false;
-
 /**
- * OAuth PKCE return page at /auth/callback.
- * Vite SPA equivalent of Next.js pages/auth/callback — no next/router.
+ * Optional legacy /auth/callback landing.
+ * Primary OAuth redirect is `/` with detectSessionInUrl — do not exchangeCodeForSession here
+ * (that would race a second PKCE exchange).
  */
 export default function AuthCallback({ client, onResolved }: AuthCallbackProps) {
   const ran = useRef(false);
@@ -27,17 +26,6 @@ export default function AuthCallback({ client, onResolved }: AuthCallbackProps) 
     };
 
     const handleAuthCallback = async () => {
-      const code = new URLSearchParams(window.location.search).get('code');
-
-      if (code && !exchangeStarted) {
-        exchangeStarted = true;
-        const { data, error } = await client.auth.exchangeCodeForSession(code);
-        if (!error && data.session) {
-          finish(data.session);
-          return;
-        }
-      }
-
       const { data } = await client.auth.getSession();
       finish(data.session ?? null);
     };

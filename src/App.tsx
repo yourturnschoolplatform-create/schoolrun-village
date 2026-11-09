@@ -222,11 +222,12 @@ function AccountScreen({
     setBusy(true);
     setMessage(null);
     try {
-      // PKCE return path — must be listed in Supabase Auth → URL Configuration redirect allowlist.
+      // Return straight to the app home (onboarding mounts when session exists).
+      // Must be listed in Supabase Auth → URL Configuration redirect allowlist.
       const { error } = await client.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/`,
           ...(provider === 'google' ? { queryParams: { prompt: 'select_account' } } : {}),
         },
       });
@@ -719,16 +720,16 @@ export default function App() {
     }
     let cancelled = false;
 
-    // PKCE ?code= is exchanged on /auth/callback only (detectSessionInUrl is false).
+    // Main-page session detect: detectSessionInUrl turns OAuth ?code= / hash into a session,
+    // then SIGNED_IN fires. No Next.js router — setSession mounts Onboarding on `/`.
     const { data: { subscription } } = client.auth.onAuthStateChange((event, nextSession) => {
       if (cancelled) return;
       setSession(nextSession);
       setAuthReady(true);
 
       if (event === 'SIGNED_IN' && nextSession) {
-        if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
-          stripOAuthCodeFromUrl();
-        }
+        // Clean address bar (drop code=/state=/hash; keep school ?invite= when present).
+        stripOAuthCodeFromUrl();
         navigateAfterSignIn();
       }
 
