@@ -34,7 +34,7 @@ export type PendingMembership = { membership_id: string; display_name: string };
 
 /**
  * Load onboarding status via Supabase RLS (no /api/onboarding/status round-trip).
- * Shape matches the Express handler so Onboarding UI keeps working on static hosts.
+ * Read-only: no side-effect RPCs (avoids post-login 400s from ledger writes).
  */
 async function loadOnboardingStatus(client: SupabaseClient): Promise<OnboardingStatus> {
   const { data: sessionData, error: sessionError } = await client.auth.getSession();
@@ -74,56 +74,54 @@ async function loadOnboardingStatus(client: SupabaseClient): Promise<OnboardingS
     client.from('role_assignments').select('role, school_id').eq('user_id', userId).is('revoked_at', null),
   ]);
 
-  for (const result of [profileResult, membershipResult, consentResult, documentResult, childResult, declarationResult, rolesResult]) {
-    if (result.error) throw new Error('Something went wrong. Please try again.');
-  }
-
-  if (session.user.email_confirmed_at) {
-    // Soft-fail: new social sign-ups may briefly lag ledger/profile rows.
-    await client.rpc('record_email_verified_event');
-  }
+  // Soft-read: one RLS/schema miss must not block social-login onboarding boot.
+  const profile = profileResult.error ? null : profileResult.data;
+  const membership = membershipResult.error ? null : membershipResult.data;
+  const consents = consentResult.error ? [] : (consentResult.data ?? []);
+  const documents = documentResult.error ? [] : (documentResult.data ?? []);
+  const children = childResult.error ? [] : (childResult.data ?? []);
+  const declarations = declarationResult.error ? [] : (declarationResult.data ?? []);
+  const roles = rolesResult.error ? [] : (rolesResult.data ?? []);
 
   let currentSafetyDeclaration: OnboardingStatus['currentSafetyDeclaration'] = null;
-  if (membershipResult.data?.status === 'verified') {
-    const { data, error } = await client
+  if (membership?.status === 'verified') {
+    const { data } = await client
       .from('safety_declaration_versions')
       .select('id, title, summary')
       .eq('is_published', true)
-      .or(`school_id.is.null,school_id.eq.${membershipResult.data.school_id}`)
-      .order('school_id', { ascending: false, nullsFirst: false })
+      .or(`school_id.is.null,school_id.eq.${membership.school_id}`)
       .order('published_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (error) throw new Error('Something went wrong. Please try again.');
-    currentSafetyDeclaration = data;
+    currentSafetyDeclaration = data ?? null;
   }
 
   return {
     emailVerified: Boolean(session.user.email_confirmed_at),
-    profile: profileResult.data
+    profile: profile
       ? {
-          displayName: profileResult.data.display_name,
-          accountStatus: String(profileResult.data.account_status ?? 'pending_verification').toUpperCase(),
-          accountRole: String(profileResult.data.account_role ?? 'parent').toUpperCase(),
-          schoolId: profileResult.data.signup_school_id ?? null,
-          verifiedAt: profileResult.data.account_verified_at ?? null,
-          suburb: profileResult.data.signup_suburb ?? null,
-          schoolLabel: profileResult.data.signup_school_label ?? null,
+          displayName: profile.display_name,
+          accountStatus: String(profile.account_status ?? 'pending_verification').toUpperCase(),
+          accountRole: String(profile.account_role ?? 'parent').toUpperCase(),
+          schoolId: profile.signup_school_id ?? null,
+          verifiedAt: profile.account_verified_at ?? null,
+          suburb: profile.signup_suburb ?? null,
+          schoolLabel: profile.signup_school_label ?? null,
         }
       : null,
-    membership: membershipResult.data
+    membership: membership
       ? {
-          id: membershipResult.data.id,
-          status: membershipResult.data.status as MembershipStatus,
-          approved_at: membershipResult.data.approved_at,
+          id: membership.id,
+          status: membership.status as MembershipStatus,
+          approved_at: membership.approved_at,
         }
       : null,
-    consentDocuments: (documentResult.data ?? []) as ConsentDocument[],
-    acceptedConsentDocumentIds: (consentResult.data ?? []).map((item) => item.document_id),
-    childCount: (childResult.data ?? []).length,
-    safetyDeclarationIds: (declarationResult.data ?? []).map((item) => item.declaration_version_id),
+    consentDocuments: documents as ConsentDocument[],
+    acceptedConsentDocumentIds: consents.map((item) => item.document_id),
+    childCount: children.length,
+    safetyDeclarationIds: declarations.map((item) => item.declaration_version_id),
     currentSafetyDeclaration,
-    roles: (rolesResult.data ?? []) as OnboardingStatus['roles'],
+    roles: roles as OnboardingStatus['roles'],
   };
 }
 

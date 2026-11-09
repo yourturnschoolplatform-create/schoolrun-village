@@ -720,6 +720,37 @@ export default function App() {
     }
     let cancelled = false;
 
+    const checkSession = async () => {
+      try {
+        const { data: { session: current }, error } = await client.auth.getSession();
+        if (cancelled) return;
+
+        if (error) {
+          // Corrupted / unreadable local session — clear and return to a clean signed-out home.
+          await client.auth.signOut();
+          if (cancelled) return;
+          setSession(null);
+          setAuthReady(true);
+          if (window.location.pathname !== '/' || window.location.search || window.location.hash) {
+            window.location.href = '/';
+          }
+          return;
+        }
+
+        setSession(current);
+        setAuthReady(true);
+        if (current && (window.location.search.includes('code=') || window.location.hash)) {
+          stripOAuthCodeFromUrl();
+        }
+      } catch {
+        if (cancelled) return;
+        setSession(null);
+        setAuthReady(true);
+      }
+    };
+
+    void checkSession();
+
     // Main-page session detect: detectSessionInUrl turns OAuth ?code= / hash into a session,
     // then SIGNED_IN fires. No Next.js router — setSession mounts Onboarding on `/`.
     const { data: { subscription } } = client.auth.onAuthStateChange((event, nextSession) => {

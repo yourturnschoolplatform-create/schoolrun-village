@@ -64,7 +64,6 @@ describe('onboardingApi.status (direct Supabase)', () => {
         }),
       },
       from,
-      rpc: async () => ({ data: null, error: null }),
     } as unknown as SupabaseClient;
 
     const status = await onboardingApi.status(client);
