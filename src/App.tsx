@@ -26,16 +26,24 @@ function hasAuthCallbackParams(): boolean {
   return hashParams.has('access_token') || hashParams.has('error') || hashParams.has('error_description');
 }
 
+/** True only when the address bar actually contains a school ?invite= token. */
+function hasSchoolInviteInUrl(): boolean {
+  const invite = new URLSearchParams(window.location.search).get('invite')?.trim() ?? '';
+  return Boolean(invite);
+}
+
 /** School invite uses ?invite= — never confuse with OAuth ?code=. */
 function readSchoolInviteToken(): string | null {
+  // Social OAuth callbacks must never trigger school-invite verification.
   if (hasAuthCallbackParams()) return null;
-  const invite = new URLSearchParams(window.location.search).get('invite')?.trim() ?? '';
-  return invite || null;
+  if (!hasSchoolInviteInUrl()) return null;
+  return new URLSearchParams(window.location.search).get('invite')!.trim();
 }
 
 function stripOAuthCodeFromUrl() {
   const queryParams = new URLSearchParams(window.location.search);
-  const invite = queryParams.get('invite')?.trim();
+  if (!queryParams.has('code') && !queryParams.has('state') && !window.location.hash) return;
+  const invite = hasSchoolInviteInUrl() ? queryParams.get('invite')!.trim() : '';
   // Keep school invite; drop OAuth code/state/hash so refresh cannot re-process the callback.
   const next = invite
     ? `${window.location.pathname}?invite=${encodeURIComponent(invite)}`
@@ -326,7 +334,7 @@ function ConsentStep({ client, status, onRefresh, invitationToken }: { client: S
       await Promise.all(status.consentDocuments
         .filter((document) => !status.acceptedConsentDocumentIds.includes(document.id))
         .map((document) => onboardingApi.acceptConsent(client, document.document_type, document.version)));
-      if (invitationToken) {
+      if (invitationToken && hasSchoolInviteInUrl()) {
         try {
           await onboardingApi.claimInvitation(client, invitationToken);
         } catch {
@@ -525,6 +533,15 @@ function RejectedOrSuspended({ state }: { state: 'rejected' | 'suspended' }) {
   return <section className="onboarding-card centre-card" aria-labelledby="membership-state-title"><div className="state-icon state-icon--amber" aria-hidden="true">!</div><p className="eyebrow">School access</p><h1 id="membership-state-title">{suspended ? 'Your membership is suspended.' : 'Your membership was not approved.'}</h1><p className="section-copy">Please contact your school approval team for help. School information remains unavailable in this state.</p></section>;
 }
 
+function publicOnboardingErrorMessage(message: string | null | undefined): string {
+  if (!message) return 'Something went wrong. Please try again.';
+  // Invitation copy is allowed only when the URL still has ?invite=.
+  if (/invitation link/i.test(message) && !hasSchoolInviteInUrl()) {
+    return 'Something went wrong. Please try again.';
+  }
+  return message;
+}
+
 function Onboarding({ appName, client, session, invitationToken, onSignOut, openAdminDashboard = false }: { appName: string; client: SupabaseClient; session: Session; invitationToken: string | null; onSignOut: () => void; openAdminDashboard?: boolean }) {
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -541,6 +558,7 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
     try {
       const next = await onboardingApi.status(client);
       setStatus(next);
+      setError(null);
       // Capture signup suburb for header while still pending verification.
       if (next.profile?.suburb) {
         setSchoolLocation((current) => ({
@@ -550,13 +568,17 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
         }));
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'We could not load your onboarding status.');
+      setStatus(null);
+      setError(reason instanceof Error ? reason.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   }, [client]);
 
-  useEffect(() => { void refresh(); }, [refresh, session.access_token]);
+  useEffect(() => {
+    setError(null);
+    void refresh();
+  }, [refresh, session.access_token]);
 
   const accountStatus = normalizeAccountStatus(status?.profile?.accountStatus);
   const verificationPending = accountStatus === 'PENDING_VERIFICATION';
@@ -630,16 +652,16 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
         verificationPending={verificationPending}
       />
       {toast ? <p className="notice notice--teal" role="status">{toast}</p> : null}
-      {loading && !ready ? (
+      {loading && !ready && !status ? (
         <section className="onboarding-card centre-card">
           <p className="section-copy">Checking your secure onboarding status…</p>
         </section>
       ) : null}
-      {!loading && (error || !status || !accessState) ? (
+      {!loading && error && !status ? (
         <section className="onboarding-card centre-card">
-          <h1>We’re preparing your onboarding.</h1>
-          <Notice tone="red">{error ?? 'Please refresh and try again.'}</Notice>
-          <button className="secondary-button" onClick={() => void refresh()}>Try again</button>
+          <h1>Something went wrong.</h1>
+          <Notice tone="red">{publicOnboardingErrorMessage(error)}</Notice>
+          <button className="secondary-button" type="button" onClick={() => window.location.reload()}>Try again</button>
         </section>
       ) : null}
       {canAdmin ? (
@@ -647,10 +669,10 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
           <button className="text-button" type="button" onClick={() => setShowAdminVerification(true)}>Open admin verification portal</button>
         </p>
       ) : null}
-      {accessState === 'consent' && status ? <ConsentStep client={client} status={status} onRefresh={refresh} invitationToken={invitationToken} /> : null}
-      {accessState === 'school' && <SchoolStep client={client} onRefresh={refresh} />}
-      {accessState === 'waiting' && <WaitingScreen />}
-      {accessState === 'profile-and-safety' && status ? <FinalSafetyStep client={client} status={status} onRefresh={refresh} /> : null}
+      {status && accessState === 'consent' ? <ConsentStep client={client} status={status} onRefresh={refresh} invitationToken={invitationToken} /> : null}
+      {status && accessState === 'school' ? <SchoolStep client={client} onRefresh={refresh} /> : null}
+      {status && accessState === 'waiting' ? <WaitingScreen /> : null}
+      {status && accessState === 'profile-and-safety' ? <FinalSafetyStep client={client} status={status} onRefresh={refresh} /> : null}
       {ready ? (
         <ScheduleHub
           client={client}
@@ -704,7 +726,8 @@ export default function App() {
       setAuthReady(true);
 
       if (event === 'SIGNED_IN' && nextSession) {
-        if (window.location.search.includes('code=')) {
+        // Clear OAuth ?code= immediately so refresh cannot re-exchange the PKCE code.
+        if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
           stripOAuthCodeFromUrl();
         }
         navigateAfterSignIn();
@@ -722,8 +745,9 @@ export default function App() {
   }, [client]);
 
   useEffect(() => {
-    // Never open a school invitation while an OAuth/PKCE callback is in the URL.
-    // (No verifyOtp(type:'invite') in this app — school invites use /api/onboarding/invitations/open.)
+    // Strict isolation: school invite verification runs only for real ?invite= links.
+    // Social OAuth (?code=) must never call openInvitationLink / verifyOtp.
+    if (!hasSchoolInviteInUrl()) return;
     if (!invitationToken) return;
     if (hasAuthCallbackParams() || window.location.search.includes('code=')) return;
 
@@ -789,7 +813,9 @@ export default function App() {
 
   return (
     <main className="app-shell onboarding-shell">
-      {invitationState === 'unavailable' && <Notice tone="red">This invitation link is unavailable. No school details were revealed.</Notice>}
+      {invitationState === 'unavailable' && hasSchoolInviteInUrl() && invitationToken ? (
+        <Notice tone="red">This invitation link is unavailable. No school details were revealed.</Notice>
+      ) : null}
       {!session ? (
         <>
           <AppHeader appName={runtimeConfig.appName} signedIn={false} />

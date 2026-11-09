@@ -1,7 +1,7 @@
 import path from 'node:path';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { createServer as createViteServer } from 'vite';
-import { readPublicRuntimeConfig } from './config.js';
+import { handlePublicConfig } from './api/public-config.js';
 import { createOnboardingRouter, OnboardingInputError } from './onboarding-router.js';
 import { createSchedulesRouter, ScheduleInputError } from './schedules-router.js';
 import { createMatchesRouter, MatchInputError } from './matches-router.js';
@@ -80,15 +80,8 @@ export async function createApp() {
     response.status(200).json({ status: 'ok', service: 'yourturn-foundation' });
   });
 
-  app.get('/api/public-config', (_request, response) => {
-    noStore(response);
-    try {
-      response.status(200).json(readPublicRuntimeConfig());
-    } catch {
-      // Never fail the SPA boot path; browser will use env fallbacks if needed.
-      response.status(200).json({ appName: 'SchoolRun Village', supabase: null });
-    }
-  });
+  // SPA boot config — must stay registered before Vite/static so it never 404s.
+  app.get('/api/public-config', handlePublicConfig);
 
   // Foundation-only proof that ordinary Express data access carries the caller JWT.
   app.get('/api/foundation/school-scope', async (request, response, next) => {

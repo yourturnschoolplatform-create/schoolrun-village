@@ -51,8 +51,9 @@ async function request<T>(client: SupabaseClient, path: string, init: RequestIni
   if (!response.ok) {
     if (response.status === 401) throw new Error('Please verify your email and sign in again to continue.');
     if (response.status === 429) throw new Error('Too many attempts. Please wait before trying another code.');
-    if (response.status === 404) throw new Error('That invitation link is unavailable or already used.');
-    throw new Error('That step could not be completed. Please check the details and try again.');
+    // Generic failures never use invitation-link copy. Invite-specific wording is
+    // reserved for claimInvitation (only called when ?invite= is present).
+    throw new Error('Something went wrong. Please try again.');
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
@@ -74,8 +75,30 @@ export const onboardingApi = {
     request<{ childId: string }>(client, '/children', { method: 'POST', body: JSON.stringify({ membershipId, nickname, yearLevel }) }),
   signSafetyDeclaration: (client: SupabaseClient, membershipId: string, declarationVersionId: string) =>
     request<{ status: string }>(client, '/safety-declaration', { method: 'POST', body: JSON.stringify({ membershipId, declarationVersionId }) }),
-  claimInvitation: (client: SupabaseClient, token: string) =>
-    request<{ status: string }>(client, '/invitations/claim', { method: 'POST', body: JSON.stringify({ token }) }),
+  claimInvitation: async (client: SupabaseClient, token: string) => {
+    const trimmed = token.trim();
+    if (!trimmed) throw new Error('Something went wrong. Please try again.');
+
+    const { data } = await client.auth.getSession();
+    const accessToken = data.session?.access_token;
+    if (!accessToken) throw new Error('Please sign in again to continue.');
+
+    const response = await fetch('/api/onboarding/invitations/claim', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: trimmed }),
+    });
+
+    if (response.status === 401) throw new Error('Please verify your email and sign in again to continue.');
+    if (response.status === 404) throw new Error('That invitation link is unavailable or already used.');
+    if (!response.ok) throw new Error('Something went wrong. Please try again.');
+    return response.json() as Promise<{ status: string }>;
+  },
   pendingMemberships: async (client: SupabaseClient) => {
     const data = await request<{ memberships: PendingMembership[] }>(client, '/moderation/pending-memberships');
     return data.memberships;
