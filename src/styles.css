@@ -46,14 +46,16 @@ button { font: inherit; }
 .onboarding-shell { display: flex; flex-direction: column; }
 .topbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  width: 100%;
   min-height: 64px;
   margin: 0 0 .85rem;
-  padding: 0 1.5rem;
+  padding: .75rem 1rem;
   border: 0;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid #F3F4F6;
   border-radius: 0;
   background: #FFFFFF;
   box-shadow: none;
@@ -61,15 +63,16 @@ button { font: inherit; }
 .topbar__brand {
   display: flex;
   align-items: center;
+  gap: .5rem;
   min-width: 0;
   flex: 0 1 auto;
 }
 .topbar__actions {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: .75rem;
+  gap: .5rem;
   margin-left: auto;
   min-width: 0;
 }
@@ -78,7 +81,7 @@ button { font: inherit; }
   padding: 0;
   border: 0;
   background: transparent;
-  color: #64748B;
+  color: #4B5563;
   cursor: pointer;
   font-size: .875rem;
   font-weight: 600;
@@ -88,7 +91,7 @@ button { font: inherit; }
   transition: color .15s ease;
 }
 .topbar__sign-out:hover {
-  color: #EF4444;
+  color: #111827;
   text-decoration: none;
 }
 .visually-hidden {
@@ -118,14 +121,15 @@ button { font: inherit; }
 .wordmark__icon {
   display: grid;
   flex: 0 0 auto;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2rem;
+  height: 2rem;
   place-items: center;
 }
 .wordmark__icon svg {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: contain;
 }
 .wordmark__text {
   display: flex;
@@ -133,26 +137,33 @@ button { font: inherit; }
   align-items: flex-start;
   gap: 0;
   min-width: 0;
-  line-height: 1.05;
+  line-height: 1.15;
+}
+.wordmark__title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
+  line-height: 1.15;
 }
 .wordmark__schoolrun {
-  color: #0F172A;
+  color: #111827;
   font-family: "Plus Jakarta Sans", Outfit, Nunito, sans-serif;
-  font-size: 1.05rem;
+  font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: -.03em;
   white-space: nowrap;
 }
 .wordmark__village {
-  color: #FF6B6B;
+  color: #F97316;
   font-family: "Plus Jakarta Sans", Outfit, Nunito, sans-serif;
-  font-size: .98rem;
+  font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: -.025em;
   white-space: nowrap;
 }
 .wordmark__tagline {
-  margin-top: .22rem;
+  margin-top: .15rem;
   color: var(--muted);
   font-family: "Plus Jakarta Sans", var(--brand), sans-serif;
   font-size: .62rem;
@@ -309,14 +320,19 @@ button { font: inherit; }
 .my-trust-chip--suspended { border-color: #FECACA; background: #FEF2F2; color: #991B1B; }
 @media (max-width: 640px) {
   .topbar {
-    padding: 0 .75rem;
-    gap: .65rem;
+    padding: .65rem .75rem;
+    gap: .75rem;
   }
   .topbar__actions {
+    width: 100%;
+    justify-content: flex-start;
     gap: .5rem;
   }
   .location-chip {
-    max-width: 9.5rem;
+    max-width: min(100%, 14rem);
+  }
+  .wordmark__tagline {
+    display: none;
   }
 }
 .brand-mark { display: grid; width: 2rem; height: 2rem; color: var(--coral); place-items: center; }
@@ -325,7 +341,11 @@ button { font: inherit; }
 .status-pill { display: inline-flex; align-items: center; width: fit-content; min-height: 1.75rem; padding: .3rem .6rem; border-radius: 999px; font-size: .72rem; font-weight: 750; letter-spacing: .025em; line-height: 1; white-space: nowrap; }
 .status-pill--teal { color: var(--teal-deep); background: var(--teal-soft); }
 .status-pill--slate { color: #526264; background: #e7ecea; }
-.status-pill--amber { color: #8b5017; background: var(--amber-soft); }
+.status-pill--amber {
+  color: #B45309;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+}
 .status-pill--red { color: #8f372d; background: var(--red-soft); }
 
 .onboarding-card { width: 100%; margin: 3.25rem auto 0; padding: 1.35rem; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--cream); box-shadow: var(--shadow-soft); }

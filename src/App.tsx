@@ -83,8 +83,10 @@ function SchoolRunWordmark({ appName }: { appName: string }) {
         </svg>
       </span>
       <span className="wordmark__text">
-        <span className="wordmark__schoolrun">SchoolRun</span>
-        <span className="wordmark__village">Village</span>
+        <span className="wordmark__title">
+          <span className="wordmark__schoolrun">SchoolRun</span>
+          <span className="wordmark__village"> Village</span>
+        </span>
         <span className="wordmark__tagline">{BRAND_TAGLINE}</span>
       </span>
     </a>
@@ -124,7 +126,7 @@ function AppHeader({
         ) : null}
         {verificationPending ? (
           <span className="status-pill status-pill--amber" data-verification-pending="true">
-            Pending Verification ⏳
+            ⏳ Pending Verification
           </span>
         ) : null}
         {showSchoolLocation && trustClient ? <MyTrustChip client={trustClient} /> : null}

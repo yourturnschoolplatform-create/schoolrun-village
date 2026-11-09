@@ -135,8 +135,12 @@ export function InstantPickupBoard({
       onComposeOpenChange?.(false);
       setComposeStep(1);
       await refresh();
-    } catch {
-      setMessage('That request could not be posted. Use a suburb label and keep notes phone-free.');
+    } catch (error) {
+      setMessage(
+        error instanceof Error && error.message
+          ? error.message
+          : 'That request could not be posted. Use a suburb label and keep notes phone-free.',
+      );
     } finally {
       setBusy(false);
     }
