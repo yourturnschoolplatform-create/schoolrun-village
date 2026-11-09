@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { resolveSchoolLocation, type SchoolLocation } from '../shared/au-location';
 import { onboardingAccessState } from '../shared/onboarding';
@@ -15,6 +15,26 @@ import { AdminVerificationDashboard } from './components/AdminVerificationDashbo
 import { accountVerificationApi } from './lib/account-verification-api';
 
 type PillTone = 'teal' | 'slate' | 'amber' | 'red';
+
+/** Survives React Strict Mode remounts so OAuth/PKCE callback handling runs once. */
+let oauthCallbackHandled = false;
+
+function hasAuthCallbackParams(): boolean {
+  const search = new URLSearchParams(window.location.search);
+  if (search.has('code') || search.has('error') || search.has('error_description')) return true;
+  const hash = window.location.hash.replace(/^#/, '');
+  if (!hash) return false;
+  const hashParams = new URLSearchParams(hash);
+  return hashParams.has('access_token') || hashParams.has('error') || hashParams.has('error_description');
+}
+
+function stripAuthCallbackParams() {
+  const url = new URL(window.location.href);
+  ['code', 'state', 'error', 'error_code', 'error_description'].forEach((key) => url.searchParams.delete(key));
+  url.hash = '';
+  const next = `${url.pathname}${url.search}`;
+  window.history.replaceState({}, document.title, next || '/');
+}
 
 function StatusPill({ children, tone = 'teal' }: { children: ReactNode; tone?: PillTone }) {
   return <span className={`status-pill status-pill--${tone}`}>{children}</span>;
@@ -634,6 +654,7 @@ export default function App() {
   const [invitationState, setInvitationState] = useState<'idle' | 'opened' | 'unavailable'>('idle');
   const client = useMemo(() => createBrowserSupabaseClient(runtimeConfig), [runtimeConfig]);
   const invitationToken = useMemo(() => new URLSearchParams(window.location.search).get('invite'), []);
+  const isProcessingAuth = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -656,19 +677,33 @@ export default function App() {
       return;
     }
     let cancelled = false;
-    void client.auth.getSession().then(({ data }) => {
-      if (cancelled) return;
-      setSession(data.session);
-      setAuthReady(true);
-    }).catch(() => {
-      if (!cancelled) {
-        setSession(null);
-        setAuthReady(true);
+
+    const handleCallback = async () => {
+      if (isProcessingAuth.current) return;
+      isProcessingAuth.current = true;
+
+      const fromOAuth = hasAuthCallbackParams();
+      if (fromOAuth && !oauthCallbackHandled) oauthCallbackHandled = true;
+
+      try {
+        const { data } = await client.auth.getSession();
+        if (cancelled) return;
+        setSession(data.session);
+        if (fromOAuth && data.session) stripAuthCallbackParams();
+      } catch {
+        if (!cancelled) setSession(null);
+      } finally {
+        if (!cancelled) setAuthReady(true);
+        isProcessingAuth.current = false;
       }
-    });
+    };
+
+    void handleCallback();
+
     const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setAuthReady(true);
+      if (nextSession && hasAuthCallbackParams()) stripAuthCallbackParams();
     });
     return () => {
       cancelled = true;
