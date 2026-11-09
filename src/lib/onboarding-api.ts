@@ -32,6 +32,101 @@ export type OnboardingStatus = {
 export type SchoolOption = { id: string; display_name: string };
 export type PendingMembership = { membership_id: string; display_name: string };
 
+/**
+ * Load onboarding status via Supabase RLS (no /api/onboarding/status round-trip).
+ * Shape matches the Express handler so Onboarding UI keeps working on static hosts.
+ */
+async function loadOnboardingStatus(client: SupabaseClient): Promise<OnboardingStatus> {
+  const { data: sessionData, error: sessionError } = await client.auth.getSession();
+  const session = sessionData.session;
+  if (sessionError || !session?.user) throw new Error('Please sign in again to continue.');
+
+  const userId = session.user.id;
+  const [
+    profileResult,
+    membershipResult,
+    consentResult,
+    documentResult,
+    childResult,
+    declarationResult,
+    rolesResult,
+  ] = await Promise.all([
+    client
+      .from('profiles')
+      .select('display_name, account_status, account_role, signup_school_id, account_verified_at, signup_suburb, signup_school_label')
+      .eq('id', userId)
+      .maybeSingle(),
+    client
+      .from('school_memberships')
+      .select('id, school_id, status, approved_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    client.from('consent_acceptances').select('document_id').eq('user_id', userId),
+    client
+      .from('consent_documents')
+      .select('id, document_type, version, title, summary')
+      .eq('is_active', true)
+      .order('document_type'),
+    client.from('child_profiles').select('id').eq('parent_id', userId),
+    client.from('safety_declarations').select('id, declaration_version_id').eq('parent_id', userId),
+    client.from('role_assignments').select('role, school_id').eq('user_id', userId).is('revoked_at', null),
+  ]);
+
+  for (const result of [profileResult, membershipResult, consentResult, documentResult, childResult, declarationResult, rolesResult]) {
+    if (result.error) throw new Error('Something went wrong. Please try again.');
+  }
+
+  if (session.user.email_confirmed_at) {
+    // Soft-fail: new social sign-ups may briefly lag ledger/profile rows.
+    await client.rpc('record_email_verified_event');
+  }
+
+  let currentSafetyDeclaration: OnboardingStatus['currentSafetyDeclaration'] = null;
+  if (membershipResult.data?.status === 'verified') {
+    const { data, error } = await client
+      .from('safety_declaration_versions')
+      .select('id, title, summary')
+      .eq('is_published', true)
+      .or(`school_id.is.null,school_id.eq.${membershipResult.data.school_id}`)
+      .order('school_id', { ascending: false, nullsFirst: false })
+      .order('published_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error('Something went wrong. Please try again.');
+    currentSafetyDeclaration = data;
+  }
+
+  return {
+    emailVerified: Boolean(session.user.email_confirmed_at),
+    profile: profileResult.data
+      ? {
+          displayName: profileResult.data.display_name,
+          accountStatus: String(profileResult.data.account_status ?? 'pending_verification').toUpperCase(),
+          accountRole: String(profileResult.data.account_role ?? 'parent').toUpperCase(),
+          schoolId: profileResult.data.signup_school_id ?? null,
+          verifiedAt: profileResult.data.account_verified_at ?? null,
+          suburb: profileResult.data.signup_suburb ?? null,
+          schoolLabel: profileResult.data.signup_school_label ?? null,
+        }
+      : null,
+    membership: membershipResult.data
+      ? {
+          id: membershipResult.data.id,
+          status: membershipResult.data.status as MembershipStatus,
+          approved_at: membershipResult.data.approved_at,
+        }
+      : null,
+    consentDocuments: (documentResult.data ?? []) as ConsentDocument[],
+    acceptedConsentDocumentIds: (consentResult.data ?? []).map((item) => item.document_id),
+    childCount: (childResult.data ?? []).length,
+    safetyDeclarationIds: (declarationResult.data ?? []).map((item) => item.declaration_version_id),
+    currentSafetyDeclaration,
+    roles: (rolesResult.data ?? []) as OnboardingStatus['roles'],
+  };
+}
+
 async function request<T>(client: SupabaseClient, path: string, init: RequestInit = {}): Promise<T> {
   const { data } = await client.auth.getSession();
   const accessToken = data.session?.access_token;
@@ -60,7 +155,7 @@ async function request<T>(client: SupabaseClient, path: string, init: RequestIni
 }
 
 export const onboardingApi = {
-  status: (client: SupabaseClient) => request<OnboardingStatus>(client, '/status'),
+  status: (client: SupabaseClient) => loadOnboardingStatus(client),
   acceptConsent: (client: SupabaseClient, documentType: ConsentDocument['document_type'], version: number) =>
     request<void>(client, '/consents', { method: 'POST', body: JSON.stringify({ documentType, version }) }),
   schoolOptions: async (client: SupabaseClient) => {

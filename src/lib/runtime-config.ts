@@ -129,6 +129,12 @@ export async function fetchRuntimeConfig(): Promise<BrowserRuntimeConfig> {
 export function createBrowserSupabaseClient(config: BrowserRuntimeConfig): SupabaseClient | null {
   if (!config.supabase) return null;
   return createClient(config.supabase.url, config.supabase.anonKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      // PKCE: exchange OAuth ?code= safely in the browser (Google / Facebook).
+      flowType: 'pkce',
+    },
   });
 }

@@ -51,11 +51,11 @@ function stripOAuthCodeFromUrl() {
   window.history.replaceState({}, document.title, next || '/');
 }
 
-/** After sign-in, leave auth entry routes so Onboarding / hub can mount at `/`. */
+/** After sign-in, leave auth/OAuth entry routes so Onboarding / hub can mount at `/`. */
 function navigateAfterSignIn() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
   if (path === '/admin/dashboard') return;
-  if (path !== '/signup' && path !== '/admin/signup') return;
+  if (path !== '/signup' && path !== '/admin/signup' && path !== '/auth/callback') return;
 
   const invite = new URLSearchParams(window.location.search).get('invite')?.trim();
   const next = invite ? `/?invite=${encodeURIComponent(invite)}` : '/';
@@ -221,11 +221,11 @@ function AccountScreen({
     setBusy(true);
     setMessage(null);
     try {
-      const redirectPath = forceSignup ? '/signup' : '/';
+      // PKCE return path — must be listed in Supabase Auth → URL Configuration redirect allowlist.
       const { error } = await client.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}${redirectPath}`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           ...(provider === 'google' ? { queryParams: { prompt: 'select_account' } } : {}),
         },
       });
