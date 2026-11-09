@@ -41,6 +41,17 @@ function stripAuthCallbackParams() {
   window.history.replaceState({}, document.title, next || '/');
 }
 
+/** After sign-in, leave auth entry routes so Onboarding / hub can mount at `/`. */
+function navigateAfterSignIn() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  if (path === '/admin/dashboard') return;
+  if (path !== '/signup' && path !== '/admin/signup' && !hasAuthCallbackParams()) return;
+
+  const invite = new URLSearchParams(window.location.search).get('invite');
+  const next = invite ? `/?invite=${encodeURIComponent(invite)}` : '/';
+  window.history.replaceState({}, document.title, next);
+}
+
 function StatusPill({ children, tone = 'teal' }: { children: ReactNode; tone?: PillTone }) {
   return <span className={`status-pill status-pill--${tone}`}>{children}</span>;
 }
@@ -712,6 +723,7 @@ export default function App() {
 
       if (event === 'SIGNED_IN' && nextSession) {
         if (hasAuthCallbackParams()) stripAuthCallbackParams();
+        navigateAfterSignIn();
       }
 
       if (event === 'SIGNED_OUT') {
