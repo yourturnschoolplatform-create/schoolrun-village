@@ -154,8 +154,21 @@ async function request<T>(client: SupabaseClient, path: string, init: RequestIni
 
 export const onboardingApi = {
   status: (client: SupabaseClient) => loadOnboardingStatus(client),
-  acceptConsent: (client: SupabaseClient, documentType: ConsentDocument['document_type'], version: number) =>
-    request<void>(client, '/consents', { method: 'POST', body: JSON.stringify({ documentType, version }) }),
+  acceptConsent: async (
+    client: SupabaseClient,
+    documentType: ConsentDocument['document_type'],
+    version: number,
+  ): Promise<void> => {
+    const { data: sessionData } = await client.auth.getSession();
+    if (!sessionData.session?.user) throw new Error('Please sign in again to continue.');
+
+    // Direct RLS RPC — same path as server /consents, no Express round-trip.
+    const { error } = await client.rpc('accept_current_consent', {
+      p_document_type: documentType,
+      p_version: version,
+    });
+    if (error) throw new Error('Something went wrong. Please try again.');
+  },
   schoolOptions: async (client: SupabaseClient) => {
     const data = await request<{ schools: SchoolOption[] }>(client, '/school-options');
     return data.schools;
