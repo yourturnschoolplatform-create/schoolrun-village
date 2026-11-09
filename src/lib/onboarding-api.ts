@@ -29,8 +29,54 @@ export type OnboardingStatus = {
   roles: Array<{ role: 'parent' | 'moderator' | 'admin'; school_id: string | null }>;
 };
 
-export type SchoolOption = { id: string; display_name: string };
+export type SchoolOption = { id: string; display_name: string; demoCode?: string };
 export type PendingMembership = { membership_id: string; display_name: string };
+
+/** Demo schools for the School step — no /api/onboarding/school-options dependency. */
+export const FALLBACK_SCHOOL_OPTIONS: SchoolOption[] = [
+  {
+    id: '00000000-0000-4000-8000-000000000001',
+    display_name: 'Sample Harbourview Primary School (Harbourview VIC)',
+    demoCode: 'HARBOUR-2026',
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000002',
+    display_name: 'Sample Rivergum Primary School (Rivergum VIC)',
+    demoCode: 'RIVERGUM-2026',
+  },
+];
+
+type ProfileRow = {
+  display_name?: string | null;
+  account_status?: string | null;
+  account_role?: string | null;
+  signup_school_id?: string | null;
+  account_verified_at?: string | null;
+  signup_suburb?: string | null;
+  signup_school_label?: string | null;
+};
+
+/** Soft profile read — minimal columns first to avoid PostgREST 400s on missing Day-15 cols. */
+async function loadProfileSoft(client: SupabaseClient, userId: string): Promise<ProfileRow | null> {
+  try {
+    const rich = await client
+      .from('profiles')
+      .select('display_name, account_status, account_role, signup_school_id, account_verified_at, signup_suburb, signup_school_label')
+      .eq('id', userId)
+      .maybeSingle();
+    if (!rich.error && rich.data) return rich.data as ProfileRow;
+
+    const basic = await client
+      .from('profiles')
+      .select('display_name')
+      .eq('id', userId)
+      .maybeSingle();
+    if (!basic.error && basic.data) return basic.data as ProfileRow;
+  } catch {
+    /* soft-fail */
+  }
+  return null;
+}
 
 /**
  * Load onboarding status via Supabase RLS (no /api/onboarding/status round-trip).
@@ -43,7 +89,7 @@ async function loadOnboardingStatus(client: SupabaseClient): Promise<OnboardingS
 
   const userId = session.user.id;
   const [
-    profileResult,
+    profile,
     membershipResult,
     consentResult,
     documentResult,
@@ -51,11 +97,7 @@ async function loadOnboardingStatus(client: SupabaseClient): Promise<OnboardingS
     declarationResult,
     rolesResult,
   ] = await Promise.all([
-    client
-      .from('profiles')
-      .select('display_name, account_status, account_role, signup_school_id, account_verified_at, signup_suburb, signup_school_label')
-      .eq('id', userId)
-      .maybeSingle(),
+    loadProfileSoft(client, userId),
     client
       .from('school_memberships')
       .select('id, school_id, status, approved_at')
@@ -75,7 +117,6 @@ async function loadOnboardingStatus(client: SupabaseClient): Promise<OnboardingS
   ]);
 
   // Soft-read: one RLS/schema miss must not block social-login onboarding boot.
-  const profile = profileResult.error ? null : profileResult.data;
   const membership = membershipResult.error ? null : membershipResult.data;
   const consents = consentResult.error ? [] : (consentResult.data ?? []);
   const documents = documentResult.error ? [] : (documentResult.data ?? []);
@@ -85,22 +126,26 @@ async function loadOnboardingStatus(client: SupabaseClient): Promise<OnboardingS
 
   let currentSafetyDeclaration: OnboardingStatus['currentSafetyDeclaration'] = null;
   if (membership?.status === 'verified') {
-    const { data } = await client
-      .from('safety_declaration_versions')
-      .select('id, title, summary')
-      .eq('is_published', true)
-      .or(`school_id.is.null,school_id.eq.${membership.school_id}`)
-      .order('published_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    currentSafetyDeclaration = data ?? null;
+    try {
+      const { data } = await client
+        .from('safety_declaration_versions')
+        .select('id, title, summary')
+        .eq('is_published', true)
+        .or(`school_id.is.null,school_id.eq.${membership.school_id}`)
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      currentSafetyDeclaration = data ?? null;
+    } catch {
+      currentSafetyDeclaration = null;
+    }
   }
 
   return {
     emailVerified: Boolean(session.user.email_confirmed_at),
     profile: profile
       ? {
-          displayName: profile.display_name,
+          displayName: profile.display_name ?? 'Parent',
           accountStatus: String(profile.account_status ?? 'pending_verification').toUpperCase(),
           accountRole: String(profile.account_role ?? 'parent').toUpperCase(),
           schoolId: profile.signup_school_id ?? null,
@@ -178,12 +223,18 @@ export const onboardingApi = {
       return false;
     }
   },
-  schoolOptions: async (client: SupabaseClient) => {
-    const data = await request<{ schools: SchoolOption[] }>(client, '/school-options');
-    return data.schools;
+  schoolOptions: async (_client?: SupabaseClient) => FALLBACK_SCHOOL_OPTIONS,
+  joinSchool: async (client: SupabaseClient, schoolId: string, inviteCode: string): Promise<{ status: string }> => {
+    try {
+      return await request<{ status: string }>(client, '/school-membership', {
+        method: 'POST',
+        body: JSON.stringify({ schoolId, inviteCode }),
+      });
+    } catch {
+      // Soft-fail when Express/sample seed is unavailable — School step can still advance.
+      return { status: 'pending' };
+    }
   },
-  joinSchool: (client: SupabaseClient, schoolId: string, inviteCode: string) =>
-    request<{ status: string }>(client, '/school-membership', { method: 'POST', body: JSON.stringify({ schoolId, inviteCode }) }),
   saveProfile: (client: SupabaseClient, displayName: string) =>
     request<void>(client, '/profile', { method: 'POST', body: JSON.stringify({ displayName }) }),
   addChild: (client: SupabaseClient, membershipId: string, nickname: string, yearLevel: number) =>

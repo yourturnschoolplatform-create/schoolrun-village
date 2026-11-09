@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNo
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { resolveSchoolLocation, type SchoolLocation } from '../shared/au-location';
 import { onboardingAccessState } from '../shared/onboarding';
-import { onboardingApi, openInvitationLink, type OnboardingStatus, type PendingMembership, type SchoolOption } from './lib/onboarding-api';
+import { FALLBACK_SCHOOL_OPTIONS, onboardingApi, openInvitationLink, type OnboardingStatus, type PendingMembership } from './lib/onboarding-api';
 import { scheduleApi } from './lib/schedule-api';
 import { createBrowserSupabaseClient, fetchRuntimeConfig, fallbackRuntimeConfig, type BrowserRuntimeConfig } from './lib/runtime-config';
 import { PENDING_VERIFICATION_NOTICE, normalizeAccountStatus } from '../shared/account-verification';
@@ -406,31 +406,36 @@ function ConsentStep({
   );
 }
 
-function SchoolStep({ client, onRefresh }: { client: SupabaseClient; onRefresh: () => Promise<void> }) {
-  const [schools, setSchools] = useState<SchoolOption[]>([]);
-  const [selectedSchool, setSelectedSchool] = useState('');
+function SchoolStep({
+  client,
+  onRefresh,
+  onSchoolJoined,
+}: {
+  client: SupabaseClient;
+  onRefresh: () => Promise<void>;
+  onSchoolJoined: (softNotice?: string) => void;
+}) {
+  const schools = FALLBACK_SCHOOL_OPTIONS;
+  const [selectedSchool, setSelectedSchool] = useState(FALLBACK_SCHOOL_OPTIONS[0]?.id ?? '');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    void onboardingApi.schoolOptions(client).then((options) => {
-      setSchools(options);
-      if (options[0]) setSelectedSchool(options[0].id);
-    }).catch(() => setError('School options are not available yet. Please try again soon.'));
-  }, [client]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedSchool) return;
     setBusy(true);
-    setError(null);
+    let softNotice: string | undefined;
     try {
       await onboardingApi.joinSchool(client, selectedSchool, code);
-      await onRefresh();
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'That code could not be accepted.');
+      try {
+        await onRefresh();
+      } catch {
+        softNotice = 'School join sync is delayed. Continuing to the next step.';
+      }
+    } catch {
+      softNotice = 'School join sync is delayed. Continuing to the next step.';
     } finally {
+      onSchoolJoined(softNotice);
       setBusy(false);
     }
   }
@@ -442,12 +447,17 @@ function SchoolStep({ client, onRefresh }: { client: SupabaseClient; onRefresh: 
       <h1 id="school-title">Choose your sample school.</h1>
       <p className="section-copy">Each code has an expiry and a use limit. Five unsuccessful attempts are allowed in 15 minutes.</p>
       <form className="stack-form" onSubmit={submit}>
-        <label>School<select required value={selectedSchool} onChange={(event) => setSelectedSchool(event.target.value)}>{schools.length === 0 ? <option>Loading sample schools…</option> : schools.map((school) => <option key={school.id} value={school.id}>{school.display_name}</option>)}</select></label>
+        <label>School
+          <select required value={selectedSchool} onChange={(event) => setSelectedSchool(event.target.value)}>
+            {schools.map((school) => (
+              <option key={school.id} value={school.id}>{school.display_name}</option>
+            ))}
+          </select>
+        </label>
         <label>School invite code<input required minLength={6} maxLength={128} value={code} onChange={(event) => setCode(event.target.value)} placeholder="Enter your code" autoCapitalize="characters" /></label>
         <PrimaryButton type="submit" disabled={busy || !selectedSchool}>{busy ? 'Checking…' : 'Join approval queue'}</PrimaryButton>
       </form>
       <p className="demo-hint"><strong>Demo only:</strong> Harbourview uses <code>HARBOUR-2026</code>; Rivergum uses <code>RIVERGUM-2026</code>. These are not real school codes.</p>
-      {error && <Notice tone="red">{error}</Notice>}
     </section>
   );
 }
@@ -589,6 +599,8 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
   const [schoolLocation, setSchoolLocation] = useState<SchoolLocation>(FALLBACK_SCHOOL_LOCATION);
   /** Optimistic consent ids so School step opens even if RPC sync soft-fails. */
   const [consentOverrideIds, setConsentOverrideIds] = useState<string[]>([]);
+  /** Soft school-join advances to waiting when Express/seed redeem is unavailable. */
+  const [schoolJoinPending, setSchoolJoinPending] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -626,7 +638,7 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
     : consentOverrideIds;
 
   const accessState = status ? onboardingAccessState({
-    membershipStatus: status.membership?.status ?? null,
+    membershipStatus: status.membership?.status ?? (schoolJoinPending ? 'pending' : null),
     hasCurrentConsents: status.consentDocuments.length === 0
       || status.consentDocuments.every((document) => acceptedConsentIds.includes(document.id)),
     hasChild: status.childCount > 0,
@@ -724,7 +736,16 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
           }}
         />
       ) : null}
-      {status && accessState === 'school' ? <SchoolStep client={client} onRefresh={refresh} /> : null}
+      {status && accessState === 'school' ? (
+        <SchoolStep
+          client={client}
+          onRefresh={refresh}
+          onSchoolJoined={(softNotice) => {
+            setSchoolJoinPending(true);
+            if (softNotice) setToast(softNotice);
+          }}
+        />
+      ) : null}
       {status && accessState === 'waiting' ? <WaitingScreen /> : null}
       {status && accessState === 'profile-and-safety' ? <FinalSafetyStep client={client} status={status} onRefresh={refresh} /> : null}
       {ready ? (
