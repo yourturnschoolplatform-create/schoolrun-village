@@ -18,19 +18,20 @@ describe('account verification dual-signup helpers', () => {
     expect(normalizeAccountRole('admin')).toBe('ADMIN');
     expect(normalizeAccountRole('parent')).toBe('PARENT');
     expect(isAccountPending('PENDING_VERIFICATION')).toBe(true);
-    expect(accountGateBlocksFeatures('PENDING_VERIFICATION')).toBe(true);
+    expect(accountGateBlocksFeatures('PENDING_VERIFICATION')).toBe(false);
+    expect(accountGateBlocksFeatures('REJECTED')).toBe(true);
     expect(accountGateBlocksFeatures('VERIFIED')).toBe(false);
     expect(PENDING_VERIFICATION_NOTICE).toMatch(/under verification/i);
   });
 
-  it('blocks ready access while account verification is pending', () => {
+  it('allows ready hub access while account verification is still pending', () => {
     expect(onboardingAccessState({
       membershipStatus: 'verified',
       hasCurrentConsents: true,
       hasChild: true,
       hasSafetyDeclaration: true,
       accountStatus: 'PENDING_VERIFICATION',
-    })).toBe('waiting');
+    })).toBe('ready');
 
     expect(onboardingAccessState({
       membershipStatus: 'verified',

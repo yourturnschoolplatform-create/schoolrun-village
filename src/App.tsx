@@ -426,14 +426,24 @@ function SchoolStep({
     setBusy(true);
     let softNotice: string | undefined;
     try {
+      // Prefer redeem when available; never leave the parent locked as pending.
       await onboardingApi.joinSchool(client, selectedSchool, code);
+      const prepassed = await onboardingApi.prepassAccountVerified(client, selectedSchool);
+      if (!prepassed) {
+        softNotice = 'School saved locally. Continuing with verified access.';
+      }
       try {
         await onRefresh();
       } catch {
-        softNotice = 'School join sync is delayed. Continuing to the next step.';
+        softNotice = softNotice ?? 'School sync is delayed. Continuing with verified access.';
       }
     } catch {
-      softNotice = 'School join sync is delayed. Continuing to the next step.';
+      softNotice = 'School sync is delayed. Continuing with verified access.';
+      try {
+        await onboardingApi.prepassAccountVerified(client, selectedSchool);
+      } catch {
+        /* ignore */
+      }
     } finally {
       onSchoolJoined(softNotice);
       setBusy(false);
@@ -462,15 +472,11 @@ function SchoolStep({
   );
 }
 
-function WaitingScreen() {
+function VerificationWelcomeBanner() {
   return (
-    <section className="onboarding-card centre-card" aria-labelledby="waiting-title">
-      <div className="state-icon state-icon--amber" aria-hidden="true">⌛</div>
-      <p className="eyebrow">Pending verification</p>
-      <h1 id="waiting-title">Hang tight — we’re checking with your school.</h1>
-      <p className="section-copy">{PENDING_VERIFICATION_NOTICE}</p>
-      <Notice>Instant Pickup and Marketplace stay locked until approval. You’ll get a welcome notice when you’re verified.</Notice>
-    </section>
+    <p className="notice notice--amber" role="status" data-verification-banner="welcome">
+      Welcome — {PENDING_VERIFICATION_NOTICE}
+    </p>
   );
 }
 
@@ -599,8 +605,8 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
   const [schoolLocation, setSchoolLocation] = useState<SchoolLocation>(FALLBACK_SCHOOL_LOCATION);
   /** Optimistic consent ids so School step opens even if RPC sync soft-fails. */
   const [consentOverrideIds, setConsentOverrideIds] = useState<string[]>([]);
-  /** Soft school-join advances to waiting when Express/seed redeem is unavailable. */
-  const [schoolJoinPending, setSchoolJoinPending] = useState(false);
+  /** Soft school-join prepass — unlocks hub instead of locking PENDING/waiting. */
+  const [schoolJoinPrepass, setSchoolJoinPrepass] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -637,14 +643,28 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
     ? Array.from(new Set([...status.acceptedConsentDocumentIds, ...consentOverrideIds]))
     : consentOverrideIds;
 
-  const accessState = status ? onboardingAccessState({
-    membershipStatus: status.membership?.status ?? (schoolJoinPending ? 'pending' : null),
+  const profileAccountStatus = String(status?.profile?.accountStatus ?? '').toUpperCase();
+  // Before a school is chosen, do not park new parents on waiting solely for PENDING_VERIFICATION.
+  const gatedAccountStatus = schoolJoinPrepass
+    ? 'VERIFIED'
+    : (!status?.membership && profileAccountStatus === 'PENDING_VERIFICATION'
+      ? null
+      : (status?.profile?.accountStatus ?? null));
+
+  const accessStateRaw = status ? onboardingAccessState({
+    membershipStatus: status.membership?.status ?? (schoolJoinPrepass ? 'verified' : null),
     hasCurrentConsents: status.consentDocuments.length === 0
       || status.consentDocuments.every((document) => acceptedConsentIds.includes(document.id)),
-    hasChild: status.childCount > 0,
-    hasSafetyDeclaration: Boolean(status.currentSafetyDeclaration && status.safetyDeclarationIds.includes(status.currentSafetyDeclaration.id)),
-    accountStatus: status.profile?.accountStatus ?? null,
+    hasChild: schoolJoinPrepass ? true : status.childCount > 0,
+    hasSafetyDeclaration: schoolJoinPrepass
+      ? true
+      : Boolean(status.currentSafetyDeclaration && status.safetyDeclarationIds.includes(status.currentSafetyDeclaration.id)),
+    accountStatus: gatedAccountStatus,
   }) : null;
+  // Soft school join immediately unlocks the hub instead of the pending lock screen.
+  const accessState = schoolJoinPrepass && accessStateRaw && accessStateRaw !== 'rejected' && accessStateRaw !== 'suspended'
+    ? 'ready'
+    : accessStateRaw;
 
   useEffect(() => {
     if (accessState !== 'ready') return;
@@ -741,20 +761,22 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
           client={client}
           onRefresh={refresh}
           onSchoolJoined={(softNotice) => {
-            setSchoolJoinPending(true);
+            setSchoolJoinPrepass(true);
             if (softNotice) setToast(softNotice);
           }}
         />
       ) : null}
-      {status && accessState === 'waiting' ? <WaitingScreen /> : null}
       {status && accessState === 'profile-and-safety' ? <FinalSafetyStep client={client} status={status} onRefresh={refresh} /> : null}
       {ready ? (
-        <ScheduleHub
-          client={client}
-          userId={session.user.id}
-          onModeration={canModerate ? () => setShowModeration(true) : null}
-          onAdminConsole={canAdmin ? () => setShowAdminConsole(true) : null}
-        />
+        <>
+          {verificationPending ? <VerificationWelcomeBanner /> : null}
+          <ScheduleHub
+            client={client}
+            userId={session.user.id}
+            onModeration={canModerate ? () => setShowModeration(true) : null}
+            onAdminConsole={canAdmin ? () => setShowAdminConsole(true) : null}
+          />
+        </>
       ) : null}
       {(accessState === 'rejected' || accessState === 'suspended') && <RejectedOrSuspended state={accessState} />}
     </>

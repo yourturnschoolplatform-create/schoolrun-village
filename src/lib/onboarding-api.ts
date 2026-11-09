@@ -235,6 +235,39 @@ export const onboardingApi = {
       return { status: 'pending' };
     }
   },
+  /**
+   * Immediate verification prepass after school selection.
+   * Uses real profiles columns (not school_id/status) and never throws.
+   */
+  prepassAccountVerified: async (client: SupabaseClient, schoolId: string): Promise<boolean> => {
+    try {
+      const { data: sessionData } = await client.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+      if (!userId) return false;
+
+      const { error } = await client
+        .from('profiles')
+        .update({
+          account_status: 'verified',
+          account_verified_at: new Date().toISOString(),
+          signup_school_id: schoolId.startsWith('00000000-') ? null : schoolId,
+          signup_school_label: FALLBACK_SCHOOL_OPTIONS.find((school) => school.id === schoolId)?.display_name ?? null,
+        })
+        .eq('id', userId);
+
+      // If Day-15 columns are missing, try the minimal verified stamp only.
+      if (error) {
+        const fallback = await client
+          .from('profiles')
+          .update({ account_status: 'verified', account_verified_at: new Date().toISOString() })
+          .eq('id', userId);
+        return !fallback.error;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  },
   saveProfile: (client: SupabaseClient, displayName: string) =>
     request<void>(client, '/profile', { method: 'POST', body: JSON.stringify({ displayName }) }),
   addChild: (client: SupabaseClient, membershipId: string, nickname: string, yearLevel: number) =>

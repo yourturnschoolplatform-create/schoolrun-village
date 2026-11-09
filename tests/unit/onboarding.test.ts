@@ -12,13 +12,14 @@ describe('onboarding and schedule state transitions', () => {
     expect(ANALYTICS_EVENT_IDS).not.toContain('payment_created');
   });
 
-  it('keeps every pending state on the waiting screen', () => {
+  it('treats pending membership as soft — continues onboarding instead of a hard waiting lock', () => {
     expect(isPendingMembership('pending')).toBe(true);
     expect(isPendingMembership('pending_email')).toBe(true);
     expect(isPendingMembership('pending_invite')).toBe(true);
     expect(isPendingMembership('pending_moderator')).toBe(true);
     expect(isPendingMembership('verified')).toBe(false);
-    expect(onboardingAccessState({ membershipStatus: 'pending', hasCurrentConsents: true, hasChild: false, hasSafetyDeclaration: false })).toBe('waiting');
+    expect(onboardingAccessState({ membershipStatus: 'pending', hasCurrentConsents: true, hasChild: false, hasSafetyDeclaration: false })).toBe('profile-and-safety');
+    expect(onboardingAccessState({ membershipStatus: 'pending', hasCurrentConsents: true, hasChild: true, hasSafetyDeclaration: true })).toBe('ready');
   });
 
   it('requires approval, child profile and safety declaration before ready access', () => {

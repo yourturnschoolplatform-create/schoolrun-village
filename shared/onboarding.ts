@@ -28,9 +28,8 @@ export function onboardingAccessState(input: {
   const accountStatus = String(input.accountStatus ?? '').trim().toUpperCase();
   if (accountStatus === 'REJECTED' || input.membershipStatus === 'rejected') return 'rejected';
   if (input.membershipStatus === 'suspended') return 'suspended';
-  // Dual-signup gate: pending account verification blocks Instant Pickup / Marketplace.
-  if (accountStatus === 'PENDING_VERIFICATION') return 'waiting';
-  if (isPendingMembership(input.membershipStatus)) return 'waiting';
+  // Pending verification / pending membership no longer hard-lock the hub —
+  // show a soft welcome banner in UI instead of the waiting screen.
   if (!input.hasCurrentConsents) return 'consent';
   if (!input.membershipStatus) return 'school';
   if (!input.hasChild || !input.hasSafetyDeclaration) return 'profile-and-safety';

@@ -53,10 +53,10 @@ export function isAccountVerified(status: AccountVerificationStatus | null | und
   return status === 'VERIFIED';
 }
 
-/** Pending account verification blocks Instant Pickup / Marketplace ready access. */
+/** Only rejected accounts hard-block Instant Pickup / Marketplace. Pending shows a soft banner. */
 export function accountGateBlocksFeatures(status: AccountVerificationStatus | null | undefined): boolean {
-  return isAccountPending(status) || isAccountRejected(status);
+  return isAccountRejected(status);
 }
 
 export const PENDING_VERIFICATION_NOTICE =
-  'Your profile is under verification by your school admin.';
+  'Your profile is under verification by your school admin. Carpool and Marketplace stay open meanwhile.';
