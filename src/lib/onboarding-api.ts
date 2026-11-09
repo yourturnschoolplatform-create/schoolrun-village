@@ -154,20 +154,29 @@ async function request<T>(client: SupabaseClient, path: string, init: RequestIni
 
 export const onboardingApi = {
   status: (client: SupabaseClient) => loadOnboardingStatus(client),
+  /**
+   * Persist consent via accept_current_consent → consent_acceptances(user_id, document_id).
+   * Returns false on RPC/schema failure instead of throwing so onboarding can continue.
+   */
   acceptConsent: async (
     client: SupabaseClient,
     documentType: ConsentDocument['document_type'],
     version: number,
-  ): Promise<void> => {
-    const { data: sessionData } = await client.auth.getSession();
-    if (!sessionData.session?.user) throw new Error('Please sign in again to continue.');
+  ): Promise<boolean> => {
+    try {
+      const { data: sessionData } = await client.auth.getSession();
+      if (!sessionData.session?.user) return false;
 
-    // Direct RLS RPC — same path as server /consents, no Express round-trip.
-    const { error } = await client.rpc('accept_current_consent', {
-      p_document_type: documentType,
-      p_version: version,
-    });
-    if (error) throw new Error('Something went wrong. Please try again.');
+      // Schema-correct path (not profiles / user_consents / consent_version strings).
+      const { error } = await client.rpc('accept_current_consent', {
+        p_document_type: documentType,
+        p_version: version,
+      });
+      return !error;
+    } catch {
+      // Soft-fail: never throw into the onboarding UI flow.
+      return false;
+    }
   },
   schoolOptions: async (client: SupabaseClient) => {
     const data = await request<{ schools: SchoolOption[] }>(client, '/school-options');

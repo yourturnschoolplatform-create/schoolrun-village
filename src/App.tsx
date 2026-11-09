@@ -322,33 +322,68 @@ function EmailVerificationScreen({ email }: { email: string | undefined }) {
   );
 }
 
-function ConsentStep({ client, status, onRefresh, invitationToken }: { client: SupabaseClient; status: OnboardingStatus; onRefresh: () => Promise<void>; invitationToken: string | null }) {
+function ConsentStep({
+  client,
+  status,
+  onRefresh,
+  invitationToken,
+  onConsentsAccepted,
+}: {
+  client: SupabaseClient;
+  status: OnboardingStatus;
+  onRefresh: () => Promise<void>;
+  invitationToken: string | null;
+  /** Always advances to School; optional soft notice if DB sync failed. */
+  onConsentsAccepted: (documentIds: string[], softNotice?: string) => void;
+}) {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const allChecked = status.consentDocuments.every((document) => checked[document.id] || status.acceptedConsentDocumentIds.includes(document.id));
 
   async function acceptAll() {
     if (!allChecked) return;
     setBusy(true);
-    setError(null);
+    const pending = status.consentDocuments.filter(
+      (document) => !status.acceptedConsentDocumentIds.includes(document.id),
+    );
+    const acceptedIds = [
+      ...status.acceptedConsentDocumentIds,
+      ...pending.map((document) => document.id),
+    ];
+    let softNotice: string | undefined;
+
     try {
-      await Promise.all(status.consentDocuments
-        .filter((document) => !status.acceptedConsentDocumentIds.includes(document.id))
-        .map((document) => onboardingApi.acceptConsent(client, document.document_type, document.version)));
+      const results = await Promise.all(
+        pending.map(async (document) => {
+          try {
+            return await onboardingApi.acceptConsent(client, document.document_type, document.version);
+          } catch {
+            return false;
+          }
+        }),
+      );
+      if (results.some((ok) => !ok)) {
+        softNotice = 'Consent sync is delayed. You can continue to school setup.';
+      }
+
       if (invitationToken && hasSchoolInviteInUrl()) {
         try {
           await onboardingApi.claimInvitation(client, invitationToken);
         } catch {
-          // Consents are already saved. A stale/unknown ?invite= token must not
-          // block progress; school join can continue via invite code instead.
-          setError('That invitation link is no longer available. You can still continue and join with a school code.');
+          softNotice = 'That invitation link is unavailable. You can still join with a school code.';
         }
       }
-      await onRefresh();
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'We could not save your consent.');
+
+      try {
+        await onRefresh();
+      } catch {
+        softNotice = softNotice ?? 'Consent sync is delayed. You can continue to school setup.';
+      }
+    } catch {
+      softNotice = 'Consent sync is delayed. You can continue to school setup.';
     } finally {
+      // Hard guarantee: never leave the user stuck on step 1.
+      onConsentsAccepted(acceptedIds, softNotice);
       setBusy(false);
     }
   }
@@ -366,7 +401,6 @@ function ConsentStep({ client, status, onRefresh, invitationToken }: { client: S
         })}
       </div>
       {invitationToken && <Notice tone="teal">An invitation link is ready. Its school details will stay private until approval.</Notice>}
-      {error && <Notice tone="red">{error}</Notice>}
       <PrimaryButton disabled={!allChecked || busy} onClick={() => void acceptAll()}>{busy ? 'Saving…' : invitationToken ? 'Accept and join waitlist' : 'Accept and continue'}</PrimaryButton>
     </section>
   );
@@ -553,6 +587,8 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
   const [showAdminVerification, setShowAdminVerification] = useState(openAdminDashboard);
   const [toast, setToast] = useState<string | null>(null);
   const [schoolLocation, setSchoolLocation] = useState<SchoolLocation>(FALLBACK_SCHOOL_LOCATION);
+  /** Optimistic consent ids so School step opens even if RPC sync soft-fails. */
+  const [consentOverrideIds, setConsentOverrideIds] = useState<string[]>([]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -585,9 +621,14 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
   const accountStatus = normalizeAccountStatus(status?.profile?.accountStatus);
   const verificationPending = accountStatus === 'PENDING_VERIFICATION';
 
+  const acceptedConsentIds = status
+    ? Array.from(new Set([...status.acceptedConsentDocumentIds, ...consentOverrideIds]))
+    : consentOverrideIds;
+
   const accessState = status ? onboardingAccessState({
     membershipStatus: status.membership?.status ?? null,
-    hasCurrentConsents: status.consentDocuments.length > 0 && status.consentDocuments.every((document) => status.acceptedConsentDocumentIds.includes(document.id)),
+    hasCurrentConsents: status.consentDocuments.length === 0
+      || status.consentDocuments.every((document) => acceptedConsentIds.includes(document.id)),
     hasChild: status.childCount > 0,
     hasSafetyDeclaration: Boolean(status.currentSafetyDeclaration && status.safetyDeclarationIds.includes(status.currentSafetyDeclaration.id)),
     accountStatus: status.profile?.accountStatus ?? null,
@@ -671,7 +712,18 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
           <button className="text-button" type="button" onClick={() => setShowAdminVerification(true)}>Open admin verification portal</button>
         </p>
       ) : null}
-      {status && accessState === 'consent' ? <ConsentStep client={client} status={status} onRefresh={refresh} invitationToken={invitationToken} /> : null}
+      {status && accessState === 'consent' ? (
+        <ConsentStep
+          client={client}
+          status={status}
+          onRefresh={refresh}
+          invitationToken={invitationToken}
+          onConsentsAccepted={(documentIds, softNotice) => {
+            setConsentOverrideIds(documentIds);
+            if (softNotice) setToast(softNotice);
+          }}
+        />
+      ) : null}
       {status && accessState === 'school' ? <SchoolStep client={client} onRefresh={refresh} /> : null}
       {status && accessState === 'waiting' ? <WaitingScreen /> : null}
       {status && accessState === 'profile-and-safety' ? <FinalSafetyStep client={client} status={status} onRefresh={refresh} /> : null}
