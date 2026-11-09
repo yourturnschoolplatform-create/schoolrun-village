@@ -29,10 +29,15 @@ function hasAuthCallbackParams(): boolean {
 }
 
 function stripAuthCallbackParams() {
-  const url = new URL(window.location.href);
-  ['code', 'state', 'error', 'error_code', 'error_description'].forEach((key) => url.searchParams.delete(key));
-  url.hash = '';
-  const next = `${url.pathname}${url.search}`;
+  const queryParams = new URLSearchParams(window.location.search);
+  if (!queryParams.has('code') && !queryParams.has('error') && !queryParams.has('error_description') && !window.location.hash) {
+    return;
+  }
+  // Keep school invite links; drop OAuth code/state/hash from the address bar.
+  const invite = queryParams.get('invite');
+  const next = invite
+    ? `${window.location.pathname}?invite=${encodeURIComponent(invite)}`
+    : window.location.pathname;
   window.history.replaceState({}, document.title, next || '/');
 }
 
@@ -700,14 +705,22 @@ export default function App() {
 
     void handleCallback();
 
-    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: { subscription } } = client.auth.onAuthStateChange((event, nextSession) => {
+      if (cancelled) return;
       setSession(nextSession);
       setAuthReady(true);
-      if (nextSession && hasAuthCallbackParams()) stripAuthCallbackParams();
+
+      if (event === 'SIGNED_IN' && nextSession) {
+        if (hasAuthCallbackParams()) stripAuthCallbackParams();
+      }
+
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+      }
     });
     return () => {
       cancelled = true;
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [client]);
 
