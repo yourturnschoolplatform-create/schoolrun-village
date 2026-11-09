@@ -1,5 +1,6 @@
 import { Router, type Request } from 'express';
 import type { User } from '@supabase/supabase-js';
+import { handleOnboardingStatus } from './api/onboarding/status.js';
 import { databaseErrorCode } from './safe-error-log.js';
 import { createPublicSupabaseClient } from './supabase/public-client.js';
 import { createRequestScopedSupabaseClient, RequestAuthenticationError } from './supabase/request-client.js';
@@ -64,71 +65,8 @@ function rpcVoid(result: { error: { message: string } | null }): void {
 export function createOnboardingRouter(): Router {
   const router = Router();
 
-  router.get('/status', async (request, response, next) => {
-    try {
-      const context = await signedInContext(request);
-      const [profileResult, membershipResult, consentResult, documentResult, childResult, declarationResult, rolesResult] = await Promise.all([
-        context.client.from('profiles').select('display_name, account_status, account_role, signup_school_id, account_verified_at, signup_suburb, signup_school_label').eq('id', context.user.id).maybeSingle(),
-        context.client.from('school_memberships').select('id, school_id, status, approved_at').eq('user_id', context.user.id).order('created_at', { ascending: true }).limit(1).maybeSingle(),
-        context.client.from('consent_acceptances').select('document_id').eq('user_id', context.user.id),
-        context.client.from('consent_documents').select('id, document_type, version, title, summary').eq('is_active', true).order('document_type'),
-        context.client.from('child_profiles').select('id').eq('parent_id', context.user.id),
-        context.client.from('safety_declarations').select('id, declaration_version_id').eq('parent_id', context.user.id),
-        context.client.from('role_assignments').select('role, school_id').eq('user_id', context.user.id).is('revoked_at', null),
-      ]);
-
-      for (const result of [profileResult, membershipResult, consentResult, documentResult, childResult, declarationResult, rolesResult]) {
-        if (result.error) throw result.error;
-      }
-
-      if (context.user.email_confirmed_at) {
-        const eventResult = await context.client.rpc('record_email_verified_event');
-        if (eventResult.error) throw eventResult.error;
-      }
-
-      let currentSafetyDeclaration: { id: string; title: string; summary: string } | null = null;
-      if (membershipResult.data?.status === 'verified') {
-        const { data, error } = await context.client
-          .from('safety_declaration_versions')
-          .select('id, title, summary')
-          .eq('is_published', true)
-          .or(`school_id.is.null,school_id.eq.${membershipResult.data.school_id}`)
-          .order('school_id', { ascending: false, nullsFirst: false })
-          .order('published_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (error) throw error;
-        currentSafetyDeclaration = data;
-      }
-
-      response.setHeader('Cache-Control', 'no-store, max-age=0');
-      response.json({
-        emailVerified: Boolean(context.user.email_confirmed_at),
-        profile: profileResult.data ? {
-          displayName: profileResult.data.display_name,
-          accountStatus: String(profileResult.data.account_status ?? 'pending_verification').toUpperCase(),
-          accountRole: String(profileResult.data.account_role ?? 'parent').toUpperCase(),
-          schoolId: profileResult.data.signup_school_id ?? null,
-          verifiedAt: profileResult.data.account_verified_at ?? null,
-          suburb: profileResult.data.signup_suburb ?? null,
-          schoolLabel: profileResult.data.signup_school_label ?? null,
-        } : null,
-        membership: membershipResult.data ? {
-          id: membershipResult.data.id,
-          status: membershipResult.data.status,
-          approved_at: membershipResult.data.approved_at,
-        } : null,
-        consentDocuments: documentResult.data ?? [],
-        acceptedConsentDocumentIds: (consentResult.data ?? []).map((item) => item.document_id),
-        childCount: (childResult.data ?? []).length,
-        safetyDeclarationIds: (declarationResult.data ?? []).map((item) => item.declaration_version_id),
-        currentSafetyDeclaration,
-        roles: rolesResult.data ?? [],
-      });
-    } catch (error) {
-      next(error);
-    }
-  });
+  // all(): GET returns status; other methods get 405 from the handler (not a Vite/SPA 404).
+  router.all('/status', handleOnboardingStatus);
 
   router.get('/consent-documents', async (request, response, next) => {
     try {

@@ -21,8 +21,9 @@ export function bearerTokenFrom(request: Request): string {
  * visitor JWT, so all database access in the request remains subject to Supabase RLS.
  */
 export function createRequestScopedSupabaseClient(request: Request): SupabaseClient {
-  const { url, anonKey } = readPublicSupabaseConfig();
+  // Prefer 401 for missing bearer over 500 from missing server env during SPA boot probes.
   const accessToken = bearerTokenFrom(request);
+  const { url, anonKey } = readPublicSupabaseConfig();
 
   return createClient(url, anonKey, {
     auth: {
