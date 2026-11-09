@@ -99,10 +99,18 @@ export function ScheduleHub({
   const [householdOpen, setHouseholdOpen] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [timePreset, setTimePreset] = useState<'morning' | 'afternoon' | 'custom'>('morning');
+  const [pickupComposeOpen, setPickupComposeOpen] = useState(false);
+  const [pickupPresetIntent, setPickupPresetIntent] = useState<ScheduleIntent | null>(null);
   const fallbackStart = useMemo(() => schoolLocalDate(), []);
   const start = overview?.start ?? fallbackStart;
   const timezone = overview?.timezone ?? 'Australia/Melbourne';
   const registeredSuburb = (overview?.schoolSuburb ?? '').trim();
+
+  function openPickupCompose(intent: ScheduleIntent) {
+    setPickupPresetIntent(intent);
+    setPickupComposeOpen(true);
+    setView('today');
+  }
 
   function selectView(next: ViewMode) {
     setView(next);
@@ -133,7 +141,11 @@ export function ScheduleHub({
     } else if (focus === 'trust') {
       setCommunityPanel('trust');
     }
-    selectView(next);
+    if (focus === 'instant') {
+      openPickupCompose('need_help');
+    } else {
+      selectView(next);
+    }
     if (typeof window === 'undefined') return;
     window.requestAnimationFrame(() => {
       const target = focus === 'instant'
@@ -324,11 +336,39 @@ export function ScheduleHub({
         </button>
       )}
 
-      <div className="schedule-hero">
-        <p className="eyebrow">Your school-run rhythm</p>
-        <h1 id="schedule-title">Plan the next four weeks.</h1>
-        <p>Save a weekly “I can help” or “I need help” pattern. Holidays are automatically skipped. Reciprocal options appear in Matches.</p>
-      </div>
+      {view === 'today' ? (
+        <div className="schedule-hero schedule-hero--home">
+          <p className="eyebrow">{registeredSuburb ? `${registeredSuburb} VIC` : 'SchoolRun Village'}</p>
+          <h1 id="schedule-title">Need a pickup today, or can you help?</h1>
+          <p>One clear action — ask for help or offer a seat. Suburb only, phone-free.</p>
+          <div className="home-hero-actions" role="group" aria-label="Today actions">
+            <button
+              type="button"
+              className="home-hero-cta home-hero-cta--ask"
+              onClick={() => openPickupCompose('need_help')}
+            >
+              <span className="home-hero-cta__title">Ask for a ride</span>
+              <span className="home-hero-cta__sub">I need help</span>
+            </button>
+            <button
+              type="button"
+              className="home-hero-cta home-hero-cta--offer"
+              onClick={() => openPickupCompose('can_help')}
+            >
+              <span className="home-hero-cta__title">Offer a seat</span>
+              <span className="home-hero-cta__sub">I can help</span>
+            </button>
+          </div>
+        </div>
+      ) : view === 'calendar' ? (
+        <div className="schedule-hero">
+          <p className="eyebrow">Weekly pattern &amp; settings</p>
+          <h1 id="schedule-title">Plan the next four weeks.</h1>
+          <p>Save a weekly pattern here. Holidays are skipped automatically. Same-day posts stay on Home.</p>
+        </div>
+      ) : (
+        <h1 id="schedule-title" className="visually-hidden">SchoolRun Village</h1>
+      )}
 
       {view === 'messages' ? (
         <ChatHub
@@ -353,10 +393,10 @@ export function ScheduleHub({
         <>
           {message && <p className="notice notice--teal" role="status">{message}</p>}
           {!overview && !message && <p className="section-copy">Loading your protected schedule…</p>}
-          <section className="day-view" aria-labelledby="today-title">
+          <section className="day-view day-view--summary" aria-labelledby="today-title">
             <div>
               <p className="eyebrow">{displayDate(start, timezone)}</p>
-              <h2 id="today-title">Today’s school-run plan</h2>
+              <h2 id="today-title">Today’s schedule</h2>
             </div>
             {todayInstances.length ? (
               <ul className="instance-list">
@@ -375,7 +415,7 @@ export function ScheduleHub({
                 ))}
               </ul>
             ) : (
-              <p className="notice notice--teal">No active school-run listing is planned for today.</p>
+              <p className="section-copy">No active pickup listing for today. Use Ask or Offer above, or set a weekly pattern in Calendar.</p>
             )}
           </section>
           <InstantPickupBoard
@@ -383,7 +423,17 @@ export function ScheduleHub({
             userId={userId}
             defaultSuburb={registeredSuburb}
             onOpenChat={openChatRoom}
+            composeOpen={pickupComposeOpen}
+            onComposeOpenChange={setPickupComposeOpen}
+            presetIntent={pickupPresetIntent}
           />
+        </>
+      ) : null}
+
+      {view === 'calendar' ? (
+        <>
+          {message && <p className="notice notice--teal" role="status">{message}</p>}
+          {!overview && !message && <p className="section-copy">Loading your protected schedule…</p>}
           <div className="schedule-grid-layout">
             <form className="schedule-form schedule-form--friendly" onSubmit={submitPattern}>
               <div className="schedule-form__heading">
@@ -660,13 +710,6 @@ export function ScheduleHub({
               {onAdminConsole && <button className="text-button" type="button" onClick={onAdminConsole}>Open admin console</button>}
             </aside>
           </div>
-        </>
-      ) : null}
-
-      {view === 'calendar' ? (
-        <>
-          {message && <p className="notice notice--teal" role="status">{message}</p>}
-          {!overview && !message && <p className="section-copy">Loading your protected schedule…</p>}
           <section className="calendar-view" aria-labelledby="calendar-title">
             <div className="calendar-view__head">
               <div>

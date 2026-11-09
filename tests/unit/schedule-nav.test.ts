@@ -72,6 +72,11 @@ describe('Schedule dashboard navigation', () => {
     expect(hub).toContain('userId={userId}');
     expect(hub).toContain('defaultSuburb={registeredSuburb}');
     expect(hub).toContain('onOpenChat={openChatRoom}');
+    expect(hub).toContain('composeOpen={pickupComposeOpen}');
+    expect(hub).toContain('home-hero-cta');
+    expect(hub).toContain('Ask for a ride');
+    expect(hub).toContain('Offer a seat');
+    expect(hub).toContain("view === 'calendar'");
     expect(hub).toContain('📋 Copy');
     expect(hub).toContain("focus === 'deals'");
     expect(hub).toContain('hot-deals-title');
@@ -89,6 +94,8 @@ describe('Schedule dashboard navigation', () => {
     expect(css).toContain('.day-chip--active');
     expect(css).toContain('.status-tag--active');
     expect(css).toContain('household-code__trigger');
+    expect(css).toContain('.home-hero-cta');
+    expect(css).toContain('.instant-sheet');
 
     const community = await readFile(resolve('src/components/CommunityHub.tsx'), 'utf8');
     expect(community).toContain('<HotDealsBoard');
@@ -115,6 +122,9 @@ describe('Schedule dashboard navigation', () => {
     expect(board).toContain('note-chip');
     expect(board).toContain('suburb-autofill');
     expect(board).toContain('instant-compose__cta');
+    expect(board).toContain('instant-sheet');
+    expect(board).toContain('composeStep');
+    expect(board).toContain('Step {composeStep} of 3');
     expect(css).toContain('.instant-policy-badge');
     expect(css).toContain('.note-chip');
   });

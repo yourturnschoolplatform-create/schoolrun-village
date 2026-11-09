@@ -36,17 +36,24 @@ const NOTE_CHIPS = [
 
 /**
  * Same-school today/tomorrow instant help board. Australian English. Suburb only.
+ * Compose UI opens as a stepped bottom sheet when controlled by the home hero CTAs.
  */
 export function InstantPickupBoard({
   client,
   userId,
   defaultSuburb = '',
   onOpenChat,
+  composeOpen = false,
+  onComposeOpenChange,
+  presetIntent = null,
 }: {
   client: SupabaseClient;
   userId?: string;
   defaultSuburb?: string;
   onOpenChat: (room: ChatRoom) => void;
+  composeOpen?: boolean;
+  onComposeOpenChange?: (open: boolean) => void;
+  presetIntent?: ScheduleIntent | null;
 }) {
   const [items, setItems] = useState<InstantPickupRequest[]>([]);
   const [intent, setIntent] = useState<ScheduleIntent>('need_help');
@@ -60,6 +67,7 @@ export function InstantPickupBoard({
   const [toast, setToast] = useState<string | null>(null);
   const [matchRoom, setMatchRoom] = useState<ChatRoom | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [composeStep, setComposeStep] = useState<1 | 2 | 3>(1);
   const resolvedUserId = userId ?? '';
   const registeredSuburb = useMemo(() => {
     const fromProp = defaultSuburb.trim();
@@ -67,6 +75,16 @@ export function InstantPickupBoard({
     const fromBoard = items.find((item) => item.schoolSuburb?.trim())?.schoolSuburb?.trim();
     return fromBoard ?? '';
   }, [defaultSuburb, items]);
+
+  useEffect(() => {
+    if (!composeOpen) return;
+    if (presetIntent) {
+      setIntent(presetIntent);
+      setComposeStep(2);
+    } else {
+      setComposeStep(1);
+    }
+  }, [composeOpen, presetIntent]);
 
   const refresh = useCallback(async () => {
     try {
@@ -103,7 +121,7 @@ export function InstantPickupBoard({
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!areaLabel.trim() || busy) return;
+    if (composeStep !== 3 || !areaLabel.trim() || busy) return;
     setBusy(true);
     try {
       await instantPickupApi.create(client, {
@@ -114,12 +132,19 @@ export function InstantPickupBoard({
       });
       setNotes('');
       setMessage('Your instant request is on the school board.');
+      onComposeOpenChange?.(false);
+      setComposeStep(1);
       await refresh();
     } catch {
       setMessage('That request could not be posted. Use a suburb label and keep notes phone-free.');
     } finally {
       setBusy(false);
     }
+  }
+
+  function closeCompose() {
+    onComposeOpenChange?.(false);
+    setComposeStep(1);
   }
 
   async function cancel(id: string) {
@@ -190,12 +215,9 @@ export function InstantPickupBoard({
   return (
     <section className="feed-section instant-board" aria-labelledby="instant-board-title">
       <div className="feed-section__intro">
-        <p className="eyebrow">Same-day school run</p>
-        <h2 id="instant-board-title">Ask or offer help today.</h2>
-        <p className="section-copy">
-          Post a short need-help or can-help notice for your school. Suburb only — no phones or addresses.
-          Request Match opens a private chat. Final check-in starts 30 minutes before pickup.
-        </p>
+        <p className="eyebrow">School board</p>
+        <h2 id="instant-board-title">Live ask &amp; offer posts</h2>
+        <p className="section-copy">Suburb only — no phones or addresses. Request Match opens a private chat.</p>
       </div>
 
       <div className="instant-policy-badges" aria-label="Instant pickup policies">
@@ -257,115 +279,149 @@ export function InstantPickupBoard({
         </aside>
       )}
 
-      <form className="stack-form feed-compose instant-compose" onSubmit={(event) => void submit(event)}>
-        <div className="friendly-field" role="group" aria-label="Request type">
-          <span className="friendly-field__label">Request type</span>
-          <div className="segmented-toggle" role="radiogroup" aria-label="Request type">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={intent === 'need_help'}
-              className={intent === 'need_help' ? 'segmented-toggle__btn segmented-toggle__btn--navy' : 'segmented-toggle__btn'}
-              onClick={() => setIntent('need_help')}
-            >
-              🙋‍♂️ I need help
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={intent === 'can_help'}
-              className={intent === 'can_help' ? 'segmented-toggle__btn segmented-toggle__btn--coral' : 'segmented-toggle__btn'}
-              onClick={() => setIntent('can_help')}
-            >
-              🤝 I can help
-            </button>
-          </div>
-        </div>
-
-        <div className="friendly-field" role="group" aria-label="School run">
-          <span className="friendly-field__label">School run</span>
-          <div className="icon-tabs" role="radiogroup" aria-label="School run direction">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={direction === 'dropoff'}
-              className={direction === 'dropoff' ? 'icon-tab icon-tab--active' : 'icon-tab'}
-              onClick={() => setDirection('dropoff')}
-            >
-              <span aria-hidden="true">☀️</span>
-              Drop-off
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={direction === 'pickup'}
-              className={direction === 'pickup' ? 'icon-tab icon-tab--active' : 'icon-tab'}
-              onClick={() => setDirection('pickup')}
-            >
-              <span aria-hidden="true">🏫</span>
-              Pickup
-            </button>
-          </div>
-        </div>
-
-        <div className="friendly-field" role="group" aria-label="Suburb-level area label">
-          <span className="friendly-field__label">Suburb-level area label</span>
-          {!suburbEditing && areaLabel.trim() ? (
-            <div className="suburb-autofill">
-              <span className="suburb-autofill__value">📍 {areaLabel}{/\bVIC\b/i.test(areaLabel) ? '' : ' VIC'}</span>
-              <button type="button" className="text-button" onClick={() => setSuburbEditing(true)}>Edit</button>
+      {composeOpen ? (
+        <div className="instant-sheet-overlay" role="presentation" onClick={closeCompose}>
+          <aside
+            className="instant-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="instant-sheet-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="instant-sheet__handle" aria-hidden="true" />
+            <div className="instant-sheet__head">
+              <div>
+                <p className="eyebrow">Step {composeStep} of 3</p>
+                <h3 id="instant-sheet-title">
+                  {composeStep === 1 ? 'Do you need help today?' : composeStep === 2 ? 'Drop-off or pickup?' : 'Suburb & note'}
+                </h3>
+              </div>
+              <button type="button" className="text-button" onClick={closeCompose}>Close</button>
             </div>
-          ) : (
-            <>
-              <input
-                required
-                maxLength={64}
-                value={areaLabel}
-                onChange={(event) => setAreaLabel(event.target.value)}
-                placeholder={registeredSuburb || 'e.g. Docklands'}
-              />
-              {registeredSuburb ? (
-                <button
-                  type="button"
-                  className="text-button"
-                  onClick={() => {
-                    setAreaLabel(registeredSuburb);
-                    setSuburbEditing(false);
-                  }}
-                >
-                  Use registered suburb ({registeredSuburb})
-                </button>
+
+            <form className="stack-form feed-compose instant-compose" onSubmit={(event) => void submit(event)}>
+              {composeStep === 1 ? (
+                <div className="friendly-field" role="group" aria-label="Request type">
+                  <div className="segmented-toggle" role="radiogroup" aria-label="Request type">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={intent === 'need_help'}
+                      className={intent === 'need_help' ? 'segmented-toggle__btn segmented-toggle__btn--navy' : 'segmented-toggle__btn'}
+                      onClick={() => { setIntent('need_help'); setComposeStep(2); }}
+                    >
+                      🙋‍♂️ I need help
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={intent === 'can_help'}
+                      className={intent === 'can_help' ? 'segmented-toggle__btn segmented-toggle__btn--coral' : 'segmented-toggle__btn'}
+                      onClick={() => { setIntent('can_help'); setComposeStep(2); }}
+                    >
+                      🤝 I can help
+                    </button>
+                  </div>
+                </div>
               ) : null}
-            </>
-          )}
-        </div>
 
-        <div className="friendly-field" role="group" aria-label="Optional note">
-          <span className="friendly-field__label">Optional note</span>
-          <div className="note-chips" role="group" aria-label="Quick note presets">
-            {NOTE_CHIPS.map((chip) => (
-              <button
-                key={chip.id}
-                type="button"
-                className="note-chip"
-                onClick={() => appendNoteChip(chip.phrase)}
-              >
-                {chip.label}
-              </button>
-            ))}
-          </div>
-          <input
-            maxLength={500}
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder="Keep it brief and phone-free"
-          />
-        </div>
+              {composeStep === 2 ? (
+                <div className="friendly-field" role="group" aria-label="School run">
+                  <div className="icon-tabs" role="radiogroup" aria-label="School run direction">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={direction === 'dropoff'}
+                      className={direction === 'dropoff' ? 'icon-tab icon-tab--active' : 'icon-tab'}
+                      onClick={() => { setDirection('dropoff'); setComposeStep(3); }}
+                    >
+                      <span aria-hidden="true">☀️</span>
+                      Drop-off
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={direction === 'pickup'}
+                      className={direction === 'pickup' ? 'icon-tab icon-tab--active' : 'icon-tab'}
+                      onClick={() => { setDirection('pickup'); setComposeStep(3); }}
+                    >
+                      <span aria-hidden="true">🏫</span>
+                      Pickup
+                    </button>
+                  </div>
+                  <button type="button" className="text-button" onClick={() => setComposeStep(1)}>Back</button>
+                </div>
+              ) : null}
 
-        <button className="primary-button instant-compose__cta" type="submit" disabled={busy || !areaLabel.trim()}>
-          {busy ? 'Posting…' : 'Post to school board'}
-        </button>
-      </form>
+              {composeStep === 3 ? (
+                <>
+                  <div className="friendly-field" role="group" aria-label="Suburb-level area label">
+                    <span className="friendly-field__label">Suburb-level area label</span>
+                    {!suburbEditing && areaLabel.trim() ? (
+                      <div className="suburb-autofill">
+                        <span className="suburb-autofill__value">📍 {areaLabel}{/\bVIC\b/i.test(areaLabel) ? '' : ' VIC'}</span>
+                        <button type="button" className="text-button" onClick={() => setSuburbEditing(true)}>Edit</button>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          required
+                          maxLength={64}
+                          value={areaLabel}
+                          onChange={(event) => setAreaLabel(event.target.value)}
+                          placeholder={registeredSuburb || 'e.g. Docklands'}
+                        />
+                        {registeredSuburb ? (
+                          <button
+                            type="button"
+                            className="text-button"
+                            onClick={() => {
+                              setAreaLabel(registeredSuburb);
+                              setSuburbEditing(false);
+                            }}
+                          >
+                            Use registered suburb ({registeredSuburb})
+                          </button>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="friendly-field" role="group" aria-label="Optional note">
+                    <span className="friendly-field__label">Optional note</span>
+                    <div className="note-chips" role="group" aria-label="Quick note presets">
+                      {NOTE_CHIPS.map((chip) => (
+                        <button
+                          key={chip.id}
+                          type="button"
+                          className="note-chip"
+                          onClick={() => appendNoteChip(chip.phrase)}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      maxLength={500}
+                      value={notes}
+                      onChange={(event) => setNotes(event.target.value)}
+                      placeholder="Keep it brief and phone-free"
+                    />
+                  </div>
+
+                  <div className="instant-sheet__actions">
+                    <button type="button" className="text-button" onClick={() => setComposeStep(2)}>Back</button>
+                    <button className="primary-button instant-compose__cta" type="submit" disabled={busy || !areaLabel.trim()}>
+                      {busy ? 'Posting…' : 'Post to school board'}
+                    </button>
+                  </div>
+                </>
+              ) : null}
+            </form>
+          </aside>
+        </div>
+      ) : null}
+
       <ul className="feed-list">
         {items.length === 0 && (
           <li className="section-copy">No open instant requests for your school right now.</li>
