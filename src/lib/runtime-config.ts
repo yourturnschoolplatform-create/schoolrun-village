@@ -132,8 +132,8 @@ export function createBrowserSupabaseClient(config: BrowserRuntimeConfig): Supab
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
-      // PKCE: exchange OAuth ?code= safely in the browser (Google / Facebook).
+      // PKCE code is exchanged once on /auth/callback — avoid a second auto-detect race.
+      detectSessionInUrl: false,
       flowType: 'pkce',
     },
   });

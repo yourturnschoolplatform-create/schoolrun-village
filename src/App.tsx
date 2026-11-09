@@ -13,6 +13,7 @@ import { AdminModerationPanel } from './components/AdminModerationPanel';
 import { AdminSignupScreen } from './components/AdminSignupScreen';
 import { AdminVerificationDashboard } from './components/AdminVerificationDashboard';
 import { accountVerificationApi } from './lib/account-verification-api';
+import AuthCallback from './pages/auth/callback';
 
 type PillTone = 'teal' | 'slate' | 'amber' | 'red';
 
@@ -718,15 +719,13 @@ export default function App() {
     }
     let cancelled = false;
 
-    // Supabase detectSessionInUrl exchanges OAuth ?code= automatically and emits
-    // SIGNED_IN / INITIAL_SESSION — do not also call exchangeCodeForSession/getSession here.
+    // PKCE ?code= is exchanged on /auth/callback only (detectSessionInUrl is false).
     const { data: { subscription } } = client.auth.onAuthStateChange((event, nextSession) => {
       if (cancelled) return;
       setSession(nextSession);
       setAuthReady(true);
 
       if (event === 'SIGNED_IN' && nextSession) {
-        // Clear OAuth ?code= immediately so refresh cannot re-exchange the PKCE code.
         if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
           stripOAuthCodeFromUrl();
         }
@@ -761,6 +760,7 @@ export default function App() {
   const isAdminSignup = appPath === '/admin/signup';
   const isParentSignup = appPath === '/signup';
   const isAdminDashboard = appPath === '/admin/dashboard';
+  const isAuthCallback = appPath === '/auth/callback';
 
   // Prefer env/API client immediately; never hang forever on public-config.
   if (configLoading && !client) {
@@ -786,6 +786,22 @@ export default function App() {
             Check SUPABASE_URL / SUPABASE_ANON_KEY (or NEXT_PUBLIC_ / VITE_ aliases), then refresh.
           </p>
         </section>
+      </main>
+    );
+  }
+
+  if (client && isAuthCallback) {
+    return (
+      <main className="app-shell onboarding-shell">
+        <AppHeader appName={runtimeConfig.appName} signedIn={Boolean(session)} onSignOut={session ? signOut : undefined} />
+        <AuthCallback
+          client={client}
+          onResolved={(nextSession) => {
+            setSession(nextSession);
+            setAuthReady(true);
+          }}
+        />
+        <footer className="footer-note"><span>SchoolRun Village</span><span aria-hidden="true">•</span><span>Safe Rides, Share &amp; Save</span></footer>
       </main>
     );
   }
