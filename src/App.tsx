@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { resolveSchoolLocation, type SchoolLocation } from '../shared/au-location';
 import { onboardingAccessState } from '../shared/onboarding';
@@ -16,9 +16,7 @@ import { accountVerificationApi } from './lib/account-verification-api';
 
 type PillTone = 'teal' | 'slate' | 'amber' | 'red';
 
-/** Survives React Strict Mode remounts so OAuth/PKCE callback handling runs once. */
-let oauthCallbackHandled = false;
-
+/** True while Supabase OAuth/PKCE (or implicit) callback params are still in the URL. */
 function hasAuthCallbackParams(): boolean {
   const search = new URLSearchParams(window.location.search);
   if (search.has('code') || search.has('error') || search.has('error_description')) return true;
@@ -28,13 +26,17 @@ function hasAuthCallbackParams(): boolean {
   return hashParams.has('access_token') || hashParams.has('error') || hashParams.has('error_description');
 }
 
-function stripAuthCallbackParams() {
+/** School invite uses ?invite= — never confuse with OAuth ?code=. */
+function readSchoolInviteToken(): string | null {
+  if (hasAuthCallbackParams()) return null;
+  const invite = new URLSearchParams(window.location.search).get('invite')?.trim() ?? '';
+  return invite || null;
+}
+
+function stripOAuthCodeFromUrl() {
   const queryParams = new URLSearchParams(window.location.search);
-  if (!queryParams.has('code') && !queryParams.has('error') && !queryParams.has('error_description') && !window.location.hash) {
-    return;
-  }
-  // Keep school invite links; drop OAuth code/state/hash from the address bar.
-  const invite = queryParams.get('invite');
+  const invite = queryParams.get('invite')?.trim();
+  // Keep school invite; drop OAuth code/state/hash so refresh cannot re-process the callback.
   const next = invite
     ? `${window.location.pathname}?invite=${encodeURIComponent(invite)}`
     : window.location.pathname;
@@ -45,9 +47,9 @@ function stripAuthCallbackParams() {
 function navigateAfterSignIn() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
   if (path === '/admin/dashboard') return;
-  if (path !== '/signup' && path !== '/admin/signup' && !hasAuthCallbackParams()) return;
+  if (path !== '/signup' && path !== '/admin/signup') return;
 
-  const invite = new URLSearchParams(window.location.search).get('invite');
+  const invite = new URLSearchParams(window.location.search).get('invite')?.trim();
   const next = invite ? `/?invite=${encodeURIComponent(invite)}` : '/';
   window.history.replaceState({}, document.title, next);
 }
@@ -669,8 +671,8 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const [invitationState, setInvitationState] = useState<'idle' | 'opened' | 'unavailable'>('idle');
   const client = useMemo(() => createBrowserSupabaseClient(runtimeConfig), [runtimeConfig]);
-  const invitationToken = useMemo(() => new URLSearchParams(window.location.search).get('invite'), []);
-  const isProcessingAuth = useRef(false);
+  // Capture ?invite= once at boot only when this is not an OAuth callback (?code=).
+  const invitationToken = useMemo(() => readSchoolInviteToken(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -694,35 +696,17 @@ export default function App() {
     }
     let cancelled = false;
 
-    const handleCallback = async () => {
-      if (isProcessingAuth.current) return;
-      isProcessingAuth.current = true;
-
-      const fromOAuth = hasAuthCallbackParams();
-      if (fromOAuth && !oauthCallbackHandled) oauthCallbackHandled = true;
-
-      try {
-        const { data } = await client.auth.getSession();
-        if (cancelled) return;
-        setSession(data.session);
-        if (fromOAuth && data.session) stripAuthCallbackParams();
-      } catch {
-        if (!cancelled) setSession(null);
-      } finally {
-        if (!cancelled) setAuthReady(true);
-        isProcessingAuth.current = false;
-      }
-    };
-
-    void handleCallback();
-
+    // Supabase detectSessionInUrl exchanges OAuth ?code= automatically and emits
+    // SIGNED_IN / INITIAL_SESSION — do not also call exchangeCodeForSession/getSession here.
     const { data: { subscription } } = client.auth.onAuthStateChange((event, nextSession) => {
       if (cancelled) return;
       setSession(nextSession);
       setAuthReady(true);
 
       if (event === 'SIGNED_IN' && nextSession) {
-        if (hasAuthCallbackParams()) stripAuthCallbackParams();
+        if (window.location.search.includes('code=')) {
+          stripOAuthCodeFromUrl();
+        }
         navigateAfterSignIn();
       }
 
@@ -730,6 +714,7 @@ export default function App() {
         setSession(null);
       }
     });
+
     return () => {
       cancelled = true;
       subscription.unsubscribe();
@@ -737,8 +722,11 @@ export default function App() {
   }, [client]);
 
   useEffect(() => {
+    // Never open a school invitation while an OAuth/PKCE callback is in the URL.
+    // (No verifyOtp(type:'invite') in this app — school invites use /api/onboarding/invitations/open.)
     if (!invitationToken) return;
-    // Re-open after sign-in: open_school_invitation is authenticated-EXECUTE only.
+    if (hasAuthCallbackParams() || window.location.search.includes('code=')) return;
+
     void openInvitationLink(invitationToken, session?.access_token).then((result) => setInvitationState(result));
   }, [invitationToken, session?.access_token]);
 
