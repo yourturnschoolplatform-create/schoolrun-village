@@ -475,7 +475,8 @@ function SchoolStep({
       <p className="eyebrow">Step 2 of 3</p>
       <h1 id="school-title">Choose your school.</h1>
       <p className="section-copy">
-        Pick your suburb and school. You join immediately — no invite code or approval queue.
+        We can detect nearby schools from your browser location (optional, never stored),
+        or you can pick a suburb and school manually. You join immediately — no invite code.
       </p>
       <form className="stack-form" onSubmit={submit}>
         <LocationBasedSchoolSelect
