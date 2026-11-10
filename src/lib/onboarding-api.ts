@@ -282,10 +282,16 @@ export const onboardingApi = {
   /** Immediate verified join for location-based school pick (no invite code / queue). */
   joinSchoolVerified: async (client: SupabaseClient, schoolId: string): Promise<{ status: string; membershipId?: string }> => {
     try {
-      const { data, error } = await client.rpc('join_school_self_verified', { p_school_id: schoolId });
-      if (!error && data) return { status: 'verified', membershipId: String(data) };
-    } catch {
-      /* soft-fail below */
+      const { data, error } = await client.rpc('join_school_self_verified', {
+        p_school_id: schoolId,
+      });
+      if (error) {
+        console.error('join_school_self_verified', error);
+      } else if (data) {
+        return { status: 'verified', membershipId: String(data) };
+      }
+    } catch (error) {
+      console.error('join_school_self_verified', error);
     }
     // Soft-fail when RPC/migration is unavailable — hub prepass still unlocks.
     return { status: 'verified' };
