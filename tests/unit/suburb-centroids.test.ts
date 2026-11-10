@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   haversineKm,
+  NEARBY_SUBURB_RADIUS_KM,
+  rankSuburbsByDistance,
   sortSchoolsByDistance,
   suburbsByNearestSchool,
 } from '../../shared/suburb-centroids';
@@ -17,7 +19,7 @@ describe('suburb centroids (browser-only distance helpers)', () => {
       melbourne.lat,
       melbourne.lng,
     );
-    expect(ranked[0].suburb).toMatch(/Harbourview|Docklands/);
+    expect(ranked[0].suburb).toMatch(/Harbourview|Docklands|Melbourne/);
     expect(ranked.at(-1)?.suburb).toBe('Chatswood');
     expect(ranked[0].distanceKm).not.toBeNull();
     expect(ranked[0].distanceKm!).toBeLessThan(ranked.at(-1)!.distanceKm!);
@@ -39,5 +41,22 @@ describe('suburb centroids (browser-only distance helpers)', () => {
     const km = haversineKm(-37.8136, 144.9631, -37.8149, 144.9480);
     expect(km).toBeGreaterThan(0);
     expect(km).toBeLessThan(3);
+  });
+
+  it(`flags Docklands/Carlton/Southbank within ${NEARBY_SUBURB_RADIUS_KM} km from Docklands`, () => {
+    const docklands = { lat: -37.8149, lng: 144.9480 };
+    const ranked = rankSuburbsByDistance(
+      ['Chatswood', 'Docklands', 'Carlton', 'Southbank', 'Melbourne', 'Harbourview'],
+      docklands.lat,
+      docklands.lng,
+    );
+    const nearbyNames = ranked.filter((entry) => entry.nearby).map((entry) => entry.suburb);
+    expect(nearbyNames[0]).toBe('Docklands');
+    expect(nearbyNames).toEqual(
+      expect.arrayContaining(['Docklands', 'Carlton', 'Southbank', 'Melbourne', 'Harbourview']),
+    );
+    expect(nearbyNames).not.toContain('Chatswood');
+    expect(ranked.at(-1)?.suburb).toBe('Chatswood');
+    expect(ranked.at(-1)?.nearby).toBe(false);
   });
 });

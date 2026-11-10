@@ -626,6 +626,15 @@ input::placeholder { color: #99a6a2; }
   font-size: .8rem;
   line-height: 1.45;
 }
+.location-school-select[data-location-school-select='detecting'] .field-help {
+  color: #C2410C;
+}
+.location-school-select[data-location-school-select='ready'] .field-help {
+  color: #166534;
+}
+.location-school-select select:disabled {
+  opacity: .7;
+}
 .instant-sheet-overlay {
   position: fixed;
   inset: 0;

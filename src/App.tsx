@@ -578,7 +578,7 @@ function SchoolStep({
       <p className="eyebrow">Step 2 of 3</p>
       <h1 id="school-title">Choose your school.</h1>
       <p className="section-copy">
-        Pick a suburb and school, or use your current location to sort nearby schools.
+        We detect your location to prioritise nearby suburbs within 10 km, then filter schools for the suburb you pick.
         Location is optional and never stored. You join immediately — no invite code.
       </p>
       <form className="stack-form" onSubmit={submit}>

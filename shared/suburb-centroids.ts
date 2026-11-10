@@ -9,11 +9,24 @@ export type SuburbCentroid = {
   lng: number;
 };
 
+/** Default radius for “nearby” suburb prioritisation during onboarding. */
+export const NEARBY_SUBURB_RADIUS_KM = 10;
+
 /** Sample + common VIC/NSW suburb hints used during onboarding geolocation. */
 export const AU_SUBURB_CENTROIDS: readonly SuburbCentroid[] = [
   { suburb: 'Harbourview', lat: -37.8136, lng: 144.9631 },
   { suburb: 'Docklands', lat: -37.8149, lng: 144.9480 },
+  { suburb: 'Melbourne', lat: -37.8136, lng: 144.9631 },
+  { suburb: 'Southbank', lat: -37.8230, lng: 144.9640 },
   { suburb: 'Carlton', lat: -37.8001, lng: 144.9671 },
+  { suburb: 'Fitzroy', lat: -37.7985, lng: 144.9784 },
+  { suburb: 'Richmond', lat: -37.8190, lng: 145.0020 },
+  { suburb: 'South Yarra', lat: -37.8385, lng: 144.9920 },
+  { suburb: 'Port Melbourne', lat: -37.8420, lng: 144.9400 },
+  { suburb: 'West Melbourne', lat: -37.8090, lng: 144.9500 },
+  { suburb: 'East Melbourne', lat: -37.8130, lng: 144.9840 },
+  { suburb: 'North Melbourne', lat: -37.7990, lng: 144.9460 },
+  { suburb: 'Parkville', lat: -37.7850, lng: 144.9510 },
   { suburb: 'Rivergum', lat: -37.8400, lng: 145.0200 },
   { suburb: 'Chatswood', lat: -33.7969, lng: 151.1832 },
   { suburb: 'Local suburb', lat: -37.8136, lng: 144.9631 },
@@ -109,4 +122,48 @@ export function suburbsByNearestSchool(
   return Array.from(best.entries())
     .sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))
     .map(([suburb]) => suburb);
+}
+
+export type RankedSuburb = {
+  suburb: string;
+  distanceKm: number | null;
+  nearby: boolean;
+};
+
+/**
+ * Rank unique school suburbs by centroid distance from the user.
+ * Nearby suburbs (within radiusKm) come first; others follow alphabetically.
+ * Coordinates are browser-only — never stored.
+ */
+export function rankSuburbsByDistance(
+  suburbs: string[],
+  lat: number,
+  lng: number,
+  radiusKm: number = NEARBY_SUBURB_RADIUS_KM,
+  catalogue: readonly SuburbCentroid[] = AU_SUBURB_CENTROIDS,
+): RankedSuburb[] {
+  const unique = Array.from(
+    new Set(suburbs.map((suburb) => suburb.trim()).filter(Boolean)),
+  );
+
+  const ranked: RankedSuburb[] = unique.map((suburb) => {
+    const distanceKm = distanceKmToSuburb(lat, lng, suburb, catalogue);
+    return {
+      suburb,
+      distanceKm,
+      nearby: distanceKm != null && distanceKm <= radiusKm,
+    };
+  });
+
+  ranked.sort((a, b) => {
+    if (a.nearby !== b.nearby) return a.nearby ? -1 : 1;
+    if (a.nearby && b.nearby) {
+      const da = a.distanceKm ?? Number.POSITIVE_INFINITY;
+      const db = b.distanceKm ?? Number.POSITIVE_INFINITY;
+      return da - db || a.suburb.localeCompare(b.suburb);
+    }
+    return a.suburb.localeCompare(b.suburb);
+  });
+
+  return ranked;
 }
