@@ -51,18 +51,6 @@ type InstantPickupRow = {
   created_at: string;
 };
 
-function isMissingRpc(error: { code?: string; message?: string; status?: number } | null): boolean {
-  if (!error) return false;
-  const message = (error.message ?? '').toLowerCase();
-  return (
-    error.code === 'PGRST202'
-    || error.code === '42883'
-    || error.status === 404
-    || message.includes('could not find the function')
-    || message.includes('does not exist')
-  );
-}
-
 async function rpc<T>(client: SupabaseClient, name: string, args: Record<string, unknown> = {}): Promise<T> {
   const { data, error } = await client.rpc(name, args);
   if (error) throw Object.assign(new Error('That instant pickup action is not available right now.'), { cause: error });
@@ -114,90 +102,36 @@ async function resolveCallerSchoolId(client: SupabaseClient, userId: string): Pr
     return membership.data.school_id as string;
   }
 
-  const profile = await client
-    .from('profiles')
-    .select('signup_school_id')
-    .eq('id', userId)
-    .maybeSingle();
-  if (!profile.error && profile.data?.signup_school_id) {
-    return profile.data.signup_school_id as string;
-  }
-
+  // Avoid profiles.signup_school_id (Day-15) — missing cols cause console 400s.
+  // School comes from school_memberships only (id, school_id, status live there).
   return null;
 }
 
-async function createViaTable(
-  client: SupabaseClient,
-  userId: string,
-  input: {
-    intent: ScheduleIntent;
-    direction: SchoolRunDirection;
-    areaLabel: string;
-    targetDate?: string | null;
-    notes?: string | null;
-  },
-): Promise<InstantPickupRequest> {
-  const schoolId = await resolveCallerSchoolId(client, userId);
-  if (!schoolId) {
-    throw new Error('Join a school before posting an instant pickup request.');
-  }
-
-  const payload: Record<string, unknown> = {
-    school_id: schoolId,
-    requester_id: userId,
-    intent: input.intent,
-    direction: input.direction,
-    area_label: input.areaLabel.trim(),
-    notes: input.notes?.trim() || null,
-    status: 'open',
-  };
-  if (input.targetDate) payload.target_date = input.targetDate;
-
-  const { data, error } = await client
-    .from('instant_pickup_requests')
-    .insert(payload)
-    .select(
-      'id, school_id, requester_id, matched_user_id, intent, direction, target_date, area_label, notes, status, check_in_status, final_check_at, chat_room_id, created_at',
-    )
-    .single();
-
-  if (error || !data) {
-    throw new Error('That request could not be posted. Use a suburb label and keep notes phone-free.');
-  }
-
-  return mapRow(data as InstantPickupRow, userId);
-}
-
-async function listViaTable(client: SupabaseClient, userId: string, includeClosed: boolean): Promise<InstantPickupRequest[]> {
-  let query = client
-    .from('instant_pickup_requests')
-    .select(
-      'id, school_id, requester_id, matched_user_id, intent, direction, target_date, area_label, notes, status, check_in_status, final_check_at, chat_room_id, created_at',
-    )
-    .order('created_at', { ascending: false })
-    .limit(50);
-
-  if (!includeClosed) {
-    query = query.or(`status.eq.open,requester_id.eq.${userId}`);
-  }
-
-  const { data, error } = await query;
-  if (error) throw new Error('That instant pickup action is not available right now.');
-  return (data as InstantPickupRow[] | null ?? []).map((row) => mapRow(row, userId));
-}
-
 export const instantPickupApi = {
+  /**
+   * Board list — direct table read (no list RPC).
+   * Uses Day-11 columns: intent / direction / area_label / status open|matched|…
+   */
   list: async (client: SupabaseClient, includeClosed = false) => {
     const userId = await requireSessionUserId(client);
-    const { data, error } = await client.rpc('list_instant_pickup_requests', {
-      p_include_closed: includeClosed,
-    });
-    if (!error && data) return data as InstantPickupRequest[];
-    if (!isMissingRpc(error)) {
-      // Membership/permission misses still try the table path for soft-pass hubs.
+    let query = client
+      .from('instant_pickup_requests')
+      .select(
+        'id, school_id, requester_id, matched_user_id, intent, direction, target_date, area_label, notes, status, check_in_status, final_check_at, chat_room_id, created_at',
+      )
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (!includeClosed) {
+      query = query.or(`status.eq.open,requester_id.eq.${userId}`);
     }
-    return listViaTable(client, userId, includeClosed);
+
+    const { data, error } = await query;
+    if (error) throw new Error('That instant pickup action is not available right now.');
+    return (data as InstantPickupRow[] | null ?? []).map((row) => mapRow(row, userId));
   },
+
+  /** Post to school board — direct table insert only (never via create RPC). */
   create: async (
     client: SupabaseClient,
     input: {
@@ -209,16 +143,38 @@ export const instantPickupApi = {
     },
   ) => {
     const userId = await requireSessionUserId(client);
-    const { data, error } = await client.rpc('create_instant_pickup_request', {
-      p_intent: input.intent,
-      p_direction: input.direction,
-      p_area_label: input.areaLabel,
-      p_target_date: input.targetDate ?? null,
-      p_notes: input.notes ?? null,
-    });
-    if (!error && data) return data as InstantPickupRequest;
-    return createViaTable(client, userId, input);
+    const schoolId = await resolveCallerSchoolId(client, userId);
+    if (!schoolId) {
+      throw new Error('Join a school before posting an instant pickup request.');
+    }
+
+    const payload: Record<string, unknown> = {
+      school_id: schoolId,
+      requester_id: userId,
+      intent: input.intent,
+      direction: input.direction,
+      area_label: input.areaLabel.trim(),
+      notes: input.notes?.trim() || null,
+      status: 'open',
+    };
+    if (input.targetDate) payload.target_date = input.targetDate;
+
+    const { data, error } = await client
+      .from('instant_pickup_requests')
+      .insert(payload)
+      .select(
+        'id, school_id, requester_id, matched_user_id, intent, direction, target_date, area_label, notes, status, check_in_status, final_check_at, chat_room_id, created_at',
+      )
+      .single();
+
+    if (error || !data) {
+      console.error('Insert error:', error?.message ?? 'no row returned');
+      throw new Error('That request could not be posted. Use a suburb label and keep notes phone-free.');
+    }
+
+    return mapRow(data as InstantPickupRow, userId);
   },
+
   cancel: (client: SupabaseClient, requestId: string) =>
     rpc<InstantPickupRequest>(client, 'cancel_instant_pickup_request', {
       p_request_id: requestId,

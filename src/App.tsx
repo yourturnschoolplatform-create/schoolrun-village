@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNo
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { resolveSchoolLocation, type SchoolLocation } from '../shared/au-location';
 import { onboardingAccessState } from '../shared/onboarding';
-import { FALLBACK_SCHOOL_OPTIONS, onboardingApi, openInvitationLink, type OnboardingStatus, type PendingMembership } from './lib/onboarding-api';
+import { FALLBACK_SCHOOL_OPTIONS, onboardingApi, openInvitationLink, type OnboardingStatus, type PendingMembership, type SchoolOption } from './lib/onboarding-api';
 import { scheduleApi } from './lib/schedule-api';
 import { createBrowserSupabaseClient, fetchRuntimeConfig, fallbackRuntimeConfig, type BrowserRuntimeConfig } from './lib/runtime-config';
 import { PENDING_VERIFICATION_NOTICE, normalizeAccountStatus } from '../shared/account-verification';
+import { LocationBasedSchoolSelect } from './components/LocationBasedSchoolSelect';
 import { FALLBACK_SCHOOL_LOCATION, LocationChip } from './components/LocationChip';
 import { MyTrustChip } from './components/MyTrustChip';
 import { ScheduleHub } from './components/ScheduleHub';
@@ -417,10 +418,21 @@ function SchoolStep({
   onRefresh: () => Promise<void>;
   onSchoolJoined: (softNotice?: string) => void;
 }) {
-  const schools = FALLBACK_SCHOOL_OPTIONS;
+  const [schools, setSchools] = useState<SchoolOption[]>(FALLBACK_SCHOOL_OPTIONS);
   const [selectedSchool, setSelectedSchool] = useState(FALLBACK_SCHOOL_OPTIONS[0]?.id ?? '');
-  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void onboardingApi.schoolOptions(client).then((options) => {
+      if (cancelled || !options.length) return;
+      setSchools(options);
+      setSelectedSchool((current) => (
+        options.some((school) => school.id === current) ? current : options[0].id
+      ));
+    });
+    return () => { cancelled = true; };
+  }, [client]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -428,12 +440,11 @@ function SchoolStep({
     setBusy(true);
     let softNotice: string | undefined;
     try {
-      // Prefer redeem when available; never leave the parent locked as pending.
-      await onboardingApi.joinSchool(client, selectedSchool, code);
-      const prepassed = await onboardingApi.prepassAccountVerified(client, selectedSchool);
-      if (!prepassed) {
-        softNotice = 'School saved locally. Continuing with verified access.';
+      const joined = await onboardingApi.joinSchoolVerified(client, selectedSchool);
+      if (joined.status !== 'verified') {
+        softNotice = 'School saved. Continuing with verified access.';
       }
+      await onboardingApi.prepassAccountVerified(client, selectedSchool);
       try {
         await onRefresh();
       } catch {
@@ -452,24 +463,31 @@ function SchoolStep({
     }
   }
 
+  const selectOptions = schools.map((school) => ({
+    id: school.id,
+    displayName: school.display_name,
+    suburb: school.suburb,
+  }));
+
   return (
     <section className="onboarding-card" aria-labelledby="school-title">
       <Progress current={2} />
       <p className="eyebrow">Step 2 of 3</p>
-      <h1 id="school-title">Choose your sample school.</h1>
-      <p className="section-copy">Each code has an expiry and a use limit. Five unsuccessful attempts are allowed in 15 minutes.</p>
+      <h1 id="school-title">Choose your school.</h1>
+      <p className="section-copy">
+        Pick your suburb and school. You join immediately — no invite code or approval queue.
+      </p>
       <form className="stack-form" onSubmit={submit}>
-        <label>School
-          <select required value={selectedSchool} onChange={(event) => setSelectedSchool(event.target.value)}>
-            {schools.map((school) => (
-              <option key={school.id} value={school.id}>{school.display_name}</option>
-            ))}
-          </select>
-        </label>
-        <label>School invite code<input required minLength={6} maxLength={128} value={code} onChange={(event) => setCode(event.target.value)} placeholder="Enter your code" autoCapitalize="characters" /></label>
-        <PrimaryButton type="submit" disabled={busy || !selectedSchool}>{busy ? 'Checking…' : 'Join approval queue'}</PrimaryButton>
+        <LocationBasedSchoolSelect
+          schools={selectOptions}
+          value={selectedSchool}
+          onChange={setSelectedSchool}
+          disabled={busy}
+        />
+        <PrimaryButton type="submit" disabled={busy || !selectedSchool}>
+          {busy ? 'Joining…' : 'Continue to SchoolRun Village'}
+        </PrimaryButton>
       </form>
-      <p className="demo-hint"><strong>Demo only:</strong> Harbourview uses <code>HARBOUR-2026</code>; Rivergum uses <code>RIVERGUM-2026</code>. These are not real school codes.</p>
     </section>
   );
 }
@@ -494,13 +512,26 @@ function FinalSafetyStep({ client, status, onRefresh }: { client: SupabaseClient
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!status.membership || !declaration || !allChecks || (status.childCount === 0 && (!nickname || yearLevel === ''))) return;
+    if (!declaration || !allChecks || (status.childCount === 0 && (!nickname || yearLevel === ''))) return;
     setBusy(true);
     setError(null);
     try {
+      // Direct Supabase RPCs — never /api/onboarding/profile (404 on static hosts).
       await onboardingApi.saveProfile(client, displayName);
-      if (status.childCount === 0) await onboardingApi.addChild(client, status.membership.id, nickname, Number(yearLevel));
-      await onboardingApi.signSafetyDeclaration(client, status.membership.id, declaration.id);
+
+      let membershipId = status.membership?.id ?? null;
+      if (!membershipId && status.profile?.schoolId) {
+        const joined = await onboardingApi.joinSchoolVerified(client, status.profile.schoolId);
+        membershipId = joined.membershipId ?? null;
+      }
+
+      if (membershipId && status.childCount === 0) {
+        await onboardingApi.addChild(client, membershipId, nickname, Number(yearLevel));
+      }
+      if (membershipId) {
+        await onboardingApi.signSafetyDeclaration(client, membershipId, declaration.id);
+      }
+
       await onRefresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'We could not save that declaration.');

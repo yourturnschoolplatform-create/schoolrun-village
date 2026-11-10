@@ -3,16 +3,17 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('Day 11/12 instant pickup board boundary', () => {
-  it('keeps writes on RPCs, uses suburb labels, and enables realtime without money fields', async () => {
+  it('posts via direct table insert, uses suburb labels, and enables realtime without money fields', async () => {
     const api = await readFile(resolve('src/lib/instant-pickup-api.ts'), 'utf8');
     const sql = await readFile(resolve('db/migrations/0055_day11_instant_pickup_requests.sql'), 'utf8');
     const day12 = await readFile(resolve('db/migrations/0056_day12_live_matching_and_reminders.sql'), 'utf8');
-    expect(api).toContain("client.rpc('list_instant_pickup_requests'");
-    expect(api).toContain("client.rpc('create_instant_pickup_request'");
+    expect(api).not.toMatch(/\.rpc\(\s*['"]create_instant_pickup_request['"]/);
+    expect(api).not.toMatch(/\.rpc\(\s*['"]list_instant_pickup_requests['"]/);
     expect(api).toContain("rpc<InstantPickupAcceptResult>(client, 'accept_instant_pickup_request'");
     expect(api).toContain("rpc<InstantPickupRequest>(client, 'check_in_instant_pickup'");
     expect(api).toContain("table: 'instant_pickup_requests'");
     expect(api).toContain(".from('instant_pickup_requests')");
+    expect(api).toContain('.insert(payload)');
     expect(api).toContain('requester_id');
     expect(api).toContain('area_label');
     expect(sql).toMatch(/create table public\.instant_pickup_requests/i);

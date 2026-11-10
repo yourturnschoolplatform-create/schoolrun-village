@@ -1,6 +1,33 @@
+import { readFileSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { Client } from 'pg';
+
+/** Load KEY=VALUE pairs from .env into process.env when missing (never logs values). */
+function loadDotEnvIfPresent(): void {
+  try {
+    const raw = readFileSync(resolve('.env'), 'utf8');
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq <= 0) continue;
+      const key = trimmed.slice(0, eq).trim();
+      let value = trimmed.slice(eq + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"'))
+        || (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      if (process.env[key] === undefined) process.env[key] = value;
+    }
+  } catch {
+    // .env is optional when the shell already exports the migration URL.
+  }
+}
+
+loadDotEnvIfPresent();
 
 const target = process.argv.find((argument) => argument.startsWith('--target='))?.slice('--target='.length) ?? 'development';
 const environmentVariableByTarget: Record<string, string> = {

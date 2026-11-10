@@ -244,6 +244,13 @@
       "schoolScope": "caller only"
     },
     {
+      "name": "join_school_self_verified",
+      "reason": "location-based school pick joins caller as verified",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "selected active school",
+      "searchPath": "pg_catalog"
+    },
+    {
       "name": "propose_reciprocal_swap",
       "reason": "propose reciprocal swap",
       "callerDerivation": "auth.uid()",

@@ -26,13 +26,8 @@ describe('onboardingApi.status (direct Supabase)', () => {
       if (table === 'profiles') {
         return chain({
           data: {
+            id: 'user-1',
             display_name: 'Alex',
-            account_status: 'pending_verification',
-            account_role: 'parent',
-            signup_school_id: null,
-            account_verified_at: null,
-            signup_suburb: 'Harbourview',
-            signup_school_label: null,
           },
           error: null,
         });
@@ -71,7 +66,7 @@ describe('onboardingApi.status (direct Supabase)', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(status.emailVerified).toBe(true);
     expect(status.profile?.displayName).toBe('Alex');
-    expect(status.profile?.suburb).toBe('Harbourview');
+    expect(status.profile?.suburb).toBeNull();
     expect(status.membership).toBeNull();
     expect(status.consentDocuments).toHaveLength(1);
     expect(from).toHaveBeenCalledWith('profiles');

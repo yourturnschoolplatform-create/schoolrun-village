@@ -43,7 +43,7 @@ export async function handleOnboardingStatus(
     ] = await Promise.all([
       context.client
         .from('profiles')
-        .select('display_name, account_status, account_role, signup_school_id, account_verified_at, signup_suburb, signup_school_label')
+        .select('id, display_name')
         .eq('id', context.user.id)
         .maybeSingle(),
       context.client
@@ -97,12 +97,13 @@ export async function handleOnboardingStatus(
       profile: profileResult.data
         ? {
             displayName: profileResult.data.display_name,
-            accountStatus: String(profileResult.data.account_status ?? 'pending_verification').toUpperCase(),
-            accountRole: String(profileResult.data.account_role ?? 'parent').toUpperCase(),
-            schoolId: profileResult.data.signup_school_id ?? null,
-            verifiedAt: profileResult.data.account_verified_at ?? null,
-            suburb: profileResult.data.signup_suburb ?? null,
-            schoolLabel: profileResult.data.signup_school_label ?? null,
+            // Day-1 select is id/display_name only; Day-15 fields stay defaulted when absent.
+            accountStatus: 'PENDING_VERIFICATION',
+            accountRole: 'PARENT',
+            schoolId: null,
+            verifiedAt: null,
+            suburb: null,
+            schoolLabel: null,
           }
         : null,
       membership: membershipResult.data

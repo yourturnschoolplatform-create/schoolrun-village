@@ -585,6 +585,16 @@ input::placeholder { color: #99a6a2; }
   border: 1px solid var(--line);
   background: #F8FAFC;
 }
+.location-school-select {
+  display: grid;
+  gap: .85rem;
+}
+.location-school-select .field-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: .8rem;
+  line-height: 1.45;
+}
 .instant-sheet-overlay {
   position: fixed;
   inset: 0;

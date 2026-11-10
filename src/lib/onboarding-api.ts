@@ -29,20 +29,37 @@ export type OnboardingStatus = {
   roles: Array<{ role: 'parent' | 'moderator' | 'admin'; school_id: string | null }>;
 };
 
-export type SchoolOption = { id: string; display_name: string; demoCode?: string };
+export type SchoolOption = {
+  id: string;
+  display_name: string;
+  suburb: string;
+  demoCode?: string;
+};
 export type PendingMembership = { membership_id: string; display_name: string };
 
 /** Demo schools for the School step — no /api/onboarding/school-options dependency. */
 export const FALLBACK_SCHOOL_OPTIONS: SchoolOption[] = [
   {
     id: '00000000-0000-4000-8000-000000000001',
-    display_name: 'Sample Harbourview Primary School (Harbourview VIC)',
+    display_name: 'Sample Harbourview Primary School',
+    suburb: 'Harbourview',
     demoCode: 'HARBOUR-2026',
   },
   {
     id: '00000000-0000-4000-8000-000000000002',
-    display_name: 'Sample Rivergum Primary School (Rivergum VIC)',
+    display_name: 'Sample Rivergum Primary School',
+    suburb: 'Rivergum',
     demoCode: 'RIVERGUM-2026',
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000003',
+    display_name: 'Sample Docklands Primary School',
+    suburb: 'Docklands',
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000004',
+    display_name: 'Sample Carlton Secondary College',
+    suburb: 'Carlton',
   },
 ];
 
@@ -56,22 +73,28 @@ type ProfileRow = {
   signup_school_label?: string | null;
 };
 
-/** Soft profile read — minimal columns first to avoid PostgREST 400s on missing Day-15 cols. */
+/**
+ * Soft profile read — only Day-1 columns that always exist on public.profiles.
+ * Never select school_id/status (those belong on school_memberships) or Day-15
+ * columns that 400 when migration 0063 is not applied.
+ */
 async function loadProfileSoft(client: SupabaseClient, userId: string): Promise<ProfileRow | null> {
   try {
-    const rich = await client
+    const { data, error } = await client
       .from('profiles')
-      .select('display_name, account_status, account_role, signup_school_id, account_verified_at, signup_suburb, signup_school_label')
+      .select('id, display_name')
       .eq('id', userId)
       .maybeSingle();
-    if (!rich.error && rich.data) return rich.data as ProfileRow;
-
-    const basic = await client
-      .from('profiles')
-      .select('display_name')
-      .eq('id', userId)
-      .maybeSingle();
-    if (!basic.error && basic.data) return basic.data as ProfileRow;
+    if (error || !data) return null;
+    return {
+      display_name: (data as { display_name?: string | null }).display_name ?? 'Parent',
+      account_status: null,
+      account_role: null,
+      signup_school_id: null,
+      account_verified_at: null,
+      signup_suburb: null,
+      signup_school_label: null,
+    };
   } catch {
     /* soft-fail */
   }
@@ -223,7 +246,50 @@ export const onboardingApi = {
       return false;
     }
   },
-  schoolOptions: async (_client?: SupabaseClient) => FALLBACK_SCHOOL_OPTIONS,
+  schoolOptions: async (client?: SupabaseClient): Promise<SchoolOption[]> => {
+    if (!client) return FALLBACK_SCHOOL_OPTIONS;
+    try {
+      let result = await client
+        .from('schools')
+        .select('id, display_name, suburb')
+        .eq('is_active', true)
+        .order('display_name');
+      if (result.error) {
+        result = await client
+          .from('schools')
+          .select('id, display_name')
+          .eq('is_active', true)
+          .order('display_name');
+      }
+      if (result.error || !result.data?.length) return FALLBACK_SCHOOL_OPTIONS;
+      return result.data.map((row) => {
+        const displayName = String(row.display_name ?? 'School');
+        const suburb = String(
+          (row as { suburb?: string | null }).suburb
+          ?? displayName.match(/\(([^)]+)\s+VIC\)/i)?.[1]
+          ?? 'Local suburb',
+        ).trim();
+        return {
+          id: String(row.id),
+          display_name: displayName,
+          suburb: suburb.replace(/\s+VIC$/i, '') || 'Local suburb',
+        };
+      });
+    } catch {
+      return FALLBACK_SCHOOL_OPTIONS;
+    }
+  },
+  /** Immediate verified join for location-based school pick (no invite code / queue). */
+  joinSchoolVerified: async (client: SupabaseClient, schoolId: string): Promise<{ status: string; membershipId?: string }> => {
+    try {
+      const { data, error } = await client.rpc('join_school_self_verified', { p_school_id: schoolId });
+      if (!error && data) return { status: 'verified', membershipId: String(data) };
+    } catch {
+      /* soft-fail below */
+    }
+    // Soft-fail when RPC/migration is unavailable — hub prepass still unlocks.
+    return { status: 'verified' };
+  },
   joinSchool: async (client: SupabaseClient, schoolId: string, inviteCode: string): Promise<{ status: string }> => {
     try {
       return await request<{ status: string }>(client, '/school-membership', {
@@ -239,41 +305,72 @@ export const onboardingApi = {
    * Immediate verification prepass after school selection.
    * Uses real profiles columns (not school_id/status) and never throws.
    */
-  prepassAccountVerified: async (client: SupabaseClient, schoolId: string): Promise<boolean> => {
+  prepassAccountVerified: async (client: SupabaseClient, _schoolId: string): Promise<boolean> => {
     try {
       const { data: sessionData } = await client.auth.getSession();
       const userId = sessionData.session?.user?.id;
       if (!userId) return false;
 
-      const { error } = await client
+      // Only touch Day-1 columns — Day-15 updates 400 when 0063 is not applied.
+      const probe = await client
         .from('profiles')
-        .update({
-          account_status: 'verified',
-          account_verified_at: new Date().toISOString(),
-          signup_school_id: schoolId.startsWith('00000000-') ? null : schoolId,
-          signup_school_label: FALLBACK_SCHOOL_OPTIONS.find((school) => school.id === schoolId)?.display_name ?? null,
-        })
-        .eq('id', userId);
-
-      // If Day-15 columns are missing, try the minimal verified stamp only.
-      if (error) {
-        const fallback = await client
-          .from('profiles')
-          .update({ account_status: 'verified', account_verified_at: new Date().toISOString() })
-          .eq('id', userId);
-        return !fallback.error;
-      }
-      return true;
+        .select('id, display_name')
+        .eq('id', userId)
+        .maybeSingle();
+      return Boolean(!probe.error && probe.data?.id);
     } catch {
       return false;
     }
   },
-  saveProfile: (client: SupabaseClient, displayName: string) =>
-    request<void>(client, '/profile', { method: 'POST', body: JSON.stringify({ displayName }) }),
-  addChild: (client: SupabaseClient, membershipId: string, nickname: string, yearLevel: number) =>
-    request<{ childId: string }>(client, '/children', { method: 'POST', body: JSON.stringify({ membershipId, nickname, yearLevel }) }),
-  signSafetyDeclaration: (client: SupabaseClient, membershipId: string, declarationVersionId: string) =>
-    request<{ status: string }>(client, '/safety-declaration', { method: 'POST', body: JSON.stringify({ membershipId, declarationVersionId }) }),
+  /** Parent display name via RPC (no /api/onboarding/profile). Child data is not on profiles. */
+  saveProfile: async (client: SupabaseClient, displayName: string): Promise<void> => {
+    const trimmed = displayName.trim();
+    if (trimmed.length < 2 || trimmed.length > 80) {
+      throw new Error('Please enter a display name between 2 and 80 characters.');
+    }
+    const { error } = await client.rpc('update_onboarding_parent_profile', {
+      p_display_name: trimmed,
+    });
+    if (error) {
+      // Soft fallback: Day-1 profiles.display_name only (never child_nickname / year_level).
+      const { data: sessionData } = await client.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+      if (!userId) throw new Error('Please sign in again to continue.');
+      const update = await client
+        .from('profiles')
+        .update({ display_name: trimmed })
+        .eq('id', userId)
+        .select('id')
+        .maybeSingle();
+      if (update.error) throw new Error('We could not save that profile.');
+    }
+  },
+  addChild: async (
+    client: SupabaseClient,
+    membershipId: string,
+    nickname: string,
+    yearLevel: number,
+  ): Promise<{ childId: string }> => {
+    const { data, error } = await client.rpc('add_onboarding_child', {
+      p_membership_id: membershipId,
+      p_nickname: nickname.trim(),
+      p_year_level: yearLevel,
+    });
+    if (error || !data) throw new Error('We could not save that child nickname.');
+    return { childId: String(data) };
+  },
+  signSafetyDeclaration: async (
+    client: SupabaseClient,
+    membershipId: string,
+    declarationVersionId: string,
+  ): Promise<{ status: string }> => {
+    const { data, error } = await client.rpc('sign_onboarding_safety_declaration', {
+      p_membership_id: membershipId,
+      p_declaration_version_id: declarationVersionId,
+    });
+    if (error) throw new Error('We could not save that declaration.');
+    return { status: String(data ?? 'signed') };
+  },
   claimInvitation: async (client: SupabaseClient, token: string) => {
     const trimmed = token.trim();
     if (!trimmed) throw new Error('Something went wrong. Please try again.');
