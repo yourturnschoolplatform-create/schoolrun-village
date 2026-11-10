@@ -11,7 +11,10 @@ import { createNotificationsRouter } from './notifications-router.js';
 import { createAdminRouter } from './admin-router.js';
 import { createPartnerRouter } from './partner-router.js';
 import { databaseErrorCode, logSafeServerError } from './safe-error-log.js';
+import { loadServerEnv } from './load-env.js';
 import { loadVerifiedSchoolScope, RequestAuthenticationError } from './supabase/request-client.js';
+
+loadServerEnv();
 
 const isProduction = process.env.NODE_ENV === 'production';
 const port = Number(process.env.PORT ?? 3000);

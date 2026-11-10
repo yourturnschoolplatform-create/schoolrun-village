@@ -27,14 +27,16 @@ export function normaliseSupabaseKey(value: string): string {
   return value.replace(/\s/g, '');
 }
 
-function hasCurrentSupabaseKeyPrefix(value: string, prefix: 'sb_publishable_' | 'sb_secret_'): boolean {
+function hasCurrentSupabaseKeyPrefix(value: string, prefix: 'sb_publishable_' | 'sb_secret_' | 'publishable_'): boolean {
   return value.startsWith(prefix) && value.length > prefix.length + 11 && !/\s/.test(value);
 }
 
-/** Supabase supports legacy JWT anon keys and current sb_publishable_ keys. */
+/** Supabase supports legacy JWT anon keys and current publishable keys. */
 export function isBrowserSafeSupabaseKey(value: string): boolean {
   const normalised = normaliseSupabaseKey(value);
-  return legacyJwtRole(normalised) === 'anon' || hasCurrentSupabaseKeyPrefix(normalised, 'sb_publishable_');
+  return legacyJwtRole(normalised) === 'anon'
+    || hasCurrentSupabaseKeyPrefix(normalised, 'sb_publishable_')
+    || hasCurrentSupabaseKeyPrefix(normalised, 'publishable_');
 }
 
 /** Supabase supports legacy JWT service_role keys and current sb_secret_ keys. */
@@ -52,15 +54,23 @@ function isSupabaseUrl(value: string): boolean {
   }
 }
 
-function requiredEnvironmentValue(name: 'SUPABASE_URL' | 'SUPABASE_ANON_KEY'): string {
-  const value = process.env[name]?.trim();
-  if (!value) throw new Error(`${name} is required for Supabase runtime configuration.`);
-  return value;
+function firstEnvironmentValue(...names: string[]): string | undefined {
+  for (const name of names) {
+    const value = process.env[name]?.trim();
+    if (value) return value;
+  }
+  return undefined;
 }
 
 export function readPublicSupabaseConfig(): PublicSupabaseConfig {
-  const url = requiredEnvironmentValue('SUPABASE_URL');
-  const anonKey = normaliseSupabaseKey(requiredEnvironmentValue('SUPABASE_ANON_KEY'));
+  // Prefer server names; accept Vite public aliases from local .env.
+  const url = firstEnvironmentValue('SUPABASE_URL', 'VITE_SUPABASE_URL');
+  const anonKeyRaw = firstEnvironmentValue('SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY');
+  if (!url) throw new Error('SUPABASE_URL (or VITE_SUPABASE_URL) is required for Supabase runtime configuration.');
+  if (!anonKeyRaw) {
+    throw new Error('SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY) is required for Supabase runtime configuration.');
+  }
+  const anonKey = normaliseSupabaseKey(anonKeyRaw);
 
   if (!isSupabaseUrl(url)) {
     throw new Error('SUPABASE_URL must be a valid HTTPS Supabase project URL.');
