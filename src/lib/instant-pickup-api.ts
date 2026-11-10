@@ -51,30 +51,56 @@ type InstantPickupRow = {
   created_at: string;
 };
 
-function logPickupError(scope: string, error: unknown): void {
-  if (error && typeof error === 'object') {
-    const row = error as {
-      message?: string;
-      code?: string;
-      details?: string;
-      hint?: string;
-      status?: number;
+/** Must match SQL: accept/cancel/check_in/get_instant_pickup_chat(p_request_id uuid, …). */
+const RPC_REQUEST_ID = 'p_request_id' as const;
+const RPC_CONFIRM = 'p_confirm' as const;
+
+type ErrorParts = {
+  message: string;
+  code?: string;
+  details?: string;
+  hint?: string;
+  status?: number;
+};
+
+function extractErrorParts(error: unknown): ErrorParts {
+  const bag = (value: unknown): ErrorParts => {
+    if (!value || typeof value !== 'object') {
+      return { message: typeof value === 'string' ? value : '' };
+    }
+    const row = value as Record<string, unknown>;
+    return {
+      message: typeof row.message === 'string' ? row.message : '',
+      code: typeof row.code === 'string' ? row.code : undefined,
+      details: typeof row.details === 'string' ? row.details : undefined,
+      hint: typeof row.hint === 'string' ? row.hint : undefined,
+      status: typeof row.status === 'number' ? row.status : undefined,
     };
-    console.error(`instantPickup.${scope}`, {
-      message: row.message,
-      code: row.code,
-      details: row.details,
-      hint: row.hint,
-      status: row.status,
-    });
-    return;
-  }
-  console.error(`instantPickup.${scope}`, error);
+  };
+
+  const primary = bag(error);
+  const cause = error instanceof Error && 'cause' in error ? bag(error.cause) : bag(null);
+  return {
+    message: primary.message || cause.message,
+    code: primary.code || cause.code,
+    details: primary.details || cause.details,
+    hint: primary.hint || cause.hint,
+    status: primary.status ?? cause.status,
+  };
+}
+
+function logPickupError(scope: string, error: unknown, meta?: Record<string, unknown>): void {
+  const parts = extractErrorParts(error);
+  console.error('Request match detailed error:', error);
+  console.error(`instantPickup.${scope}`, {
+    ...parts,
+    ...meta,
+  });
 }
 
 function friendlyPickupError(error: unknown, fallback: string): Error {
-  const message = error instanceof Error ? error.message : '';
-  const lower = message.toLowerCase();
+  const parts = extractErrorParts(error);
+  const lower = `${parts.message} ${parts.details ?? ''} ${parts.hint ?? ''}`.toLowerCase();
   if (
     lower.includes('sign in')
     || lower.includes('authentication')
@@ -95,13 +121,37 @@ function friendlyPickupError(error: unknown, fallback: string): Error {
   if (lower.includes('window has already passed')) {
     return new Error('That pickup window has already passed.');
   }
+  // PostgREST param / signature mismatches (PGRST202 / 42883).
+  if (
+    parts.code === 'PGRST202'
+    || parts.code === '42883'
+    || lower.includes('could not find the function')
+    || lower.includes('function public.accept_instant_pickup')
+    || lower.includes('unexpected argument')
+  ) {
+    return new Error(
+      'Match RPC parameters are out of sync with the database. Expected p_request_id (uuid).',
+    );
+  }
   return new Error(fallback);
 }
 
-async function rpc<T>(client: SupabaseClient, name: string, args: Record<string, unknown> = {}): Promise<T> {
+function assertRequestId(requestId: string): string {
+  const id = requestId?.trim() ?? '';
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error('That pickup request id is invalid.');
+  }
+  return id;
+}
+
+async function rpc<T>(
+  client: SupabaseClient,
+  name: string,
+  args: Record<string, unknown> = {},
+): Promise<T> {
   const { data, error } = await client.rpc(name, args);
   if (error) {
-    logPickupError(name, error);
+    logPickupError(name, error, { rpc: name, args });
     throw Object.assign(
       friendlyPickupError(error, 'That instant pickup action is not available right now.'),
       { cause: error },
@@ -241,35 +291,62 @@ export const instantPickupApi = {
 
   cancel: async (client: SupabaseClient, requestId: string) => {
     await requireSessionUserId(client);
+    const p_request_id = assertRequestId(requestId);
     return rpc<InstantPickupRequest>(client, 'cancel_instant_pickup_request', {
-      p_request_id: requestId,
+      [RPC_REQUEST_ID]: p_request_id,
     });
   },
+  /**
+   * accept_instant_pickup_request(p_request_id uuid) → { request, chatRoom }
+   * Arg key must stay `p_request_id` to match db/migrations/0069_*.sql.
+   */
   accept: async (client: SupabaseClient, requestId: string) => {
     await requireSessionUserId(client);
+    const p_request_id = assertRequestId(requestId);
+    const args = { [RPC_REQUEST_ID]: p_request_id } as { p_request_id: string };
     try {
-      return await rpc<InstantPickupAcceptResult>(client, 'accept_instant_pickup_request', {
-        p_request_id: requestId,
-      });
+      const data = await rpc<InstantPickupAcceptResult | Record<string, unknown>>(
+        client,
+        'accept_instant_pickup_request',
+        args,
+      );
+      const row = data as InstantPickupAcceptResult & Record<string, unknown>;
+      const chatRoom = (row.chatRoom ?? row.chat_room) as ChatRoom | undefined;
+      const request = (row.request ?? row) as InstantPickupRequest;
+      if (!chatRoom || !chatRoom.id) {
+        console.error('Request match detailed error:', {
+          reason: 'missing_chatRoom_in_rpc_payload',
+          args,
+          data,
+        });
+        throw new Error('That match request could not be started right now.');
+      }
+      return { request, chatRoom } satisfies InstantPickupAcceptResult;
     } catch (error) {
-      logPickupError('accept', error);
-      throw friendlyPickupError(
-        error,
-        'That match request could not be started right now.',
+      logPickupError('accept', error, {
+        rpc: 'accept_instant_pickup_request',
+        args,
+        expectedParams: ['p_request_id'],
+      });
+      throw Object.assign(
+        friendlyPickupError(error, 'That match request could not be started right now.'),
+        { cause: error instanceof Error ? error.cause ?? error : error },
       );
     }
   },
   checkIn: async (client: SupabaseClient, requestId: string, confirm: boolean) => {
     await requireSessionUserId(client);
+    const p_request_id = assertRequestId(requestId);
     return rpc<InstantPickupRequest>(client, 'check_in_instant_pickup', {
-      p_request_id: requestId,
-      p_confirm: confirm,
+      [RPC_REQUEST_ID]: p_request_id,
+      [RPC_CONFIRM]: confirm,
     });
   },
   openChat: async (client: SupabaseClient, requestId: string) => {
     await requireSessionUserId(client);
+    const p_request_id = assertRequestId(requestId);
     return rpc<ChatRoom>(client, 'get_instant_pickup_chat', {
-      p_request_id: requestId,
+      [RPC_REQUEST_ID]: p_request_id,
     });
   },
   subscribe: (

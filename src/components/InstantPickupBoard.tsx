@@ -167,21 +167,48 @@ export function InstantPickupBoard({
     setBusy(true);
     setMessage(null);
     try {
-      const { data: sessionData } = await client.auth.getSession();
-      if (!sessionData.session?.user?.id) {
+      const { data: sessionData, error: sessionError } = await client.auth.getSession();
+      if (sessionError) {
+        console.error('Request match detailed error:', sessionError);
         setMessage('Please sign in again, then finish school onboarding before requesting a match.');
         return;
       }
+      if (!sessionData.session?.user?.id) {
+        console.error('Request match detailed error:', { reason: 'empty_session', requestId: id });
+        setMessage('Please sign in again, then finish school onboarding before requesting a match.');
+        return;
+      }
+      // RPC: accept_instant_pickup_request(p_request_id uuid)
       const result = await instantPickupApi.accept(client, id);
       await refresh();
       setMatchRoom(result.chatRoom);
       setToast('Private match chat opened. You can send your confirmation code.');
       setMessage('Match requested. Share your household confirmation code in chat when ready.');
-    } catch (error) {
-      console.error('InstantPickupBoard.requestMatch', error);
+    } catch (err) {
+      console.error('Request match detailed error:', err);
+      const cause =
+        err instanceof Error && 'cause' in err ? (err as Error & { cause?: unknown }).cause : undefined;
+      if (cause) console.error('Request match detailed error (cause):', cause);
+      const bag = (value: unknown) => {
+        if (!value || typeof value !== 'object') return null;
+        const row = value as Record<string, unknown>;
+        return {
+          message: row.message,
+          code: row.code,
+          details: row.details,
+          hint: row.hint,
+          status: row.status,
+        };
+      };
+      console.error('Request match detailed error:', {
+        rpc: 'accept_instant_pickup_request',
+        args: { p_request_id: id },
+        error: bag(err) ?? String(err),
+        cause: bag(cause),
+      });
       setMessage(
-        error instanceof Error && error.message.trim()
-          ? error.message
+        err instanceof Error && err.message.trim()
+          ? err.message
           : 'That match request could not be started right now.',
       );
     } finally {
