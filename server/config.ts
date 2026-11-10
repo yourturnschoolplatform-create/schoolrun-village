@@ -8,6 +8,7 @@ export type PublicSupabaseConfig = {
 export type PublicRuntimeConfig = {
   appName: string;
   supabase: PublicSupabaseConfig | null;
+  configured?: boolean;
 };
 
 function legacyJwtRole(value: string): string | null {
@@ -63,9 +64,19 @@ function firstEnvironmentValue(...names: string[]): string | undefined {
 }
 
 export function readPublicSupabaseConfig(): PublicSupabaseConfig {
-  // Prefer server names; accept Vite public aliases from local .env.
-  const url = firstEnvironmentValue('SUPABASE_URL', 'VITE_SUPABASE_URL');
-  const anonKeyRaw = firstEnvironmentValue('SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY');
+  // Prefer server names; accept Vite / Next public aliases from local .env or host env.
+  const url = firstEnvironmentValue(
+    'SUPABASE_URL',
+    'VITE_SUPABASE_URL',
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'YOURTURN_SUPABASE_URL',
+  );
+  const anonKeyRaw = firstEnvironmentValue(
+    'SUPABASE_ANON_KEY',
+    'VITE_SUPABASE_ANON_KEY',
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    'YOURTURN_SUPABASE_ANON_KEY',
+  );
   if (!url) throw new Error('SUPABASE_URL (or VITE_SUPABASE_URL) is required for Supabase runtime configuration.');
   if (!anonKeyRaw) {
     throw new Error('SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY) is required for Supabase runtime configuration.');
@@ -85,8 +96,17 @@ export function readPublicSupabaseConfig(): PublicSupabaseConfig {
 /** This is the only shape sent to the browser. Service-role configuration is never read here. */
 export function readPublicRuntimeConfig(): PublicRuntimeConfig {
   try {
-    return { appName: appConfig.appName, supabase: readPublicSupabaseConfig() };
+    const supabase = readPublicSupabaseConfig();
+    return {
+      appName: appConfig.appName,
+      supabase,
+      configured: true,
+    };
   } catch {
-    return { appName: appConfig.appName, supabase: null };
+    return {
+      appName: appConfig.appName,
+      supabase: null,
+      configured: false,
+    };
   }
 }

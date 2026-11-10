@@ -22,13 +22,19 @@ describe('/api/public-config', () => {
     });
   });
 
-  it('returns 200 JSON with appName and supabase fields', async () => {
+  it('returns 200 JSON with appName, supabase, and configured fields', async () => {
     const response = await fetch(`${origin}/api/public-config`);
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toMatch(/no-store/i);
-    const body = await response.json() as { appName?: string; supabase?: unknown };
+    const body = await response.json() as {
+      appName?: string;
+      supabase?: unknown;
+      configured?: boolean;
+    };
     expect(typeof body.appName).toBe('string');
     expect(body.appName?.length).toBeGreaterThan(0);
     expect(body).toHaveProperty('supabase');
+    expect(typeof body.configured).toBe('boolean');
+    expect(body.configured).toBe(Boolean(body.supabase));
   });
 });

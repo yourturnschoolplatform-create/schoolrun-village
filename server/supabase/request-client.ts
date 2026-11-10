@@ -20,10 +20,26 @@ export function bearerTokenFrom(request: Request): string {
  * Do not replace this client with a service-role client. Its bearer token is the
  * visitor JWT, so all database access in the request remains subject to Supabase RLS.
  */
+export class PublicConfigUnavailableError extends Error {
+  constructor() {
+    super('Public Supabase configuration is unavailable.');
+    this.name = 'PublicConfigUnavailableError';
+  }
+}
+
 export function createRequestScopedSupabaseClient(request: Request): SupabaseClient {
   // Prefer 401 for missing bearer over 500 from missing server env during SPA boot probes.
   const accessToken = bearerTokenFrom(request);
-  const { url, anonKey } = readPublicSupabaseConfig();
+  let url: string;
+  let anonKey: string;
+  try {
+    ({ url, anonKey } = readPublicSupabaseConfig());
+  } catch (error) {
+    console.error('request-scoped supabase config missing', {
+      name: error instanceof Error ? error.name : 'Error',
+    });
+    throw new PublicConfigUnavailableError();
+  }
 
   return createClient(url, anonKey, {
     auth: {

@@ -165,14 +165,25 @@ export function InstantPickupBoard({
 
   async function requestMatch(id: string) {
     setBusy(true);
+    setMessage(null);
     try {
+      const { data: sessionData } = await client.auth.getSession();
+      if (!sessionData.session?.user?.id) {
+        setMessage('Please sign in again, then finish school onboarding before requesting a match.');
+        return;
+      }
       const result = await instantPickupApi.accept(client, id);
       await refresh();
       setMatchRoom(result.chatRoom);
       setToast('Private match chat opened. You can send your confirmation code.');
       setMessage('Match requested. Share your household confirmation code in chat when ready.');
-    } catch {
-      setMessage('That match request could not be started right now.');
+    } catch (error) {
+      console.error('InstantPickupBoard.requestMatch', error);
+      setMessage(
+        error instanceof Error && error.message.trim()
+          ? error.message
+          : 'That match request could not be started right now.',
+      );
     } finally {
       setBusy(false);
     }

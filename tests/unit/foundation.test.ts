@@ -50,7 +50,8 @@ describe('Supabase key boundary', () => {
   it('exposes only the explicitly public runtime shape to the browser', () => {
     const publicRuntime = readPublicRuntimeConfig();
     expect(publicRuntime.appName).toBe('SchoolRun Village');
-    expect(Object.keys(publicRuntime)).toEqual(['appName', 'supabase']);
+    expect(Object.keys(publicRuntime).sort()).toEqual(['appName', 'configured', 'supabase'].sort());
+    expect(typeof publicRuntime.configured).toBe('boolean');
     expect(JSON.stringify(publicRuntime)).not.toContain('SUPABASE_SERVICE_ROLE_KEY');
   });
 

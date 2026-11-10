@@ -51,9 +51,62 @@ type InstantPickupRow = {
   created_at: string;
 };
 
+function logPickupError(scope: string, error: unknown): void {
+  if (error && typeof error === 'object') {
+    const row = error as {
+      message?: string;
+      code?: string;
+      details?: string;
+      hint?: string;
+      status?: number;
+    };
+    console.error(`instantPickup.${scope}`, {
+      message: row.message,
+      code: row.code,
+      details: row.details,
+      hint: row.hint,
+      status: row.status,
+    });
+    return;
+  }
+  console.error(`instantPickup.${scope}`, error);
+}
+
+function friendlyPickupError(error: unknown, fallback: string): Error {
+  const message = error instanceof Error ? error.message : '';
+  const lower = message.toLowerCase();
+  if (
+    lower.includes('sign in')
+    || lower.includes('authentication')
+    || lower.includes('jwt')
+    || lower.includes('not authenticated')
+  ) {
+    return new Error('Please sign in again, then finish school onboarding before requesting a match.');
+  }
+  if (lower.includes('own instant pickup') || lower.includes('your own')) {
+    return new Error('You cannot request a match on your own pickup post.');
+  }
+  if (lower.includes('not open')) {
+    return new Error('That pickup request is no longer open.');
+  }
+  if (lower.includes('membership') || lower.includes('join a school') || lower.includes('verified')) {
+    return new Error('Join and verify your school profile before requesting a match.');
+  }
+  if (lower.includes('window has already passed')) {
+    return new Error('That pickup window has already passed.');
+  }
+  return new Error(fallback);
+}
+
 async function rpc<T>(client: SupabaseClient, name: string, args: Record<string, unknown> = {}): Promise<T> {
   const { data, error } = await client.rpc(name, args);
-  if (error) throw Object.assign(new Error('That instant pickup action is not available right now.'), { cause: error });
+  if (error) {
+    logPickupError(name, error);
+    throw Object.assign(
+      friendlyPickupError(error, 'That instant pickup action is not available right now.'),
+      { cause: error },
+    );
+  }
   return data as T;
 }
 
@@ -84,8 +137,16 @@ function mapRow(row: InstantPickupRow, userId: string): InstantPickupRequest {
 
 async function requireSessionUserId(client: SupabaseClient): Promise<string> {
   const { data, error } = await client.auth.getSession();
-  if (error || !data.session?.user?.id) {
-    throw new Error('Please sign in again to continue.');
+  if (error) {
+    logPickupError('getSession', error);
+    throw new Error('Please sign in again, then finish school onboarding before continuing.');
+  }
+  if (!data.session?.user?.id) {
+    console.error('instantPickup.getSession', { reason: 'empty_session' });
+    throw new Error('Please sign in again, then finish school onboarding before continuing.');
+  }
+  if (!data.session.user.email_confirmed_at) {
+    throw new Error('Verify your email, then complete your school profile before requesting a match.');
   }
   return data.session.user.id;
 }
@@ -127,7 +188,10 @@ export const instantPickupApi = {
     }
 
     const { data, error } = await query;
-    if (error) throw new Error('That instant pickup action is not available right now.');
+    if (error) {
+      logPickupError('list', error);
+      throw friendlyPickupError(error, 'That instant pickup action is not available right now.');
+    }
     return (data as InstantPickupRow[] | null ?? []).map((row) => mapRow(row, userId));
   },
 
@@ -175,23 +239,39 @@ export const instantPickupApi = {
     return mapRow(data as InstantPickupRow, userId);
   },
 
-  cancel: (client: SupabaseClient, requestId: string) =>
-    rpc<InstantPickupRequest>(client, 'cancel_instant_pickup_request', {
+  cancel: async (client: SupabaseClient, requestId: string) => {
+    await requireSessionUserId(client);
+    return rpc<InstantPickupRequest>(client, 'cancel_instant_pickup_request', {
       p_request_id: requestId,
-    }),
-  accept: (client: SupabaseClient, requestId: string) =>
-    rpc<InstantPickupAcceptResult>(client, 'accept_instant_pickup_request', {
-      p_request_id: requestId,
-    }),
-  checkIn: (client: SupabaseClient, requestId: string, confirm: boolean) =>
-    rpc<InstantPickupRequest>(client, 'check_in_instant_pickup', {
+    });
+  },
+  accept: async (client: SupabaseClient, requestId: string) => {
+    await requireSessionUserId(client);
+    try {
+      return await rpc<InstantPickupAcceptResult>(client, 'accept_instant_pickup_request', {
+        p_request_id: requestId,
+      });
+    } catch (error) {
+      logPickupError('accept', error);
+      throw friendlyPickupError(
+        error,
+        'That match request could not be started right now.',
+      );
+    }
+  },
+  checkIn: async (client: SupabaseClient, requestId: string, confirm: boolean) => {
+    await requireSessionUserId(client);
+    return rpc<InstantPickupRequest>(client, 'check_in_instant_pickup', {
       p_request_id: requestId,
       p_confirm: confirm,
-    }),
-  openChat: (client: SupabaseClient, requestId: string) =>
-    rpc<ChatRoom>(client, 'get_instant_pickup_chat', {
+    });
+  },
+  openChat: async (client: SupabaseClient, requestId: string) => {
+    await requireSessionUserId(client);
+    return rpc<ChatRoom>(client, 'get_instant_pickup_chat', {
       p_request_id: requestId,
-    }),
+    });
+  },
   subscribe: (
     client: SupabaseClient,
     schoolId: string,

@@ -1,6 +1,5 @@
 import path from 'node:path';
 import express, { type NextFunction, type Request, type Response } from 'express';
-import { createServer as createViteServer } from 'vite';
 import { handlePublicConfig } from './api/public-config.js';
 import { createOnboardingRouter, OnboardingInputError } from './onboarding-router.js';
 import { createSchedulesRouter, ScheduleInputError } from './schedules-router.js';
@@ -12,9 +11,19 @@ import { createAdminRouter } from './admin-router.js';
 import { createPartnerRouter } from './partner-router.js';
 import { databaseErrorCode, logSafeServerError } from './safe-error-log.js';
 import { loadServerEnv } from './load-env.js';
-import { loadVerifiedSchoolScope, RequestAuthenticationError } from './supabase/request-client.js';
+import {
+  loadVerifiedSchoolScope,
+  PublicConfigUnavailableError,
+  RequestAuthenticationError,
+} from './supabase/request-client.js';
 
-loadServerEnv();
+try {
+  loadServerEnv();
+} catch (error) {
+  console.error('loadServerEnv failed', {
+    name: error instanceof Error ? error.name : 'Error',
+  });
+}
 
 const isProduction = process.env.NODE_ENV === 'production';
 const port = Number(process.env.PORT ?? 3000);
@@ -32,6 +41,11 @@ function errorHandler(error: unknown, _request: Request, response: Response, _ne
   if (error instanceof RequestAuthenticationError) {
     noStore(response);
     response.status(401).json({ error: 'authentication_required' });
+    return;
+  }
+  if (error instanceof PublicConfigUnavailableError) {
+    noStore(response);
+    response.status(503).json({ error: 'supabase_config_unavailable' });
     return;
   }
   if (error instanceof OnboardingInputError || error instanceof ScheduleInputError || error instanceof MatchInputError) {
@@ -85,8 +99,21 @@ export async function createApp(options?: { serveClient?: boolean }) {
     response.status(200).json({ status: 'ok', service: 'yourturn-foundation' });
   });
 
-  // SPA boot config — must stay registered before Vite/static so it never 404s.
-  app.get('/api/public-config', handlePublicConfig);
+  // SPA boot config — must stay registered before Vite/static; never 5xx.
+  app.get('/api/public-config', (request, response) => {
+    try {
+      handlePublicConfig(request, response);
+    } catch {
+      if (!response.headersSent) {
+        response.setHeader('Cache-Control', 'no-store, max-age=0');
+        response.status(200).json({
+          appName: 'SchoolRun Village',
+          supabase: null,
+          configured: false,
+        });
+      }
+    }
+  });
 
   // Foundation-only proof that ordinary Express data access carries the caller JWT.
   app.get('/api/foundation/school-scope', async (request, response, next) => {
@@ -110,6 +137,8 @@ export async function createApp(options?: { serveClient?: boolean }) {
 
   if (serveClient) {
     if (!isProduction) {
+      // Dynamic import keeps Vite out of the Vercel serverless bundle.
+      const { createServer: createViteServer } = await import('vite');
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: 'spa',

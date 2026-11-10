@@ -27,11 +27,17 @@ export function loadServerEnv(): void {
     // .env is optional in CI / production secret managers.
   }
 
-  // Map Vite public aliases used in local SPA .env onto server names.
-  if (!process.env.SUPABASE_URL?.trim() && process.env.VITE_SUPABASE_URL?.trim()) {
-    process.env.SUPABASE_URL = process.env.VITE_SUPABASE_URL.trim();
+  // Map public aliases used in local SPA .env onto server names.
+  if (!process.env.SUPABASE_URL?.trim()) {
+    const alias = process.env.VITE_SUPABASE_URL?.trim()
+      || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+      || process.env.YOURTURN_SUPABASE_URL?.trim();
+    if (alias) process.env.SUPABASE_URL = alias;
   }
-  if (!process.env.SUPABASE_ANON_KEY?.trim() && process.env.VITE_SUPABASE_ANON_KEY?.trim()) {
-    process.env.SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY.trim();
+  if (!process.env.SUPABASE_ANON_KEY?.trim()) {
+    const alias = process.env.VITE_SUPABASE_ANON_KEY?.trim()
+      || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+      || process.env.YOURTURN_SUPABASE_ANON_KEY?.trim();
+    if (alias) process.env.SUPABASE_ANON_KEY = alias;
   }
 }
