@@ -604,6 +604,13 @@
       "searchPath": "pg_catalog"
     },
     {
+      "name": "toggle_listing_favorite",
+      "reason": "same-school parent toggles marketplace favourite (관심) on an active listing",
+      "callerDerivation": "auth.uid() verified membership; not the author",
+      "schoolScope": "own-school active listing",
+      "searchPath": "pg_catalog"
+    },
+    {
       "name": "list_listing_enquiries",
       "reason": "author lists all enquiries or enquirer lists own on a listing",
       "callerDerivation": "auth.uid() verified membership",

@@ -12,7 +12,7 @@ import type {
   MarketplaceListingKind,
   MarketplaceTradeType,
 } from '../../shared/marketplace';
-import type { ChatRoom } from './chat-api';
+import { withListingChatSummary, type ChatRoom } from './chat-api';
 
 export type ItemListing = {
   id: string;
@@ -37,6 +37,14 @@ export type ItemListing = {
   itemCondition?: MarketplaceCondition | null;
   sizeAgeLabel?: string | null;
   householdEnv?: MarketplaceHouseholdEnv[] | null;
+  favoriteCount?: number;
+  viewerHasFavorited?: boolean;
+};
+
+export type ListingFavoriteToggle = {
+  listingId: string;
+  favorited: boolean;
+  favoriteCount: number;
 };
 
 async function rpc<T>(client: SupabaseClient, name: string, args: Record<string, unknown> = {}): Promise<T> {
@@ -89,16 +97,48 @@ export const listingsApi = {
    * get_or_create_listing_chat(p_listing_id) — peer ids derived from auth.uid()
    * and listing.author_id. Authors cannot open chat with themselves.
    */
-  openListingChat: async (client: SupabaseClient, listingId: string) => {
+  openListingChat: async (
+    client: SupabaseClient,
+    listingId: string,
+    listingSummary?: Pick<
+      ItemListing,
+      'id' | 'title' | 'author_id' | 'askAudCents' | 'askAudDisplay' | 'display_offer_label' | 'listingImages'
+    >,
+  ) => {
     try {
-      return await rpc<ChatRoom>(client, 'get_or_create_listing_chat', {
+      const room = await rpc<ChatRoom>(client, 'get_or_create_listing_chat', {
         p_listing_id: listingId,
       });
+      return listingSummary
+        ? withListingChatSummary(room, listingSummary)
+        : room;
     } catch (error) {
       throw new Error(friendlyListingContactError(
         error instanceof Error ? error.message : String(error),
         'chat',
       ));
+    }
+  },
+  /**
+   * toggle_listing_favorite(p_listing_id) — inserts or deletes listing_favorites
+   * for auth.uid(). Authors cannot favourite their own listing.
+   */
+  toggleFavorite: async (client: SupabaseClient, listingId: string) => {
+    try {
+      const result = await rpc<ListingFavoriteToggle>(client, 'toggle_listing_favorite', {
+        p_listing_id: listingId,
+      });
+      return {
+        listingId: result.listingId ?? listingId,
+        favorited: Boolean(result.favorited),
+        favoriteCount: Number(result.favoriteCount ?? 0),
+      } satisfies ListingFavoriteToggle;
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'That favourite could not be updated right now.',
+      );
     }
   },
 };

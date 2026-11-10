@@ -10,11 +10,14 @@ describe('Day 11 direct chat boundary', () => {
     expect(api).toContain("rpc<ChatRoom[]>(client, 'list_my_chat_rooms')");
     expect(api).toContain("rpc<ChatRoom>(client, 'get_or_create_schedule_chat'");
     expect(api).toContain("rpc<ChatRoom>(client, 'get_or_create_swap_chat'");
+    expect(api).toContain("rpc<ChatRoom>(client, 'get_or_create_listing_chat'");
+    expect(api).toContain('withListingChatSummary');
     expect(api).toContain("rpc<ChatMessage>(client, 'send_chat_message'");
     expect(api).toContain("table: 'chat_messages'");
     expect(api).toContain("event: 'INSERT'");
     expect(api).not.toContain('.from(');
     expect(hub).toContain('SchedulePin');
+    expect(hub).toContain('MarketplaceListingPin');
     expect(hub).toContain('chatApi.subscribeMessages');
     expect(hub).toContain('readByPeer');
     expect(sql).toMatch(/create table public\.chat_rooms/i);

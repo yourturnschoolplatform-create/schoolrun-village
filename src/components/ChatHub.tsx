@@ -8,17 +8,50 @@ function formatClock(value: string): string {
   return new Date(value).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
 }
 
+function marketplaceAskLabel(room: ChatRoom): string {
+  const schedule = room.schedule;
+  if (schedule.askAudDisplay) return schedule.askAudDisplay;
+  const offer = (schedule.offerLabel || '').trim().toUpperCase();
+  if (offer === 'SWAP') return 'Swap';
+  if (offer === 'SALE') return 'Sale';
+  return 'Free Share';
+}
+
+function MarketplaceListingPin({ room }: { room: ChatRoom }) {
+  const schedule = room.schedule;
+  const title = schedule.listingTitle || schedule.weekdayLabel || 'Marketplace listing';
+  const ask = marketplaceAskLabel(room);
+  const cover = schedule.coverSrc?.trim() || null;
+
+  return (
+    <header className="chat-pin chat-pin--listing" aria-label="Pinned marketplace listing">
+      <div className="chat-pin__listing">
+        <div className="chat-pin__thumb" aria-hidden={!cover}>
+          {cover ? (
+            <img src={cover} alt="" className="chat-pin__image" />
+          ) : (
+            <span className="chat-pin__placeholder">No photo</span>
+          )}
+        </div>
+        <div className="chat-pin__copy">
+          <p className="eyebrow">Marketplace chat</p>
+          <strong>{title}</strong>
+          <p className="chat-pin__ask">{ask}</p>
+          <small>
+            {room.peerDisplayName}
+            {schedule.areaLabel ? ` · ${schedule.areaLabel}` : ''}
+            {' · School pickup'}
+          </small>
+        </div>
+      </div>
+    </header>
+  );
+}
+
 function SchedulePin({ room }: { room: ChatRoom }) {
   const schedule = room.schedule;
   if (schedule.pinKind === 'marketplace') {
-    return (
-      <header className="chat-pin" aria-label="Pinned marketplace listing">
-        <p className="eyebrow">Marketplace enquiry</p>
-        <strong>{room.peerDisplayName}</strong>
-        <p>{schedule.weekdayLabel}</p>
-        <small>{schedule.areaLabel} · School pickup</small>
-      </header>
-    );
+    return <MarketplaceListingPin room={room} />;
   }
   const windowLabel = schedule.windowStart && schedule.windowEnd
     ? `${schedule.windowStart.slice(0, 5)}–${schedule.windowEnd.slice(0, 5)}`
@@ -129,13 +162,17 @@ function ChatRoomView({
     }
   }
 
+  const emptyCopy = room.schedule.pinKind === 'marketplace'
+    ? 'No messages yet. Ask about pickup timing for this listing.'
+    : 'No messages yet. Say hello about this school run.';
+
   return (
     <section className="chat-room" aria-labelledby="chat-room-title">
       <button className="text-button" type="button" onClick={onBack}>Back to messages</button>
       <SchedulePin room={room} />
       <h2 id="chat-room-title" className="visually-hidden">Chat with {room.peerDisplayName}</h2>
       <div className="chat-transcript" role="log" aria-live="polite">
-        {messages.length === 0 && <p className="section-copy">No messages yet. Say hello about this school run.</p>}
+        {messages.length === 0 && <p className="section-copy">{emptyCopy}</p>}
         {messages.map((message) => {
           const code = parseHouseholdCodeCard(message.body);
           if (code) {
@@ -238,7 +275,7 @@ export function ChatHub({
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => {
     if (initialRoom) setActive(initialRoom);
-  }, [initialRoom?.id]);
+  }, [initialRoom]);
 
   if (active) {
     return (
@@ -269,28 +306,28 @@ export function ChatHub({
         </p>
       )}
       <ul className="chat-inbox">
-        {rooms.map((room) => (
-          <li key={room.id}>
-            <button type="button" className="chat-inbox__item" onClick={() => setActive(room)}>
-              <div>
-                <strong>{room.peerDisplayName}</strong>
-                <span>
-                  {room.schedule.weekdayLabel}
-                  {' · '}
-                  {room.schedule.windowStart.slice(0, 5)}
-                  {' · '}
-                  {room.schedule.areaLabel}
-                </span>
-              </div>
-              <p>{room.lastMessageBody ?? 'Start the conversation'}</p>
-              {room.unreadCount > 0 && (
-                <em className="chat-inbox__unread" aria-label={`${room.unreadCount} unread`}>
-                  {room.unreadCount}
-                </em>
-              )}
-            </button>
-          </li>
-        ))}
+        {rooms.map((room) => {
+          const marketplace = room.schedule.pinKind === 'marketplace';
+          const subtitle = marketplace
+            ? `${room.schedule.listingTitle || room.schedule.weekdayLabel} · ${marketplaceAskLabel(room)}`
+            : `${room.schedule.weekdayLabel} · ${room.schedule.windowStart.slice(0, 5)} · ${room.schedule.areaLabel}`;
+          return (
+            <li key={room.id}>
+              <button type="button" className="chat-inbox__item" onClick={() => setActive(room)}>
+                <div>
+                  <strong>{room.peerDisplayName}</strong>
+                  <span>{subtitle}</span>
+                </div>
+                <p>{room.lastMessageBody ?? (marketplace ? 'Ask about this listing' : 'Start the conversation')}</p>
+                {room.unreadCount > 0 && (
+                  <em className="chat-inbox__unread" aria-label={`${room.unreadCount} unread`}>
+                    {room.unreadCount}
+                  </em>
+                )}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

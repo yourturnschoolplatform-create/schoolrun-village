@@ -10,6 +10,14 @@ export type ChatSchedulePin = {
   direction: string;
   intent: string;
   pinKind?: 'schedule' | 'instant_pickup' | 'marketplace';
+  /** Marketplace listing pin (get_or_create_listing_chat / chat_listing_pin_json). */
+  listingId?: string;
+  listingTitle?: string;
+  askAudCents?: number | null;
+  askAudDisplay?: string | null;
+  offerLabel?: string | null;
+  coverSrc?: string | null;
+  sellerId?: string;
 };
 
 export type ChatRoom = {
@@ -23,6 +31,48 @@ export type ChatRoom = {
   unreadCount: number;
   createdAt: string;
 };
+
+/** Attach listing card summary onto a marketplace chat room (client-side enrich). */
+export function withListingChatSummary(
+  room: ChatRoom,
+  listing: {
+    id: string;
+    title: string;
+    author_id: string;
+    askAudCents?: number | null;
+    askAudDisplay?: string | null;
+    display_offer_label?: string;
+    listingImages?: Array<{ src: string; cover?: boolean }> | null;
+  },
+): ChatRoom {
+  const cover = listing.listingImages?.find((entry) => entry.cover)?.src
+    ?? listing.listingImages?.[0]?.src
+    ?? null;
+  const ask = listing.askAudDisplay
+    ?? (listing.askAudCents && listing.askAudCents > 0
+      ? `$${(listing.askAudCents / 100).toFixed(listing.askAudCents % 100 === 0 ? 0 : 2)} AUD`
+      : null);
+  const offer = (listing.display_offer_label || '').trim().toUpperCase();
+  const askAudDisplay = ask
+    ?? (offer === 'SWAP' ? 'Swap' : offer === 'SALE' ? 'Sale' : 'Free Share');
+
+  return {
+    ...room,
+    schedule: {
+      ...room.schedule,
+      pinKind: 'marketplace',
+      patternId: listing.id,
+      weekdayLabel: listing.title.slice(0, 80),
+      listingId: listing.id,
+      listingTitle: listing.title.slice(0, 120),
+      askAudCents: listing.askAudCents ?? null,
+      askAudDisplay,
+      offerLabel: listing.display_offer_label ?? room.schedule.offerLabel ?? null,
+      coverSrc: cover ?? room.schedule.coverSrc ?? null,
+      sellerId: listing.author_id,
+    },
+  };
+}
 
 export type ChatMessage = {
   id: string;
