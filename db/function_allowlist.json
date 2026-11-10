@@ -786,6 +786,13 @@
       "searchPath": "pg_catalog"
     },
     {
+      "name": "get_or_create_thread_chat",
+      "reason": "open or create 1:1 discussion chat with community thread author pinned to the thread",
+      "callerDerivation": "auth.uid() as enquiring parent; not the author",
+      "schoolScope": "own verified school active discussion thread",
+      "searchPath": "pg_catalog"
+    },
+    {
       "name": "list_my_chat_rooms",
       "reason": "list caller 1:1 chat rooms with schedule pin and unread counts",
       "callerDerivation": "auth.uid(); no arguments",

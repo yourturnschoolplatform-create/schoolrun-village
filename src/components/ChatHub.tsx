@@ -48,10 +48,37 @@ function MarketplaceListingPin({ room }: { room: ChatRoom }) {
   );
 }
 
+function ThreadSummaryPin({ room }: { room: ChatRoom }) {
+  const schedule = room.schedule;
+  const title = schedule.threadTitle || schedule.weekdayLabel || 'School discussion';
+
+  return (
+    <header className="chat-pin chat-pin--thread" aria-label="Pinned discussion thread">
+      <div className="chat-pin__listing">
+        <div className="chat-pin__thumb chat-pin__thumb--thread" aria-hidden="true">
+          <span className="chat-pin__placeholder">Thread</span>
+        </div>
+        <div className="chat-pin__copy">
+          <p className="eyebrow">Discussion chat</p>
+          <strong>{title}</strong>
+          <small>
+            {room.peerDisplayName}
+            {schedule.areaLabel ? ` · ${schedule.areaLabel}` : ''}
+            {' · School thread'}
+          </small>
+        </div>
+      </div>
+    </header>
+  );
+}
+
 function SchedulePin({ room }: { room: ChatRoom }) {
   const schedule = room.schedule;
   if (schedule.pinKind === 'marketplace') {
     return <MarketplaceListingPin room={room} />;
+  }
+  if (schedule.pinKind === 'discussion') {
+    return <ThreadSummaryPin room={room} />;
   }
   const windowLabel = schedule.windowStart && schedule.windowEnd
     ? `${schedule.windowStart.slice(0, 5)}–${schedule.windowEnd.slice(0, 5)}`
@@ -164,7 +191,9 @@ function ChatRoomView({
 
   const emptyCopy = room.schedule.pinKind === 'marketplace'
     ? 'No messages yet. Ask about pickup timing for this listing.'
-    : 'No messages yet. Say hello about this school run.';
+    : room.schedule.pinKind === 'discussion'
+      ? 'No messages yet. Continue this school discussion privately.'
+      : 'No messages yet. Say hello about this school run.';
 
   return (
     <section className="chat-room" aria-labelledby="chat-room-title">
@@ -308,9 +337,12 @@ export function ChatHub({
       <ul className="chat-inbox">
         {rooms.map((room) => {
           const marketplace = room.schedule.pinKind === 'marketplace';
+          const discussion = room.schedule.pinKind === 'discussion';
           const subtitle = marketplace
             ? `${room.schedule.listingTitle || room.schedule.weekdayLabel} · ${marketplaceAskLabel(room)}`
-            : `${room.schedule.weekdayLabel} · ${room.schedule.windowStart.slice(0, 5)} · ${room.schedule.areaLabel}`;
+            : discussion
+              ? `${room.schedule.threadTitle || room.schedule.weekdayLabel} · Discussion`
+              : `${room.schedule.weekdayLabel} · ${room.schedule.windowStart.slice(0, 5)} · ${room.schedule.areaLabel}`;
           return (
             <li key={room.id}>
               <button type="button" className="chat-inbox__item" onClick={() => setActive(room)}>
@@ -318,7 +350,14 @@ export function ChatHub({
                   <strong>{room.peerDisplayName}</strong>
                   <span>{subtitle}</span>
                 </div>
-                <p>{room.lastMessageBody ?? (marketplace ? 'Ask about this listing' : 'Start the conversation')}</p>
+                <p>
+                  {room.lastMessageBody
+                    ?? (marketplace
+                      ? 'Ask about this listing'
+                      : discussion
+                        ? 'Continue this discussion'
+                        : 'Start the conversation')}
+                </p>
                 {room.unreadCount > 0 && (
                   <em className="chat-inbox__unread" aria-label={`${room.unreadCount} unread`}>
                     {room.unreadCount}

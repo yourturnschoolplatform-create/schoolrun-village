@@ -7,7 +7,7 @@ import {
   type CommunityPost,
   type CommunityThread,
 } from '../lib/community-api';
-import type { ChatRoom } from '../lib/chat-api';
+import { chatApi, withThreadChatSummary, type ChatRoom } from '../lib/chat-api';
 import { HotDealsBoard } from './HotDealsBoard';
 import { InstantPickupBoard } from './InstantPickupBoard';
 import { MarketplaceBoard } from './MarketplaceBoard';
@@ -145,6 +145,38 @@ export function CommunityHub({
       setBusy(false);
     }
   }
+
+  async function chatWithThreadAuthor(thread: CommunityThread) {
+    if (thread.author_id === userId) {
+      setMessage('This is your own discussion.');
+      return;
+    }
+    if (!onOpenChat) {
+      setMessage('Chat is not available right now. Try again from Messages later.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const room = await chatApi.openThreadChat(client, thread.id);
+      onOpenChat(withThreadChatSummary(room, thread));
+      setMessage(null);
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : 'Chat with that parent is not available right now.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const selectedThread = threads.find((thread) => thread.id === selectedThreadId) ?? null;
+  const canChatAuthor = Boolean(
+    selectedThread
+    && selectedThread.author_id !== userId
+    && onOpenChat,
+  );
 
   return (
     <section className="community-hub" aria-labelledby="community-title">
@@ -296,10 +328,29 @@ export function CommunityHub({
             </ul>
           )}
 
-          {selectedThreadId && (
-            <section className="feed-section" aria-labelledby="thread-posts-title">
-              <h2 id="thread-posts-title" className="section-heading">Thread posts</h2>
-              <ul className="feed-list">
+          {selectedThreadId && selectedThread ? (
+            <section
+              className="feed-section discussion-detail"
+              aria-labelledby="thread-posts-title"
+            >
+              <div className="discussion-detail__head">
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => setSelectedThreadId(null)}
+                >
+                  Back to threads
+                </button>
+                <p className="eyebrow">Discussion</p>
+                <h2 id="thread-posts-title" className="section-heading">{selectedThread.title}</h2>
+                <small className="feed-card__byline">
+                  {selectedThread.author_display_name}
+                  {' · '}
+                  {statusLabelEnglish(selectedThread.status)}
+                </small>
+              </div>
+
+              <ul className="feed-list discussion-detail__posts">
                 {posts.map((post) => (
                   <li key={post.id} className="feed-card">
                     <div className="feed-card__top">
@@ -368,8 +419,23 @@ export function CommunityHub({
                 </label>
                 <button className="primary-button" type="submit" disabled={busy}>Post</button>
               </form>
+
+              {canChatAuthor ? (
+                <div className="discussion-detail__bar">
+                  <button
+                    type="button"
+                    className="discussion-detail__chat"
+                    disabled={busy}
+                    onClick={() => void chatWithThreadAuthor(selectedThread)}
+                  >
+                    작성자와 1:1 채팅하기
+                  </button>
+                </div>
+              ) : selectedThread.author_id === userId ? (
+                <p className="field-help discussion-detail__own">This is your own discussion.</p>
+              ) : null}
             </section>
-          )}
+          ) : null}
         </section>
       ) : null}
 

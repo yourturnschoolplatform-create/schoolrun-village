@@ -2274,6 +2274,42 @@ input::placeholder { color: #99a6a2; }
 .chat-pin p { margin: .35rem 0 0; color: var(--ink); font-size: .92rem; font-weight: 650; }
 .chat-pin small { display: block; margin-top: .3rem; color: var(--muted); font-size: .78rem; }
 .chat-pin--listing { padding: .85rem 1rem; background: #fff; border-color: #FFE0C2; }
+.chat-pin--thread { padding: .85rem 1rem; background: #fff; border-color: #FFD8C2; }
+.chat-pin__thumb--thread { background: #FFF7F0; border-color: #FFD8C2; }
+.discussion-detail {
+  position: relative;
+  padding-bottom: 5.5rem;
+}
+.discussion-detail__head {
+  display: grid;
+  gap: .25rem;
+  margin-bottom: .75rem;
+}
+.discussion-detail__head .section-heading { margin: 0; }
+.discussion-detail__bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: grid;
+  margin-top: 1rem;
+  padding: .85rem 0 .35rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 28%);
+  border-top: 1px solid #F1F5F9;
+}
+.discussion-detail__chat {
+  min-height: 2.85rem;
+  border: 0;
+  border-radius: .9rem;
+  background: #FF6F0F;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 850;
+  box-shadow: 0 12px 24px rgba(255, 111, 15, .22);
+}
+.discussion-detail__chat:hover:not(:disabled) { background: #F05700; }
+.discussion-detail__chat:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+.discussion-detail__own { margin-top: .75rem; }
 .chat-pin__listing {
   display: grid;
   grid-template-columns: 4.25rem minmax(0, 1fr);

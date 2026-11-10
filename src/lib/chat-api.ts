@@ -9,7 +9,7 @@ export type ChatSchedulePin = {
   areaLabel: string;
   direction: string;
   intent: string;
-  pinKind?: 'schedule' | 'instant_pickup' | 'marketplace';
+  pinKind?: 'schedule' | 'instant_pickup' | 'marketplace' | 'discussion';
   /** Marketplace listing pin (get_or_create_listing_chat / chat_listing_pin_json). */
   listingId?: string;
   listingTitle?: string;
@@ -18,6 +18,10 @@ export type ChatSchedulePin = {
   offerLabel?: string | null;
   coverSrc?: string | null;
   sellerId?: string;
+  /** Discussion thread pin (get_or_create_thread_chat / chat_thread_pin_json). */
+  threadId?: string;
+  threadTitle?: string;
+  authorId?: string;
 };
 
 export type ChatRoom = {
@@ -74,6 +78,31 @@ export function withListingChatSummary(
   };
 }
 
+/** Attach discussion thread summary onto a community chat room. */
+export function withThreadChatSummary(
+  room: ChatRoom,
+  thread: {
+    id: string;
+    title: string;
+    author_id: string;
+    schoolSuburb?: string | null;
+  },
+): ChatRoom {
+  return {
+    ...room,
+    schedule: {
+      ...room.schedule,
+      pinKind: 'discussion',
+      patternId: thread.id,
+      weekdayLabel: thread.title.slice(0, 80),
+      areaLabel: thread.schoolSuburb?.trim() || room.schedule.areaLabel || 'Local suburb',
+      threadId: thread.id,
+      threadTitle: thread.title.slice(0, 120),
+      authorId: thread.author_id,
+    },
+  };
+}
+
 export type ChatMessage = {
   id: string;
   roomId: string;
@@ -101,6 +130,8 @@ export const chatApi = {
     rpc<ChatRoom>(client, 'get_or_create_swap_chat', { p_swap_id: swapId }),
   openListingChat: (client: SupabaseClient, listingId: string) =>
     rpc<ChatRoom>(client, 'get_or_create_listing_chat', { p_listing_id: listingId }),
+  openThreadChat: (client: SupabaseClient, threadId: string) =>
+    rpc<ChatRoom>(client, 'get_or_create_thread_chat', { p_thread_id: threadId }),
   listMessages: (client: SupabaseClient, roomId: string, before?: string | null) =>
     rpc<ChatMessage[]>(client, 'list_chat_messages', {
       p_room_id: roomId,
