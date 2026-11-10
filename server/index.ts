@@ -67,7 +67,9 @@ function errorHandler(error: unknown, _request: Request, response: Response, _ne
   response.status(500).json({ error: 'foundation_server_error' });
 }
 
-export async function createApp() {
+export async function createApp(options?: { serveClient?: boolean }) {
+  // On Vercel, static SPA is served by the CDN — API function stays API-only.
+  const serveClient = options?.serveClient ?? !process.env.VERCEL;
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '20kb' }));
@@ -106,28 +108,31 @@ export async function createApp() {
   app.use('/api/admin', createAdminRouter());
   app.use('/api/partner', createPartnerRouter());
 
-  if (!isProduction) {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const clientDirectory = path.resolve(projectRoot, 'dist/client');
-    app.use(express.static(clientDirectory, { index: false, immutable: true, maxAge: '1y' }));
-    app.use((request, response, next) => {
-      if (request.method !== 'GET' && request.method !== 'HEAD') return next();
-      if (request.path.startsWith('/api/')) return response.sendStatus(404);
-      response.setHeader('Cache-Control', 'no-cache');
-      return response.sendFile(path.join(clientDirectory, 'index.html'));
-    });
+  if (serveClient) {
+    if (!isProduction) {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } else {
+      const clientDirectory = path.resolve(projectRoot, 'dist/client');
+      app.use(express.static(clientDirectory, { index: false, immutable: true, maxAge: '1y' }));
+      app.use((request, response, next) => {
+        if (request.method !== 'GET' && request.method !== 'HEAD') return next();
+        if (request.path.startsWith('/api/')) return response.sendStatus(404);
+        response.setHeader('Cache-Control', 'no-cache');
+        return response.sendFile(path.join(clientDirectory, 'index.html'));
+      });
+    }
   }
 
   app.use(errorHandler);
   return app;
 }
 
-if (process.env.VITEST !== 'true') {
+// Local/dev process only — never listen inside Vercel serverless or Vitest.
+if (process.env.VITEST !== 'true' && !process.env.VERCEL) {
   const app = await createApp();
   app.listen(port, '0.0.0.0', () => {
     console.log(`SchoolRun Village foundation listening on port ${port}`);
