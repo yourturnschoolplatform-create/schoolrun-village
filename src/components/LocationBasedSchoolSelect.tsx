@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   sortSchoolsByDistance,
   suburbsByNearestSchool,
@@ -15,9 +15,11 @@ export type LocationSchoolOption = {
 
 type LocationStatus = 'idle' | 'detecting' | 'ready' | 'denied';
 
+type RankedSchool = LocationSchoolOption & { distanceKm: number | null };
+
 /**
- * Location-aware school dropdown for onboarding.
- * Uses browser geolocation only to sort/auto-select — never posts coordinates.
+ * User-friendly suburb → school picker for onboarding.
+ * Location is opt-in via button; coordinates are never stored or posted.
  */
 export function LocationBasedSchoolSelect({
   schools,
@@ -33,35 +35,17 @@ export function LocationBasedSchoolSelect({
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
   const [suburbFilter, setSuburbFilter] = useState('');
-  const autoAppliedRef = useRef(false);
+  const [statusMessage, setStatusMessage] = useState(
+    'Choose a suburb and school, or use your current location to find nearby schools. Location is never stored.',
+  );
 
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setLocationStatus('denied');
-      return;
+  const rankedSchools = useMemo<RankedSchool[]>(() => {
+    if (coords) {
+      return sortSchoolsByDistance(schools, coords.lat, coords.lng);
     }
-    setLocationStatus('detecting');
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCoords({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setLocationStatus('ready');
-      },
-      () => {
-        setCoords(null);
-        setLocationStatus('denied');
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 },
-    );
-  }, []);
-
-  const rankedSchools = useMemo(() => {
-    if (!coords) {
-      return schools.map((school) => ({ ...school, distanceKm: null as number | null }));
-    }
-    return sortSchoolsByDistance(schools, coords.lat, coords.lng);
+    return [...schools]
+      .map((school) => ({ ...school, distanceKm: null as number | null }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
   }, [schools, coords]);
 
   const suburbs = useMemo(() => {
@@ -77,38 +61,95 @@ export function LocationBasedSchoolSelect({
     );
   }, [rankedSchools, suburbFilter]);
 
-  const closestSchool = rankedSchools[0] ?? null;
+  function applyClosestFromCoords(lat: number, lng: number) {
+    const ranked = sortSchoolsByDistance(schools, lat, lng);
+    const closest = ranked[0];
+    if (!closest) {
+      setStatusMessage('No schools available yet. Please try again shortly.');
+      return;
+    }
+    setSuburbFilter(closest.suburb);
+    onChange(closest.id);
+    setStatusMessage(
+      `Closest school auto-selected: ${closest.displayName} (${closest.suburb} VIC). Location is not stored.`,
+    );
+  }
 
-  useEffect(() => {
-    if (locationStatus !== 'ready' || !closestSchool || autoAppliedRef.current) return;
-    autoAppliedRef.current = true;
-    setSuburbFilter(closestSchool.suburb);
-    onChange(closestSchool.id);
-    // Intentionally omit onChange to avoid parent re-render loops.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationStatus, closestSchool?.id, closestSchool?.suburb]);
+  function useCurrentLocation() {
+    if (disabled) return;
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationStatus('denied');
+      setCoords(null);
+      setStatusMessage(
+        'Location is not supported in this browser. You can still choose any suburb and school below.',
+      );
+      return;
+    }
 
-  useEffect(() => {
-    if (locationStatus === 'detecting') return;
-    if (!filteredSchools.length) return;
-    if (!value || !filteredSchools.some((school) => school.id === value)) {
-      onChange(filteredSchools[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredSchools, value, locationStatus]);
+    setLocationStatus('detecting');
+    setStatusMessage('Detecting nearby schools…');
 
-  const statusCopy = (() => {
-    if (locationStatus === 'detecting') {
-      return 'Detecting your location…';
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setCoords({ lat, lng });
+        setLocationStatus('ready');
+        applyClosestFromCoords(lat, lng);
+      },
+      () => {
+        setCoords(null);
+        setLocationStatus('denied');
+        setStatusMessage(
+          'Could not access your location. Choose a suburb and school from the list below.',
+        );
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
+    );
+  }
+
+  function onSuburbChange(nextSuburb: string) {
+    setSuburbFilter(nextSuburb);
+
+    const nextList = !nextSuburb
+      ? rankedSchools
+      : rankedSchools.filter(
+        (school) => school.suburb.toLowerCase() === nextSuburb.toLowerCase(),
+      );
+
+    if (!nextList.length) {
+      setStatusMessage('No schools in this suburb. Try another suburb or All suburbs.');
+      return;
     }
-    if (locationStatus === 'ready' && closestSchool) {
-      return `Closest school auto-selected: ${closestSchool.displayName} (${closestSchool.suburb} VIC). Location is not stored.`;
+
+    const stillValid = nextList.some((school) => school.id === value);
+    if (!stillValid) {
+      onChange(nextList[0].id);
     }
-    if (locationStatus === 'ready') {
-      return 'Detecting nearby schools…';
+
+    setStatusMessage(
+      nextSuburb
+        ? `Showing schools in ${nextSuburb} VIC.`
+        : coords
+          ? 'Showing all schools nearest first.'
+          : 'Showing all schools in alphabetical order.',
+    );
+  }
+
+  function onSchoolChange(schoolId: string) {
+    const selected = rankedSchools.find((school) => school.id === schoolId)
+      ?? schools.find((school) => school.id === schoolId);
+    if (!selected) {
+      onChange(schoolId);
+      return;
     }
-    return 'Location unavailable. Choose a suburb and school from the full list. Location is optional and never saved.';
-  })();
+    setSuburbFilter(selected.suburb);
+    onChange(selected.id);
+    setStatusMessage(`Selected ${selected.displayName} in ${selected.suburb} VIC.`);
+  }
+
+  const geoSupported = typeof navigator !== 'undefined' && Boolean(navigator.geolocation);
+  const showDistance = locationStatus === 'ready' && coords != null;
 
   return (
     <div
@@ -116,21 +157,31 @@ export function LocationBasedSchoolSelect({
       data-location-school-select={locationStatus}
       aria-busy={locationStatus === 'detecting'}
     >
-      {locationStatus === 'detecting' ? (
-        <p className="notice notice--amber location-school-select__detecting" role="status">
-          Detecting nearby schools…
-        </p>
-      ) : null}
+      <button
+        type="button"
+        className="location-school-select__locate"
+        disabled={disabled || locationStatus === 'detecting' || !geoSupported}
+        onClick={useCurrentLocation}
+      >
+        <span className="location-school-select__locate-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M12 21s6.5-5.2 6.5-10.2A6.5 6.5 0 0 0 5.5 10.8C5.5 15.8 12 21 12 21Z" />
+            <circle cx="12" cy="10.5" r="2.2" />
+          </svg>
+        </span>
+        <span>
+          {locationStatus === 'detecting'
+            ? 'Detecting nearby schools…'
+            : 'Use current location to find nearby schools'}
+        </span>
+      </button>
 
       <label>
         Suburb
         <select
           value={suburbFilter}
-          disabled={disabled || locationStatus === 'detecting'}
-          onChange={(event) => {
-            autoAppliedRef.current = true;
-            setSuburbFilter(event.target.value);
-          }}
+          disabled={disabled}
+          onChange={(event) => onSuburbChange(event.target.value)}
           aria-label="Filter schools by suburb"
         >
           <option value="">All suburbs</option>
@@ -144,12 +195,9 @@ export function LocationBasedSchoolSelect({
         School
         <select
           required
-          value={value}
-          disabled={disabled || locationStatus === 'detecting' || filteredSchools.length === 0}
-          onChange={(event) => {
-            autoAppliedRef.current = true;
-            onChange(event.target.value);
-          }}
+          value={filteredSchools.some((school) => school.id === value) ? value : (filteredSchools[0]?.id ?? '')}
+          disabled={disabled || filteredSchools.length === 0}
+          onChange={(event) => onSchoolChange(event.target.value)}
           aria-label="Choose your school"
         >
           {filteredSchools.length === 0 ? (
@@ -158,8 +206,10 @@ export function LocationBasedSchoolSelect({
             filteredSchools.map((school) => (
               <option key={school.id} value={school.id}>
                 {school.displayName}
-                {school.distanceKm != null && locationStatus === 'ready'
-                  ? ` · ${school.distanceKm < 10 ? `${school.distanceKm.toFixed(1)} km` : `${Math.round(school.distanceKm)} km`}`
+                {showDistance && school.distanceKm != null
+                  ? ` · ${school.distanceKm < 10
+                    ? `${school.distanceKm.toFixed(1)} km`
+                    : `${Math.round(school.distanceKm)} km`}`
                   : ''}
               </option>
             ))
@@ -168,7 +218,7 @@ export function LocationBasedSchoolSelect({
       </label>
 
       <p className="field-help" role="status">
-        {statusCopy}
+        {statusMessage}
       </p>
     </div>
   );

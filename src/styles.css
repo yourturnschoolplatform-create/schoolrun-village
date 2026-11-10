@@ -585,12 +585,40 @@ input::placeholder { color: #99a6a2; }
   border: 1px solid var(--line);
   background: #F8FAFC;
 }
-.location-school-select__detecting {
-  margin: 0 0 .35rem;
-}
 .location-school-select {
   display: grid;
   gap: .85rem;
+}
+.location-school-select__locate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: .7rem .9rem;
+  border: 1px solid #FFD8C2;
+  border-radius: .9rem;
+  background: #FFF7F0;
+  color: #C2410C;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+  text-align: center;
+}
+.location-school-select__locate:hover:not(:disabled) {
+  background: #FFEDD5;
+  border-color: #FF6F0F;
+  color: #9A3412;
+}
+.location-school-select__locate:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+.location-school-select__locate-icon {
+  display: grid;
+  place-items: center;
+  color: #FF6F0F;
 }
 .location-school-select .field-help {
   margin: 0;
