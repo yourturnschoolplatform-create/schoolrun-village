@@ -25,7 +25,7 @@ describe('Day 11 direct chat boundary', () => {
     expect(hub).toContain('readByPeer');
     const community = await readFile(resolve('src/components/CommunityHub.tsx'), 'utf8');
     expect(community).toContain('openThreadChat');
-    expect(community).toContain('작성자와 1:1 채팅하기');
+    expect(community).toContain('Chat with author');
     expect(community).toContain('discussion-detail__bar');
     expect(sql).toMatch(/create table public\.chat_rooms/i);
     expect(sql).toMatch(/create table public\.chat_participants/i);

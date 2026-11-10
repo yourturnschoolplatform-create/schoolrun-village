@@ -428,7 +428,7 @@ export function CommunityHub({
                     disabled={busy}
                     onClick={() => void chatWithThreadAuthor(selectedThread)}
                   >
-                    작성자와 1:1 채팅하기
+                    Chat with author
                   </button>
                 </div>
               ) : selectedThread.author_id === userId ? (

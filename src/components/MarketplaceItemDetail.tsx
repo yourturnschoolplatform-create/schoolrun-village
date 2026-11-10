@@ -139,7 +139,7 @@ export function MarketplaceItemDetail({
                 disabled={busy}
                 onClick={() => void onChat(item)}
               >
-                채팅하기
+                Chat 1:1
               </button>
               {payable ? (
                 <button
