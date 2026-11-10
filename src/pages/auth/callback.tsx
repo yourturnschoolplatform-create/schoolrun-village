@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { exchangeAuthCallbackParams, stripAuthCallbackFromUrl } from '../../lib/auth-session';
 
 type AuthCallbackProps = {
   client: SupabaseClient;
@@ -8,8 +9,7 @@ type AuthCallbackProps = {
 
 /**
  * Optional legacy /auth/callback landing.
- * Primary OAuth redirect is `/` with detectSessionInUrl — do not exchangeCodeForSession here
- * (that would race a second PKCE exchange).
+ * Primary redirect is `/` with the singleton client + detectSessionInUrl.
  */
 export default function AuthCallback({ client, onResolved }: AuthCallbackProps) {
   const ran = useRef(false);
@@ -19,18 +19,19 @@ export default function AuthCallback({ client, onResolved }: AuthCallbackProps) 
     ran.current = true;
 
     const finish = (session: Session | null) => {
+      stripAuthCallbackFromUrl();
       const invite = new URLSearchParams(window.location.search).get('invite')?.trim();
       const next = invite ? `/?invite=${encodeURIComponent(invite)}` : '/';
       window.history.replaceState({}, document.title, next);
       onResolved(session);
     };
 
-    const handleAuthCallback = async () => {
-      const { data } = await client.auth.getSession();
-      finish(data.session ?? null);
-    };
-
-    void handleAuthCallback();
+    void exchangeAuthCallbackParams(client)
+      .then((session) => finish(session))
+      .catch(async () => {
+        const { data } = await client.auth.getSession();
+        finish(data.session ?? null);
+      });
   }, [client, onResolved]);
 
   return (

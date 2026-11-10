@@ -1,4 +1,3 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import appConfig from '../../app.config';
 
 export type BrowserRuntimeConfig = {
@@ -121,20 +120,4 @@ export async function fetchRuntimeConfig(): Promise<BrowserRuntimeConfig> {
   } finally {
     if (timer) clearTimeout(timer);
   }
-}
-
-/**
- * Browser Supabase client uses only the anon/publishable key from public config or env fallback.
- */
-export function createBrowserSupabaseClient(config: BrowserRuntimeConfig): SupabaseClient | null {
-  if (!config.supabase) return null;
-  return createClient(config.supabase.url, config.supabase.anonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      // Exchange OAuth ?code= on return to `/` (no dedicated callback hop required).
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-    },
-  });
 }

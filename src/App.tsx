@@ -4,7 +4,14 @@ import { resolveSchoolLocation, type SchoolLocation } from '../shared/au-locatio
 import { onboardingAccessState } from '../shared/onboarding';
 import { FALLBACK_SCHOOL_OPTIONS, onboardingApi, openInvitationLink, type OnboardingStatus, type PendingMembership, type SchoolOption } from './lib/onboarding-api';
 import { scheduleApi } from './lib/schedule-api';
-import { createBrowserSupabaseClient, fetchRuntimeConfig, fallbackRuntimeConfig, type BrowserRuntimeConfig } from './lib/runtime-config';
+import {
+  exchangeAuthCallbackParams,
+  hasAuthCallbackParams as urlHasAuthCallbackParams,
+  refreshBrowserSession,
+  stripAuthCallbackFromUrl,
+} from './lib/auth-session';
+import { fetchRuntimeConfig, fallbackRuntimeConfig, type BrowserRuntimeConfig } from './lib/runtime-config';
+import { getSupabaseBrowserClient } from './lib/supabaseClient';
 import { PENDING_VERIFICATION_NOTICE, normalizeAccountStatus } from '../shared/account-verification';
 import { LocationBasedSchoolSelect } from './components/LocationBasedSchoolSelect';
 import { FALLBACK_SCHOOL_LOCATION, LocationChip } from './components/LocationChip';
@@ -18,14 +25,9 @@ import AuthCallback from './pages/auth/callback';
 
 type PillTone = 'teal' | 'slate' | 'amber' | 'red';
 
-/** True while Supabase OAuth/PKCE (or implicit) callback params are still in the URL. */
+/** True while Supabase OAuth/PKCE/email-verify callback params are still in the URL. */
 function hasAuthCallbackParams(): boolean {
-  const search = new URLSearchParams(window.location.search);
-  if (search.has('code') || search.has('error') || search.has('error_description')) return true;
-  const hash = window.location.hash.replace(/^#/, '');
-  if (!hash) return false;
-  const hashParams = new URLSearchParams(hash);
-  return hashParams.has('access_token') || hashParams.has('error') || hashParams.has('error_description');
+  return urlHasAuthCallbackParams();
 }
 
 /** True only when the address bar actually contains a school ?invite= token. */
@@ -43,14 +45,7 @@ function readSchoolInviteToken(): string | null {
 }
 
 function stripOAuthCodeFromUrl() {
-  const queryParams = new URLSearchParams(window.location.search);
-  if (!queryParams.has('code') && !queryParams.has('state') && !window.location.hash) return;
-  const invite = hasSchoolInviteInUrl() ? queryParams.get('invite')!.trim() : '';
-  // Keep school invite; drop OAuth code/state/hash so refresh cannot re-process the callback.
-  const next = invite
-    ? `${window.location.pathname}?invite=${encodeURIComponent(invite)}`
-    : window.location.pathname;
-  window.history.replaceState({}, document.title, next || '/');
+  stripAuthCallbackFromUrl();
 }
 
 /** After sign-in, leave auth/OAuth entry routes so Onboarding / hub can mount at `/`. */
@@ -179,6 +174,7 @@ function AccountScreen({
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [pendingVerifyEmail, setPendingVerifyEmail] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -186,8 +182,9 @@ function AccountScreen({
     setMessage(null);
     try {
       if (mode === 'signup') {
+        const trimmedEmail = email.trim();
         const { data, error } = await client.auth.signUp({
-          email: email.trim(),
+          email: trimmedEmail,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
@@ -207,8 +204,14 @@ function AccountScreen({
             /* profile row may lag; pending screen still applies after email verify */
           }
           onSession(data.session);
+          if (!data.session.user.email_confirmed_at) {
+            setPendingVerifyEmail(trimmedEmail);
+          }
+        } else {
+          // Confirm-email enabled: no session until the verify link is opened.
+          setPendingVerifyEmail(trimmedEmail);
+          setMessage('Check your inbox to verify your email before continuing.');
         }
-        setMessage('Check your inbox to verify your email. Your profile stays under school admin verification until approved.');
       } else {
         const { data, error } = await client.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
@@ -245,6 +248,20 @@ function AccountScreen({
 
   const handleGoogleLogin = () => { void handleOAuthLogin('google'); };
   const handleFacebookLogin = () => { void handleOAuthLogin('facebook'); };
+
+  if (pendingVerifyEmail) {
+    return (
+      <EmailVerificationScreen
+        client={client}
+        email={pendingVerifyEmail}
+        onSession={onSession}
+        onBack={() => {
+          setPendingVerifyEmail(null);
+          setMessage(null);
+        }}
+      />
+    );
+  }
 
   return (
     <section className="onboarding-card" aria-labelledby="account-title">
@@ -312,15 +329,101 @@ function AccountScreen({
   );
 }
 
-function EmailVerificationScreen({ email }: { email: string | undefined }) {
+function EmailVerificationScreen({
+  client,
+  email,
+  onSession,
+  onBack,
+}: {
+  client: SupabaseClient;
+  email: string | undefined;
+  onSession?: (session: Session) => void;
+  onBack?: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [tone, setTone] = useState<'teal' | 'red' | 'amber'>('teal');
+
+  async function resendVerification() {
+    if (!email?.trim()) {
+      setTone('red');
+      setNotice('Enter your email on the sign-up form first, then try again.');
+      return;
+    }
+    setBusy(true);
+    setNotice(null);
+    try {
+      const { error } = await client.auth.resend({
+        type: 'signup',
+        email: email.trim(),
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) throw error;
+      setTone('teal');
+      setNotice('Verification email sent again. Check your inbox (and spam folder).');
+    } catch {
+      setTone('red');
+      setNotice('That verification email could not be resent right now. Please try again shortly.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function continueAfterVerify() {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const session = await refreshBrowserSession(client);
+      if (session?.user.email_confirmed_at) {
+        onSession?.(session);
+        return;
+      }
+      if (session) {
+        onSession?.(session);
+        setTone('amber');
+        setNotice('Signed in, but email confirmation is still pending. Open the link from your inbox.');
+        return;
+      }
+      setTone('amber');
+      setNotice('No verified session yet. Open the link in your email, then tap Continue here.');
+    } catch {
+      setTone('red');
+      setNotice('We could not refresh your session. Open the email link again, or sign in.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className="onboarding-card centre-card" aria-labelledby="verify-email-title">
       <Progress current={1} />
       <div className="state-icon" aria-hidden="true">✉</div>
       <p className="eyebrow">Email verification</p>
       <h1 id="verify-email-title">Check your inbox.</h1>
-      <p className="section-copy">We sent a verification link to {email ?? 'your email address'}. Open it, then return here to continue with school verification.</p>
-      <Notice tone="teal">Your school details remain unavailable until approval is complete.</Notice>
+      <p className="section-copy">
+        We sent a verification link to {email ?? 'your email address'}.
+        Open it to confirm your account — you will continue onboarding automatically when the session is ready.
+      </p>
+      <Notice tone="teal">Check your spam folder if you do not see the email within a few minutes.</Notice>
+      {notice ? <Notice tone={tone}>{notice}</Notice> : null}
+      <div className="stack-form" style={{ marginTop: '1rem' }}>
+        <PrimaryButton type="button" disabled={busy} onClick={() => void continueAfterVerify()}>
+          {busy ? 'Checking…' : 'I have verified — continue'}
+        </PrimaryButton>
+        <button
+          type="button"
+          className="secondary-button"
+          disabled={busy || !email}
+          onClick={() => void resendVerification()}
+        >
+          Resend verification email
+        </button>
+        {onBack ? (
+          <button type="button" className="text-button text-button--lower" disabled={busy} onClick={onBack}>
+            Back to sign up
+          </button>
+        ) : null}
+      </div>
     </section>
   );
 }
@@ -718,7 +821,18 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
     return () => { cancelled = true; };
   }, [accessState, client]);
 
-  if (!session.user.email_confirmed_at) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} verificationPending={false} /><EmailVerificationScreen email={session.user.email} /></>;
+  if (!session.user.email_confirmed_at) {
+    return (
+      <>
+        <AppHeader appName={appName} signedIn onSignOut={onSignOut} verificationPending={false} />
+        <EmailVerificationScreen
+          client={client}
+          email={session.user.email}
+          onSession={() => { void refresh(); }}
+        />
+      </>
+    );
+  }
   if (showModeration) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><ModeratorPanel client={client} onClose={() => setShowModeration(false)} onRefresh={refresh} schoolId={status?.roles.find((role) => role.role === 'moderator')?.school_id ?? null} /></>;
   if (showAdminConsole) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><AdminModerationPanel client={client} onClose={() => setShowAdminConsole(false)} /></>;
   if (showAdminVerification) {
@@ -823,7 +937,8 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [invitationState, setInvitationState] = useState<'idle' | 'opened' | 'unavailable'>('idle');
-  const client = useMemo(() => createBrowserSupabaseClient(runtimeConfig), [runtimeConfig]);
+  // Singleton: same GoTrue client for the life of matching URL + anon key.
+  const client = useMemo(() => getSupabaseBrowserClient(runtimeConfig), [runtimeConfig]);
   // Capture ?invite= once at boot only when this is not an OAuth callback (?code=).
   const invitationToken = useMemo(() => readSchoolInviteToken(), []);
 
@@ -851,44 +966,42 @@ export default function App() {
 
     const checkSession = async () => {
       try {
-        const { data: { session: current }, error } = await client.auth.getSession();
+        // Email verify (?token_hash) / PKCE (?code) / hash tokens → session.
+        const current = hasAuthCallbackParams()
+          ? await exchangeAuthCallbackParams(client)
+          : (await client.auth.getSession()).data.session;
         if (cancelled) return;
-
-        if (error) {
-          // Corrupted / unreadable local session — clear and return to a clean signed-out home.
-          await client.auth.signOut();
-          if (cancelled) return;
-          setSession(null);
-          setAuthReady(true);
-          if (window.location.pathname !== '/' || window.location.search || window.location.hash) {
-            window.location.href = '/';
-          }
-          return;
-        }
 
         setSession(current);
         setAuthReady(true);
-        if (current && (window.location.search.includes('code=') || window.location.hash)) {
+        if (current && hasAuthCallbackParams()) {
           stripOAuthCodeFromUrl();
+          navigateAfterSignIn();
         }
       } catch {
         if (cancelled) return;
+        // Corrupt local session — clear once, then allow a clean sign-in.
+        try {
+          await client.auth.signOut();
+        } catch {
+          /* ignore */
+        }
+        if (cancelled) return;
         setSession(null);
         setAuthReady(true);
+        if (hasAuthCallbackParams()) stripOAuthCodeFromUrl();
       }
     };
 
     void checkSession();
 
-    // Main-page session detect: detectSessionInUrl turns OAuth ?code= / hash into a session,
-    // then SIGNED_IN fires. No Next.js router — setSession mounts Onboarding on `/`.
+    // detectSessionInUrl + verifyOtp recover sessions; keep UI in sync.
     const { data: { subscription } } = client.auth.onAuthStateChange((event, nextSession) => {
       if (cancelled) return;
       setSession(nextSession);
       setAuthReady(true);
 
-      if (event === 'SIGNED_IN' && nextSession) {
-        // Clean address bar (drop code=/state=/hash; keep school ?invite= when present).
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && nextSession) {
         stripOAuthCodeFromUrl();
         navigateAfterSignIn();
       }
