@@ -9,8 +9,10 @@ describe('Day 11/12 instant pickup board boundary', () => {
     const day12 = await readFile(resolve('db/migrations/0056_day12_live_matching_and_reminders.sql'), 'utf8');
     expect(api).not.toMatch(/\.rpc\(\s*['"]create_instant_pickup_request['"]/);
     expect(api).not.toMatch(/\.rpc\(\s*['"]list_instant_pickup_requests['"]/);
-    expect(api).toContain("rpc<InstantPickupAcceptResult>(client, 'accept_instant_pickup_request'");
+    expect(api).toContain("client.rpc('accept_instant_pickup_request'");
+    expect(api).toContain('p_request_id:');
     expect(api).toContain("rpc<InstantPickupRequest>(client, 'check_in_instant_pickup'");
+    expect(api).toMatch(/p_request_id:\s*args\.p_request_id|p_request_id:\s*assertRequestId/);
     expect(api).toContain("table: 'instant_pickup_requests'");
     expect(api).toContain(".from('instant_pickup_requests')");
     expect(api).toContain('.insert(payload)');

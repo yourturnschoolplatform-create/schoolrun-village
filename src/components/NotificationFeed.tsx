@@ -2,10 +2,12 @@ import { useEffect, useId, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { notificationsApi, type InboxNotification } from '../lib/notifications-api';
 
+const NOTIFICATION_FETCH_TIMEOUT_MS = 5_000;
+
 /**
  * Owner inbox for public.notifications via JWT API + list/mark RPCs.
- * Polls while open (same cadence as contact notifications). Direct table
- * UPDATE is avoided because read_at must be set by mark_notification_read.
+ * Polls while open. A 5s timeout forces empty-array fallback so the UI
+ * never sticks on “Loading notifications…”.
  */
 export function NotificationFeed({ client }: { client: SupabaseClient }) {
   const id = useId();
@@ -15,37 +17,60 @@ export function NotificationFeed({ client }: { client: SupabaseClient }) {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
-    let active = true;
+    let isMounted = true;
     let pending = false;
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
 
-    async function refresh() {
-      if (!active || pending) return;
+    async function fetchNotifications(isInitial: boolean) {
+      if (!isMounted || pending) return;
       pending = true;
-      try {
-        const result = await notificationsApi.list(client, { signal: controller.signal });
-        if (!active) return;
-        setNotifications(result.notifications);
+      if (isInitial) {
+        setLoading(true);
         setError('');
-        setLoading(false);
-      } catch {
-        if (active) {
-          setError('Notifications could not be refreshed. We will try again while this page is open.');
-          setLoading(false);
+      }
+
+      const controller = new AbortController();
+      let timeoutRejectId: number | undefined;
+      const timeoutId = window.setTimeout(() => {
+        controller.abort();
+      }, NOTIFICATION_FETCH_TIMEOUT_MS);
+
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutRejectId = window.setTimeout(
+            () => reject(new Error('Notification fetch timeout')),
+            NOTIFICATION_FETCH_TIMEOUT_MS,
+          );
+        });
+
+        const fetchPromise = notificationsApi.list(client, { signal: controller.signal });
+        const result = await Promise.race([fetchPromise, timeoutPromise]);
+
+        if (isMounted) {
+          setNotifications(result.notifications ?? []);
+          setError('');
         }
+      } catch (err) {
+        if (!isMounted) return;
+        console.warn('Notifications fallback triggered due to:', err);
+        // Initial load: empty inbox. Polls keep the last good list.
+        if (isInitial) setNotifications([]);
+        setError('');
       } finally {
+        window.clearTimeout(timeoutId);
+        if (timeoutRejectId != null) window.clearTimeout(timeoutRejectId);
         pending = false;
+        if (isMounted) setLoading(false);
       }
     }
 
-    void refresh();
-    const timer = window.setInterval(() => { void refresh(); }, 20_000);
+    void fetchNotifications(true);
+    const timer = window.setInterval(() => {
+      void fetchNotifications(false);
+    }, 20_000);
+
     return () => {
-      active = false;
+      isMounted = false;
       window.clearInterval(timer);
-      controller.abort();
     };
   }, [client]);
 

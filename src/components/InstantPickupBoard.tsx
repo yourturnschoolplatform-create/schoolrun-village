@@ -185,26 +185,29 @@ export function InstantPickupBoard({
       setToast('Private match chat opened. You can send your confirmation code.');
       setMessage('Match requested. Share your household confirmation code in chat when ready.');
     } catch (err) {
-      console.error('Request match detailed error:', err);
       const cause =
         err instanceof Error && 'cause' in err ? (err as Error & { cause?: unknown }).cause : undefined;
-      if (cause) console.error('Request match detailed error (cause):', cause);
       const bag = (value: unknown) => {
-        if (!value || typeof value !== 'object') return null;
+        if (!value || typeof value !== 'object') {
+          return { message: String(value ?? ''), details: '', hint: '', code: undefined };
+        }
         const row = value as Record<string, unknown>;
         return {
-          message: row.message,
-          code: row.code,
-          details: row.details,
-          hint: row.hint,
-          status: row.status,
+          message: typeof row.message === 'string' ? row.message : String(row.message ?? ''),
+          details: typeof row.details === 'string' ? row.details : '',
+          hint: typeof row.hint === 'string' ? row.hint : '',
+          code: typeof row.code === 'string' ? row.code : undefined,
         };
       };
+      const primary = bag(cause ?? err);
+      console.error('Request match detailed error:', err);
       console.error('Request match detailed error:', {
+        message: primary.message,
+        details: primary.details,
+        hint: primary.hint,
+        code: primary.code,
         rpc: 'accept_instant_pickup_request',
         args: { p_request_id: id },
-        error: bag(err) ?? String(err),
-        cause: bag(cause),
       });
       setMessage(
         err instanceof Error && err.message.trim()
