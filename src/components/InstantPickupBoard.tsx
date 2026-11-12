@@ -66,6 +66,7 @@ export function InstantPickupBoard({
   const [message, setMessage] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [matchRoom, setMatchRoom] = useState<ChatRoom | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<InstantPickupRequest | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [composeStep, setComposeStep] = useState<1 | 2 | 3>(1);
   const resolvedUserId = userId ?? '';
@@ -219,6 +220,10 @@ export function InstantPickupBoard({
     }
   }
 
+  function handleCardClick(matchItem: InstantPickupRequest) {
+    setSelectedMatch(matchItem);
+  }
+
   async function openMatchedChat(id: string, asDrawer = true) {
     setBusy(true);
     try {
@@ -230,6 +235,17 @@ export function InstantPickupBoard({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleStartChat(item: InstantPickupRequest) {
+    setSelectedMatch(item);
+    if (!item.chatRoomId) {
+      setMessage('Chat room is not ready yet.');
+      return;
+    }
+    // Open the 1:1 room in the Messages tab (ScheduleHub view switch).
+    await openMatchedChat(item.id, false);
+    setSelectedMatch(null);
   }
 
   async function respondCheckIn(confirm: boolean) {
@@ -471,8 +487,15 @@ export function InstantPickupBoard({
         {items.length === 0 && (
           <li className="section-copy">No open instant requests for your school right now.</li>
         )}
-        {items.map((item) => (
-          <li key={item.id} className="feed-card">
+        {items.map((item) => {
+          const selected = selectedMatch?.id === item.id;
+          return (
+          <li
+            key={item.id}
+            className={selected ? 'feed-card match-card--selected' : 'feed-card'}
+            data-selected={selected ? 'true' : 'false'}
+            onClick={() => handleCardClick(item)}
+          >
             <div className="feed-card__top">
               <ParentTrustBadge
                 client={client}
@@ -498,7 +521,7 @@ export function InstantPickupBoard({
                 ? ` · matched with ${item.matchedDisplayName}`
                 : ''}
             </small>
-            <div className="feed-card__actions">
+            <div className="feed-card__actions" onClick={(event) => event.stopPropagation()}>
               {!item.mine && item.status === 'open' && (
                 <button
                   className="primary-button feed-card__cta"
@@ -514,20 +537,105 @@ export function InstantPickupBoard({
                   Cancel my request
                 </button>
               )}
-              {(item.mine || item.iAmMatched) && item.status === 'matched' && item.chatRoomId && (
-                <button
-                  className="secondary-button feed-card__cta"
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void openMatchedChat(item.id, true)}
-                >
-                  Open match chat
-                </button>
+              {(item.mine || item.iAmMatched) && item.status === 'matched' && (
+                <>
+                  <button
+                    className="primary-button feed-card__cta"
+                    type="button"
+                    disabled={busy || !item.chatRoomId}
+                    onClick={() => void handleStartChat(item)}
+                  >
+                    Start chat in Messages
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    disabled={busy || !item.chatRoomId}
+                    onClick={() => void openMatchedChat(item.id, true)}
+                  >
+                    Quick chat drawer
+                  </button>
+                </>
               )}
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
+
+      {selectedMatch ? (
+        <div
+          className="match-detail-modal-overlay"
+          role="presentation"
+          onClick={() => setSelectedMatch(null)}
+        >
+          <div
+            className="match-detail-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="match-detail-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="match-detail-modal__head">
+              <h3 id="match-detail-title">Pickup Match Details</h3>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => setSelectedMatch(null)}
+              >
+                Close
+              </button>
+            </div>
+            <p>
+              <strong>Intent:</strong>{' '}
+              {intentLabelEnglish(selectedMatch.intent)}
+              {' · '}
+              {directionLabelEnglish(selectedMatch.direction)}
+            </p>
+            <p>
+              <strong>Date &amp; Time:</strong>{' '}
+              {selectedMatch.targetDate}
+              {selectedMatch.pickupAt
+                ? ` · pickup ${formatClock(selectedMatch.pickupAt)}`
+                : ''}
+            </p>
+            <p>
+              <strong>Notes:</strong>{' '}
+              {selectedMatch.notes?.trim() || 'No additional description provided.'}
+            </p>
+            <p>
+              <strong>Area:</strong>{' '}
+              {selectedMatch.areaLabel || selectedMatch.schoolSuburb || 'Local suburb'}
+            </p>
+            <p>
+              <strong>Status:</strong> {statusLabelEnglish(selectedMatch.status)}
+            </p>
+
+            {(selectedMatch.mine || selectedMatch.iAmMatched) && selectedMatch.status === 'matched' ? (
+              <button
+                type="button"
+                className="primary-button btn-primary-chat"
+                disabled={busy || !selectedMatch.chatRoomId}
+                onClick={() => void handleStartChat(selectedMatch)}
+              >
+                {busy ? 'Opening chat…' : 'Start 1:1 Chat with Partner'}
+              </button>
+            ) : null}
+
+            {!selectedMatch.chatRoomId && selectedMatch.status === 'matched' ? (
+              <p className="field-help" role="status">Chat room is not ready yet.</p>
+            ) : null}
+
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => setSelectedMatch(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {matchRoom && resolvedUserId ? (
         <MatchChatDrawer

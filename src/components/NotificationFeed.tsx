@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { ChatRoom } from '../lib/chat-api';
 import {
   instantPickupApi,
   type InstantPickupRequest,
@@ -48,12 +49,37 @@ async function loadMatchedPickupFallback(
  * Owner inbox for public.notifications via JWT API + list/mark RPCs.
  * If the inbox is empty, matched instant-pickup rows are shown as notices.
  */
-export function NotificationFeed({ client }: { client: SupabaseClient }) {
+export function NotificationFeed({
+  client,
+  onOpenChat,
+}: {
+  client: SupabaseClient;
+  onOpenChat?: (room: ChatRoom) => void;
+}) {
   const id = useId();
   const [notifications, setNotifications] = useState<InboxNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function handleStartChatFromNotice(notificationId: string) {
+    if (!onOpenChat || !isSyntheticMatchNotice(notificationId)) return;
+    const requestId = notificationId.slice(MATCH_NOTICE_PREFIX.length);
+    setBusyId(notificationId);
+    try {
+      const room = await instantPickupApi.openChat(client, requestId);
+      if (!room?.id) {
+        setError('Chat room is not ready yet.');
+        return;
+      }
+      onOpenChat(room);
+      setError('');
+    } catch {
+      setError('Chat room is not ready yet.');
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -190,6 +216,16 @@ export function NotificationFeed({ client }: { client: SupabaseClient }) {
                 </time>
               </span>
               <p className="section-copy">{item.body}</p>
+              {isSyntheticMatchNotice(item.id) && onOpenChat ? (
+                <button
+                  className="primary-button feed-card__cta"
+                  type="button"
+                  disabled={busyId !== null}
+                  onClick={() => { void handleStartChatFromNotice(item.id); }}
+                >
+                  {busyId === item.id ? 'Opening…' : 'Start chat in Messages'}
+                </button>
+              ) : null}
               {!item.is_read && !isSyntheticMatchNotice(item.id) && (
                 <button
                   className="text-button"

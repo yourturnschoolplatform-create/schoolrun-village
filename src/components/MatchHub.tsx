@@ -20,6 +20,7 @@ export function MatchHub({
   const [differentDates, setDifferentDates] = useState(false);
   const [candidates, setCandidates] = useState<MatchCandidate[]>([]);
   const [swaps, setSwaps] = useState<Swap[]>([]);
+  const [selectedMatch, setSelectedMatch] = useState<Swap | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [children, setChildren] = useState<Record<string, Child[]>>({});
@@ -57,10 +58,15 @@ export function MatchHub({
     }, 'Accepted-swap child details are visible only to participants.');
   }
 
+  function handleCardClick(matchItem: Swap) {
+    setSelectedMatch(matchItem);
+  }
+
   async function openSwapChat(swapId: string) {
     setBusy(true);
     try {
       const room = await chatApi.openSwapChat(client, swapId);
+      // Switch to Messages tab and open this 1:1 room (no /messages/:id router).
       onOpenChat(room);
       setMessage('');
     } catch {
@@ -68,6 +74,15 @@ export function MatchHub({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleStartChat(swap: Swap) {
+    setSelectedMatch(swap);
+    if (swap.status !== 'accepted') {
+      setMessage('Chat is available after the swap is accepted.');
+      return;
+    }
+    await openSwapChat(swap.id);
   }
 
   return (
@@ -78,7 +93,7 @@ export function MatchHub({
         <p>Only reciprocal, same-school options appear. Trust is shown as a band, never a score.</p>
       </div>
       {message && <p className="notice notice--teal" role="status">{message}</p>}
-      <NotificationFeed client={client} />
+      <NotificationFeed client={client} onOpenChat={onOpenChat} />
       <ContactNotifications client={client} onChanged={refresh} />
       <label className="match-toggle">
         <input type="checkbox" checked={differentDates} onChange={(event) => setDifferentDates(event.target.checked)} />
@@ -114,13 +129,29 @@ export function MatchHub({
       </section>
       <section>
         <h2>Your swap proposals</h2>
-        {swaps.length ? <div className="match-list">{swaps.map((swap) => (
-          <article className="feed-card match-card" key={swap.id}>
+        {swaps.length ? <div className="match-list">{swaps.map((swap) => {
+          const selected = selectedMatch?.id === swap.id;
+          return (
+          <article
+            className={selected ? 'feed-card match-card match-card--selected' : 'feed-card match-card'}
+            key={swap.id}
+            data-selected={selected ? 'true' : 'false'}
+            onClick={() => handleCardClick(swap)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleCardClick(swap);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-pressed={selected}
+          >
             <div className="feed-card__top"><strong>{swap.partnerName}</strong><span className="instance-status">{swap.status === 'cancelled_consent_revoked' ? 'Ended: consent withdrawn' : statusLabelEnglish(swap.status)}</span></div>
             <p>{swap.isIncoming ? 'Incoming proposal' : 'Your proposal'} · {swap.status === 'proposed'
               ? `expires ${new Date(swap.expiresAt).toLocaleString('en-AU')}`
               : 'No contact details are shared in this summary.'}</p>
-            {swap.status === 'proposed' && (swap.isIncoming ? <div>
+            {swap.status === 'proposed' && (swap.isIncoming ? <div onClick={(event) => event.stopPropagation()}>
               <button className="primary-button" disabled={busy} onClick={() => void run(
                 () => matchApi.action(client, swap.id, 'accept').then(() => undefined),
                 'Swap accepted. Participant-only child details are now available.',
@@ -128,20 +159,36 @@ export function MatchHub({
               <button className="text-button" disabled={busy} onClick={() => void run(
                 () => matchApi.action(client, swap.id, 'decline').then(() => undefined), 'Proposal declined.',
               )}>Decline</button>
-            </div> : <button className="text-button" disabled={busy} onClick={() => void run(
-              () => matchApi.action(client, swap.id, 'withdraw').then(() => undefined), 'Proposal withdrawn.',
-            )}>Withdraw</button>)}
+            </div> : <button className="text-button" disabled={busy} onClick={(event) => {
+              event.stopPropagation();
+              void run(
+                () => matchApi.action(client, swap.id, 'withdraw').then(() => undefined), 'Proposal withdrawn.',
+              );
+            }}>Withdraw</button>)}
             {swap.status === 'accepted' && <>
-              <div className="match-card__actions">
+              <div className="match-card__actions" onClick={(event) => event.stopPropagation()}>
                 <button className="secondary-button" disabled={busy} onClick={() => void reveal(swap.id)}>Show child nickname and year level</button>
-                <button className="secondary-button" disabled={busy} onClick={() => void openSwapChat(swap.id)}>Message about this school run</button>
+                <button
+                  className="primary-button feed-card__cta"
+                  disabled={busy}
+                  onClick={() => void handleStartChat(swap)}
+                >
+                  Start chat in Messages
+                </button>
                 {children[swap.id]?.map((child) => <p key={`${swap.id}-${child.nickname}`} className="child-reveal">{child.nickname} · Year {child.yearLevel}</p>)}
               </div>
-              <ContactSharing client={client} swapId={swap.id} onChanged={refresh} />
-              <Handover client={client} swapId={swap.id} onChanged={refresh} />
+              {selected ? (
+                <>
+                  <ContactSharing client={client} swapId={swap.id} onChanged={refresh} />
+                  <Handover client={client} swapId={swap.id} onChanged={refresh} />
+                </>
+              ) : (
+                <p className="field-help">Select this card to open contact sharing and handover details.</p>
+              )}
             </>}
           </article>
-        ))}</div> : <p className="section-copy">No proposals yet.</p>}
+          );
+        })}</div> : <p className="section-copy">No proposals yet.</p>}
       </section>
     </section>
   );
