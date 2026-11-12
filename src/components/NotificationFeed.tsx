@@ -1,13 +1,52 @@
 import { useEffect, useId, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import {
+  instantPickupApi,
+  type InstantPickupRequest,
+} from '../lib/instant-pickup-api';
 import { notificationsApi, type InboxNotification } from '../lib/notifications-api';
 
 const NOTIFICATION_FETCH_TIMEOUT_MS = 5_000;
+const MATCH_NOTICE_PREFIX = 'match-notice-';
+
+function isSyntheticMatchNotice(id: string): boolean {
+  return id.startsWith(MATCH_NOTICE_PREFIX);
+}
+
+/** When the inbox table is empty, surface matched pickup rows as notice cards. */
+function matchedPickupAsNotifications(
+  requests: InstantPickupRequest[],
+): InboxNotification[] {
+  return requests
+    .filter((req) => req.status === 'matched' && (req.mine || req.iAmMatched))
+    .map((req) => {
+      const label = (req.notes?.trim() || req.areaLabel || req.intent || 'Match').slice(0, 80);
+      return {
+        id: `${MATCH_NOTICE_PREFIX}${req.id}`,
+        title: 'Pickup matched',
+        body: `Your pickup request (${label}) has been successfully matched!`,
+        kind: 'instant_pickup_match',
+        is_read: true,
+        created_at: req.createdAt || new Date().toISOString(),
+      };
+    });
+}
+
+async function loadMatchedPickupFallback(
+  client: SupabaseClient,
+): Promise<InboxNotification[]> {
+  try {
+    const requests = await instantPickupApi.list(client, true);
+    return matchedPickupAsNotifications(requests);
+  } catch (err) {
+    console.warn('Matched pickup notification fallback failed:', err);
+    return [];
+  }
+}
 
 /**
  * Owner inbox for public.notifications via JWT API + list/mark RPCs.
- * Polls while open. A 5s timeout forces empty-array fallback so the UI
- * never sticks on “Loading notifications…”.
+ * If the inbox is empty, matched instant-pickup rows are shown as notices.
  */
 export function NotificationFeed({ client }: { client: SupabaseClient }) {
   const id = useId();
@@ -44,16 +83,24 @@ export function NotificationFeed({ client }: { client: SupabaseClient }) {
 
         const fetchPromise = notificationsApi.list(client, { signal: controller.signal });
         const result = await Promise.race([fetchPromise, timeoutPromise]);
+        const notificationsData = result.notifications ?? [];
 
-        if (isMounted) {
-          setNotifications(result.notifications ?? []);
-          setError('');
+        if (!isMounted) return;
+
+        if (!notificationsData.length) {
+          const fallback = await loadMatchedPickupFallback(client);
+          if (!isMounted) return;
+          setNotifications(fallback);
+        } else {
+          setNotifications(notificationsData);
         }
+        setError('');
       } catch (err) {
         if (!isMounted) return;
         console.warn('Notifications fallback triggered due to:', err);
-        // Initial load: empty inbox. Polls keep the last good list.
-        if (isInitial) setNotifications([]);
+        const fallback = await loadMatchedPickupFallback(client);
+        if (!isMounted) return;
+        setNotifications(fallback);
         setError('');
       } finally {
         window.clearTimeout(timeoutId);
@@ -75,6 +122,7 @@ export function NotificationFeed({ client }: { client: SupabaseClient }) {
   }, [client]);
 
   async function markAsRead(notificationId: string) {
+    if (isSyntheticMatchNotice(notificationId)) return;
     setBusyId(notificationId);
     try {
       const result = await notificationsApi.markRead(client, notificationId);
@@ -90,11 +138,17 @@ export function NotificationFeed({ client }: { client: SupabaseClient }) {
   }
 
   async function markAllRead() {
+    const hasRealUnread = notifications.some(
+      (item) => !item.is_read && !isSyntheticMatchNotice(item.id),
+    );
+    if (!hasRealUnread) return;
     setBusyId('all');
     try {
       await notificationsApi.markAllRead(client);
       setNotifications((current) => current.map((item) => (
-        item.is_read ? item : { ...item, is_read: true }
+        item.is_read || isSyntheticMatchNotice(item.id)
+          ? item
+          : { ...item, is_read: true }
       )));
       setError('');
     } catch {
@@ -104,7 +158,9 @@ export function NotificationFeed({ client }: { client: SupabaseClient }) {
     }
   }
 
-  const unreadCount = notifications.filter((item) => !item.is_read).length;
+  const unreadCount = notifications.filter(
+    (item) => !item.is_read && !isSyntheticMatchNotice(item.id),
+  ).length;
 
   return (
     <section className="pattern-panel" aria-labelledby={`${id}-title`}>
@@ -134,7 +190,7 @@ export function NotificationFeed({ client }: { client: SupabaseClient }) {
                 </time>
               </span>
               <p className="section-copy">{item.body}</p>
-              {!item.is_read && (
+              {!item.is_read && !isSyntheticMatchNotice(item.id) && (
                 <button
                   className="text-button"
                   type="button"
