@@ -12,6 +12,8 @@ describe('Day 11/12 instant pickup board boundary', () => {
     expect(api).toContain("client.rpc('accept_instant_pickup_request'");
     expect(api).toContain('p_request_id:');
     expect(api).toContain("rpc<InstantPickupRequest>(client, 'check_in_instant_pickup'");
+    expect(api).toContain("client.rpc('get_instant_pickup_chat'");
+    expect(api).toContain('get_instant_pickup_chat');
     expect(api).toMatch(/p_request_id:\s*args\.p_request_id|p_request_id:\s*assertRequestId/);
     expect(api).toContain("table: 'instant_pickup_requests'");
     expect(api).toContain(".from('instant_pickup_requests')");

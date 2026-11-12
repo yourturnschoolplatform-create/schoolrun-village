@@ -807,6 +807,33 @@ input::placeholder { color: #99a6a2; }
   width: 100%;
   margin-top: .25rem;
 }
+.btn-google-navi {
+  margin-top: 8px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #4285F4;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: bold;
+  text-align: center;
+}
+.btn-google-navi:hover {
+  background: #3367D6;
+}
+.btn-google-navi:focus-visible {
+  outline: 2px solid #1A73E8;
+  outline-offset: 2px;
+}
+.feed-card__actions .btn-google-navi {
+  width: 100%;
+}
 @media (min-width: 720px) {
   .match-detail-modal-overlay {
     place-items: center;

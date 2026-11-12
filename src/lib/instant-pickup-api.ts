@@ -400,10 +400,45 @@ export const instantPickupApi = {
     };
     return rpc<InstantPickupRequest>(client, 'check_in_instant_pickup', args);
   },
+  /**
+   * get_instant_pickup_chat(p_request_id) — get or create room for matched parties.
+   * Do not require chatRoomId on the client; the RPC heals a missing chat_room_id.
+   */
   openChat: async (client: SupabaseClient, requestId: string) => {
     await requireSessionUserId(client);
     const args: OpenChatRpcArgs = { p_request_id: assertRequestId(requestId) };
-    return rpc<ChatRoom>(client, 'get_instant_pickup_chat', args);
+    try {
+      const { data, error } = await client.rpc('get_instant_pickup_chat', {
+        p_request_id: args.p_request_id,
+      });
+      if (error) {
+        console.error('Failed to open chat room:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          rpc: 'get_instant_pickup_chat',
+          args,
+        });
+        throw Object.assign(
+          friendlyPickupError(error, 'Could not open chat room due to a permission or network error.'),
+          { cause: error },
+        );
+      }
+      const room = data as ChatRoom | null;
+      if (!room?.id) {
+        console.error('Failed to open chat room:', { reason: 'empty_chat_payload', args, data });
+        throw new Error('Chat room is not ready yet.');
+      }
+      return room;
+    } catch (error) {
+      if (error instanceof Error && error.message.trim()) throw error;
+      console.error('Failed to open chat room:', error);
+      throw Object.assign(
+        friendlyPickupError(error, 'Could not open chat room due to a permission or network error.'),
+        { cause: error },
+      );
+    }
   },
   subscribe: (
     client: SupabaseClient,

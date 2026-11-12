@@ -857,7 +857,7 @@
     },
     {
       "name": "get_instant_pickup_chat",
-      "reason": "open existing 1:1 chat for a matched instant pickup",
+      "reason": "get or create 1:1 chat for a matched instant pickup (p_request_id)",
       "callerDerivation": "auth.uid() must be requester or matched user",
       "schoolScope": "own verified school matched request",
       "searchPath": "pg_catalog"

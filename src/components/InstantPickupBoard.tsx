@@ -28,6 +28,22 @@ function needsFinalCheckIn(item: InstantPickupRequest, nowMs: number): boolean {
   return nowMs >= opensAt && nowMs < closesAt;
 }
 
+/**
+ * Suburb-only Google Maps driving directions (destination only).
+ * No street addresses are stored — use areaLabel / schoolSuburb.
+ */
+function handleOpenGoogleNavi(item: InstantPickupRequest): void {
+  const destination = encodeURIComponent(
+    item.areaLabel?.trim()
+      || item.schoolSuburb?.trim()
+      || 'School gate',
+  );
+  const url =
+    `https://www.google.com/maps/dir/?api=1&destination=${destination}`
+    + `&travelmode=driving`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 const NOTE_CHIPS = [
   { id: 'seat', label: '👧 1 Seat', phrase: '1 seat' },
   { id: 'gate', label: '🎒 School Gate', phrase: 'School gate' },
@@ -227,11 +243,23 @@ export function InstantPickupBoard({
   async function openMatchedChat(id: string, asDrawer = true) {
     setBusy(true);
     try {
+      // RPC get_instant_pickup_chat(p_request_id) get-or-creates when chat_room_id is null.
       const room = await instantPickupApi.openChat(client, id);
+      if (!room?.id) {
+        setMessage('Chat room is not ready yet.');
+        return;
+      }
       if (asDrawer) setMatchRoom(room);
       else onOpenChat(room);
-    } catch {
-      setMessage('That chat could not be opened yet.');
+      setMessage(null);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to open chat room:', err);
+      setMessage(
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : 'Could not open chat room due to a permission or network error.',
+      );
     } finally {
       setBusy(false);
     }
@@ -239,13 +267,28 @@ export function InstantPickupBoard({
 
   async function handleStartChat(item: InstantPickupRequest) {
     setSelectedMatch(item);
-    if (!item.chatRoomId) {
-      setMessage('Chat room is not ready yet.');
-      return;
+    setBusy(true);
+    try {
+      // Do not gate on item.chatRoomId — RPC get-or-creates, then open Messages.
+      const room = await instantPickupApi.openChat(client, item.id);
+      if (!room?.id) {
+        setMessage('Chat room is not ready yet.');
+        return;
+      }
+      onOpenChat(room);
+      setSelectedMatch(null);
+      setMessage(null);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to open chat room:', err);
+      setMessage(
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : 'Could not open chat room due to a permission or network error.',
+      );
+    } finally {
+      setBusy(false);
     }
-    // Open the 1:1 room in the Messages tab (ScheduleHub view switch).
-    await openMatchedChat(item.id, false);
-    setSelectedMatch(null);
   }
 
   async function respondCheckIn(confirm: boolean) {
@@ -542,7 +585,7 @@ export function InstantPickupBoard({
                   <button
                     className="primary-button feed-card__cta"
                     type="button"
-                    disabled={busy || !item.chatRoomId}
+                    disabled={busy}
                     onClick={() => void handleStartChat(item)}
                   >
                     Start chat in Messages
@@ -550,13 +593,25 @@ export function InstantPickupBoard({
                   <button
                     className="secondary-button"
                     type="button"
-                    disabled={busy || !item.chatRoomId}
+                    disabled={busy}
                     onClick={() => void openMatchedChat(item.id, true)}
                   >
                     Quick chat drawer
                   </button>
                 </>
               )}
+              {item.status === 'matched' ? (
+                <button
+                  type="button"
+                  className="btn-google-navi"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleOpenGoogleNavi(item);
+                  }}
+                >
+                  Google Maps Navigation
+                </button>
+              ) : null}
             </div>
           </li>
           );
@@ -612,19 +667,47 @@ export function InstantPickupBoard({
             </p>
 
             {(selectedMatch.mine || selectedMatch.iAmMatched) && selectedMatch.status === 'matched' ? (
+              <>
+                <button
+                  type="button"
+                  className="primary-button btn-primary-chat"
+                  disabled={busy}
+                  onClick={() => void handleStartChat(selectedMatch)}
+                >
+                  {busy ? 'Opening chat…' : 'Start 1:1 Chat with Partner'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-google-navi"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleOpenGoogleNavi(selectedMatch);
+                  }}
+                >
+                  Google Maps Navigation
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
-                className="primary-button btn-primary-chat"
-                disabled={busy || !selectedMatch.chatRoomId}
-                onClick={() => void handleStartChat(selectedMatch)}
+                className="btn-google-navi"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleOpenGoogleNavi(selectedMatch);
+                }}
               >
-                {busy ? 'Opening chat…' : 'Start 1:1 Chat with Partner'}
+                Google Maps Navigation
               </button>
-            ) : null}
+            )}
 
-            {!selectedMatch.chatRoomId && selectedMatch.status === 'matched' ? (
-              <p className="field-help" role="status">Chat room is not ready yet.</p>
+            {selectedMatch.status === 'matched' && !selectedMatch.chatRoomId ? (
+              <p className="field-help" role="status">
+                Chat will be created when you start the conversation.
+              </p>
             ) : null}
+            <p className="field-help">
+              Directions use the suburb label only (for example school gate area). Street addresses are never stored.
+            </p>
 
             <button
               type="button"
