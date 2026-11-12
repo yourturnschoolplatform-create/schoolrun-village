@@ -170,22 +170,44 @@ export function ContactNotifications({ client, onChanged }: { client: SupabaseCl
   useEffect(() => { callbackRef.current = onChanged; }, [onChanged]);
 
   useEffect(() => {
-    let active = true;
+    let isMounted = true;
     let pending = false;
     let initialised = false;
-    const controller = new AbortController();
     const seen = seenIds.current;
     seen.clear();
     setNotifications([]);
     setLoading(true);
     setError('');
-    async function refresh() {
-      if (!active || pending) return;
+
+    async function fetchContactUpdates(isInitial: boolean) {
+      if (!isMounted || pending) return;
       pending = true;
+      if (isInitial) {
+        setLoading(true);
+        setError('');
+      }
+
+      const controller = new AbortController();
+      let timeoutRejectId: number | undefined;
+      const timeoutId = window.setTimeout(() => {
+        controller.abort();
+      }, 5_000);
+
       try {
-        const result = await contactApi.notifications(client, controller.signal);
-        if (!active) return;
-        const hasNewNotification = initialised && result.notifications.some((notification) => !seen.has(notification.id));
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutRejectId = window.setTimeout(
+            () => reject(new Error('Contact updates fetch timeout')),
+            5_000,
+          );
+        });
+
+        const fetchPromise = contactApi.notifications(client, controller.signal);
+        const result = await Promise.race([fetchPromise, timeoutPromise]);
+
+        if (!isMounted) return;
+
+        const hasNewNotification = initialised
+          && result.notifications.some((notification) => !seen.has(notification.id));
         for (const notification of result.notifications) seen.add(notification.id);
         initialised = true;
         // Render only generic copy, never raw server messages or a mobile number.
@@ -195,29 +217,36 @@ export function ContactNotifications({ client, onChanged }: { client: SupabaseCl
           message: genericNotificationMessage(notification.kind),
         })));
         setError('');
-        setLoading(false);
+
         if (hasNewNotification) {
           try {
             await callbackRef.current();
           } catch {
-            if (active) setError('A swap update is available. Refresh your swaps to see it.');
+            if (isMounted) setError('A swap update is available. Refresh your swaps to see it.');
           }
         }
-      } catch {
-        if (active) {
-          setError('Contact notifications could not be refreshed. We will try again while this page is open.');
-          setLoading(false);
-        }
+      } catch (err) {
+        if (!isMounted) return;
+        console.warn('Contact notifications fallback triggered:', err);
+        // Initial load: empty list. Polls keep the last good list.
+        if (isInitial) setNotifications([]);
+        setError('');
       } finally {
+        window.clearTimeout(timeoutId);
+        if (timeoutRejectId != null) window.clearTimeout(timeoutRejectId);
         pending = false;
+        if (isMounted) setLoading(false);
       }
     }
-    void refresh();
-    const timer = window.setInterval(() => { void refresh(); }, 20_000);
+
+    void fetchContactUpdates(true);
+    const timer = window.setInterval(() => {
+      void fetchContactUpdates(false);
+    }, 20_000);
+
     return () => {
-      active = false;
+      isMounted = false;
       window.clearInterval(timer);
-      controller.abort();
       seen.clear();
     };
   }, [client]);

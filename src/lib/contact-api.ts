@@ -17,6 +17,9 @@ export type ContactNotification = {
   created_at: string;
 };
 
+/** Soft ceiling so contact updates never hang the Matches UI. */
+export const CONTACT_NOTIFICATIONS_TIMEOUT_MS = 5_000;
+
 async function request<T>(client: SupabaseClient, path: string, init: RequestInit = {}): Promise<T> {
   try {
     const { data, error } = await client.auth.getSession();
@@ -28,7 +31,8 @@ async function request<T>(client: SupabaseClient, path: string, init: RequestIni
     const response = await fetch(`/api/contacts${path}`, { ...init, cache: 'no-store', headers });
     if (!response.ok) throw new Error('Contact request failed');
     return await response.json() as T;
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err;
     // Never surface a response body or underlying error that could contain a mobile number.
     throw new Error('That contact action could not be completed. Please try again.');
   }
@@ -44,6 +48,29 @@ export const contactApi = {
     request<{ status: 'cancelled_consent_revoked' }>(client, `/swaps/${encodeURIComponent(swapId)}/revoke`, { method: 'POST' }),
   shared: (client: SupabaseClient, swapId: string, memberId: string) =>
     request<{ mobileNumber: string | null }>(client, `/swaps/${encodeURIComponent(swapId)}/shared/${encodeURIComponent(memberId)}`),
-  notifications: (client: SupabaseClient, signal?: AbortSignal) =>
-    request<{ notifications: ContactNotification[] }>(client, '/notifications', { signal }),
+  notifications: async (client: SupabaseClient, signal?: AbortSignal) => {
+    const controller = new AbortController();
+    const onExternalAbort = () => controller.abort();
+    signal?.addEventListener('abort', onExternalAbort);
+
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, CONTACT_NOTIFICATIONS_TIMEOUT_MS);
+
+    try {
+      return await request<{ notifications: ContactNotification[] }>(
+        client,
+        '/notifications',
+        { signal: controller.signal },
+      );
+    } catch (err) {
+      if (controller.signal.aborted && signal?.aborted !== true) {
+        throw new Error('Contact updates fetch timeout');
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', onExternalAbort);
+    }
+  },
 };
