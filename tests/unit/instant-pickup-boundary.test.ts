@@ -17,6 +17,9 @@ describe('Day 11/12 instant pickup board boundary', () => {
     expect(api).toContain(".from('instant_pickup_requests')");
     expect(api).toContain('.insert(payload)');
     expect(api).toContain('requester_id');
+    expect(api).toContain('matched_user_id');
+    expect(api).toMatch(/requester_id\.eq\.\$\{userId\},matched_user_id\.eq\.\$\{userId\}/);
+    expect(api).not.toMatch(/instant_pickup_requests[\s\S]*?\.eq\(\s*['"]user_id['"]/);
     expect(api).toContain('area_label');
     expect(sql).toMatch(/create table public\.instant_pickup_requests/i);
     expect(sql).toMatch(/is_suburb_area_label/i);

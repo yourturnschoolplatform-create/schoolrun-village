@@ -254,6 +254,7 @@ export const instantPickupApi = {
    */
   list: async (client: SupabaseClient, includeClosed = false) => {
     const userId = await requireSessionUserId(client);
+    // Columns are requester_id / matched_user_id — never user_id on this table.
     let query = client
       .from('instant_pickup_requests')
       .select(
@@ -263,7 +264,14 @@ export const instantPickupApi = {
       .limit(50);
 
     if (!includeClosed) {
-      query = query.or(`status.eq.open,requester_id.eq.${userId}`);
+      // Open board posts + anything the caller requested or accepted.
+      query = query.or(
+        `status.eq.open,requester_id.eq.${userId},matched_user_id.eq.${userId}`,
+      );
+    } else {
+      query = query.or(
+        `requester_id.eq.${userId},matched_user_id.eq.${userId}`,
+      );
     }
 
     const { data, error } = await query;
