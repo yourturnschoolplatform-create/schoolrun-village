@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNo
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { resolveSchoolLocation, type SchoolLocation } from '../shared/au-location';
 import { onboardingAccessState } from '../shared/onboarding';
-import { FALLBACK_SCHOOL_OPTIONS, onboardingApi, openInvitationLink, type OnboardingStatus, type PendingMembership, type SchoolOption } from './lib/onboarding-api';
+import { onboardingApi, openInvitationLink, type OnboardingStatus, type PendingMembership } from './lib/onboarding-api';
 import { scheduleApi } from './lib/schedule-api';
 import {
   exchangeAuthCallbackParams,
@@ -307,8 +307,8 @@ function AccountScreen({
         {mode === 'signup' ? (
           <>
             <label>Full name<input required minLength={2} maxLength={80} autoComplete="name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>
-            <label>Suburb<input required minLength={2} maxLength={64} value={suburb} onChange={(event) => setSuburb(event.target.value)} placeholder="e.g. Harbourview" /></label>
-            <label>School name<input required minLength={2} maxLength={120} value={schoolName} onChange={(event) => setSchoolName(event.target.value)} placeholder="e.g. Harbourview Primary School" /></label>
+            <label>Suburb<input required minLength={2} maxLength={64} value={suburb} onChange={(event) => setSuburb(event.target.value)} placeholder="e.g. Docklands" /></label>
+            <label>School name<input required minLength={2} maxLength={120} value={schoolName} onChange={(event) => setSchoolName(event.target.value)} placeholder="e.g. Docklands Primary School" /></label>
             <label>School invitation code (optional)<input maxLength={64} value={invitationCode} onChange={(event) => setInvitationCode(event.target.value)} placeholder="If your school issued a code" /></label>
           </>
         ) : null}
@@ -521,21 +521,9 @@ function SchoolStep({
   onRefresh: () => Promise<void>;
   onSchoolJoined: (softNotice?: string) => void;
 }) {
-  const [schools, setSchools] = useState<SchoolOption[]>(FALLBACK_SCHOOL_OPTIONS);
-  const [selectedSchool, setSelectedSchool] = useState(FALLBACK_SCHOOL_OPTIONS[0]?.id ?? '');
+  // Suburb/school catalogue is Melbourne-real AU_SUBURBS_DATA (LocationBasedSchoolSelect).
+  const [selectedSchool, setSelectedSchool] = useState('');
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void onboardingApi.schoolOptions(client).then((options) => {
-      if (cancelled || !options.length) return;
-      setSchools(options);
-      setSelectedSchool((current) => (
-        options.some((school) => school.id === current) ? current : options[0].id
-      ));
-    });
-    return () => { cancelled = true; };
-  }, [client]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -566,24 +554,17 @@ function SchoolStep({
     }
   }
 
-  const selectOptions = schools.map((school) => ({
-    id: school.id,
-    displayName: school.display_name,
-    suburb: school.suburb,
-  }));
-
   return (
     <section className="onboarding-card" aria-labelledby="school-title">
       <Progress current={2} />
       <p className="eyebrow">Step 2 of 3</p>
       <h1 id="school-title">Choose your school.</h1>
       <p className="section-copy">
-        We detect your location to prioritise nearby suburbs within 10 km, then filter schools for the suburb you pick.
+        We detect your location to prioritise nearby suburbs within 5 km, then filter schools for the suburb you pick.
         Location is optional and never stored. You join immediately — no invite code.
       </p>
       <form className="stack-form" onSubmit={submit}>
         <LocationBasedSchoolSelect
-          schools={selectOptions}
           value={selectedSchool}
           onChange={setSelectedSchool}
           disabled={busy}

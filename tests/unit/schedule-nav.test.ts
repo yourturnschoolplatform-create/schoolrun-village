@@ -46,8 +46,8 @@ describe('Schedule dashboard navigation', () => {
     expect(app).toContain('wordmark__schoolrun');
     expect(app).toContain('wordmark__village');
     expect(app).toContain('topbar__actions');
-    expect(chip).toContain('Harbourview');
-    expect(chip).toContain('Sample Harbourview Primary School');
+    expect(chip).toContain('Docklands');
+    expect(chip).toContain('Docklands Primary School');
     expect(chip).toContain('schoolSectorBadge');
     expect(chip).toContain('VIC, AU');
     expect(chip).toContain('formatLocationPill');

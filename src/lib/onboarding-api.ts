@@ -37,30 +37,16 @@ export type SchoolOption = {
 };
 export type PendingMembership = { membership_id: string; display_name: string };
 
-/** Demo schools for the School step — no /api/onboarding/school-options dependency. */
+/** Melbourne-real fallback schools from src/data/auSuburbsData (no Harbourview/Rivergum). */
 export const FALLBACK_SCHOOL_OPTIONS: SchoolOption[] = [
-  {
-    id: '00000000-0000-4000-8000-000000000001',
-    display_name: 'Sample Harbourview Primary School',
-    suburb: 'Harbourview',
-    demoCode: 'HARBOUR-2026',
-  },
-  {
-    id: '00000000-0000-4000-8000-000000000002',
-    display_name: 'Sample Rivergum Primary School',
-    suburb: 'Rivergum',
-    demoCode: 'RIVERGUM-2026',
-  },
-  {
-    id: '00000000-0000-4000-8000-000000000003',
-    display_name: 'Sample Docklands Primary School',
-    suburb: 'Docklands',
-  },
-  {
-    id: '00000000-0000-4000-8000-000000000004',
-    display_name: 'Sample Carlton Secondary College',
-    suburb: 'Carlton',
-  },
+  { id: 'docklands-ps', display_name: 'Docklands Primary School', suburb: 'Docklands' },
+  { id: 'haileybury-city', display_name: 'Haileybury City Campus', suburb: 'Melbourne (CBD)' },
+  { id: 'simonds-catholic', display_name: 'Simonds Catholic College', suburb: 'Melbourne (CBD)' },
+  { id: 'south-melbourne-ps', display_name: 'South Melbourne Primary School', suburb: 'Southbank' },
+  { id: 'carlton-gardens-ps', display_name: 'Carlton Gardens Primary School', suburb: 'Carlton' },
+  { id: 'carlton-ps', display_name: 'Carlton Primary School', suburb: 'Carlton' },
+  { id: 'fitzroy-ps', display_name: 'Fitzroy Primary School', suburb: 'Fitzroy' },
+  { id: 'richmond-ps', display_name: 'Richmond Primary School', suburb: 'Richmond' },
 ];
 
 type ProfileRow = {

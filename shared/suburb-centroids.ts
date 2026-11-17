@@ -1,6 +1,7 @@
 /**
  * Approximate AU suburb centres for browser-only distance sorting.
  * Never persisted, posted to the API, or stored on profiles/schools.
+ * Fake Harbourview / Rivergum samples removed — Melbourne-real catalogue.
  */
 
 export type SuburbCentroid = {
@@ -10,25 +11,24 @@ export type SuburbCentroid = {
 };
 
 /** Default radius for “nearby” suburb prioritisation during onboarding. */
-export const NEARBY_SUBURB_RADIUS_KM = 10;
+export const NEARBY_SUBURB_RADIUS_KM = 5;
 
-/** Sample + common VIC/NSW suburb hints used during onboarding geolocation. */
+/** Melbourne inner-suburb centroids (aligned with src/data/auSuburbsData.ts). */
 export const AU_SUBURB_CENTROIDS: readonly SuburbCentroid[] = [
-  { suburb: 'Harbourview', lat: -37.8136, lng: 144.9631 },
-  { suburb: 'Docklands', lat: -37.8149, lng: 144.9480 },
+  { suburb: 'Docklands', lat: -37.8150, lng: 144.9460 },
+  { suburb: 'Melbourne (CBD)', lat: -37.8136, lng: 144.9631 },
   { suburb: 'Melbourne', lat: -37.8136, lng: 144.9631 },
-  { suburb: 'Southbank', lat: -37.8230, lng: 144.9640 },
+  { suburb: 'Southbank', lat: -37.8226, lng: 144.9644 },
   { suburb: 'Carlton', lat: -37.8001, lng: 144.9671 },
-  { suburb: 'Fitzroy', lat: -37.7985, lng: 144.9784 },
-  { suburb: 'Richmond', lat: -37.8190, lng: 145.0020 },
-  { suburb: 'South Yarra', lat: -37.8385, lng: 144.9920 },
-  { suburb: 'Port Melbourne', lat: -37.8420, lng: 144.9400 },
+  { suburb: 'North Melbourne', lat: -37.7992, lng: 144.9467 },
+  { suburb: 'Port Melbourne', lat: -37.8399, lng: 144.9423 },
+  { suburb: 'South Yarra', lat: -37.8387, lng: 144.9912 },
+  { suburb: 'Richmond', lat: -37.8183, lng: 145.0018 },
+  { suburb: 'Fitzroy', lat: -37.7984, lng: 144.9786 },
+  { suburb: 'St Kilda', lat: -37.8676, lng: 144.9810 },
   { suburb: 'West Melbourne', lat: -37.8090, lng: 144.9500 },
   { suburb: 'East Melbourne', lat: -37.8130, lng: 144.9840 },
-  { suburb: 'North Melbourne', lat: -37.7990, lng: 144.9460 },
   { suburb: 'Parkville', lat: -37.7850, lng: 144.9510 },
-  { suburb: 'Rivergum', lat: -37.8400, lng: 145.0200 },
-  { suburb: 'Chatswood', lat: -33.7969, lng: 151.1832 },
   { suburb: 'Local suburb', lat: -37.8136, lng: 144.9631 },
 ];
 
@@ -49,7 +49,13 @@ export function centroidForSuburb(
 ): SuburbCentroid | null {
   const needle = suburb.trim().toLowerCase();
   if (!needle) return null;
-  return catalogue.find((entry) => entry.suburb.toLowerCase() === needle) ?? null;
+  const exact = catalogue.find((entry) => entry.suburb.toLowerCase() === needle);
+  if (exact) return exact;
+  // Treat "Melbourne" ≈ "Melbourne (CBD)" for DB/school label variants.
+  if (needle === 'melbourne' || needle.startsWith('melbourne ')) {
+    return catalogue.find((entry) => entry.suburb.toLowerCase().startsWith('melbourne')) ?? null;
+  }
+  return null;
 }
 
 export function distanceKmToSuburb(
@@ -133,7 +139,6 @@ export type RankedSuburb = {
 /**
  * Rank unique school suburbs by centroid distance from the user.
  * Nearby suburbs (within radiusKm) come first; others follow alphabetically.
- * Coordinates are browser-only — never stored.
  */
 export function rankSuburbsByDistance(
   suburbs: string[],

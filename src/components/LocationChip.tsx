@@ -7,18 +7,18 @@ import {
 
 /** Safe AU pilot fallback so the ready dashboard never hides the location chip. */
 export const FALLBACK_SCHOOL_LOCATION: SchoolLocation = {
-  suburb: 'Harbourview',
-  schoolName: 'Sample Harbourview Primary School',
+  suburb: 'Docklands',
+  schoolName: 'Docklands Primary School',
   schoolSector: 'primary',
 };
 
-/** Compact suburb selector label, e.g. "Harbourview VIC, AU". */
+/** Compact suburb selector label, e.g. "Docklands VIC, AU". */
 export function formatSuburbSelector(location: SchoolLocation): string {
   const suburb = location.suburb.trim() || 'Local suburb';
   return `${suburb} VIC, AU`;
 }
 
-/** Single-line header pill: "Harbourview VIC • Primary School". */
+/** Single-line header pill: "Docklands VIC • Primary School". */
 export function formatLocationPill(location: SchoolLocation): string {
   const suburb = location.suburb.trim() || 'Local suburb';
   return `${suburb} VIC • ${schoolSectorBadge(location.schoolSector)}`;
@@ -27,13 +27,18 @@ export function formatLocationPill(location: SchoolLocation): string {
 const SAMPLE_SCHOOLS: SchoolLocation[] = [
   FALLBACK_SCHOOL_LOCATION,
   {
-    suburb: 'Docklands',
-    schoolName: 'Sample Docklands Primary School',
+    suburb: 'Southbank',
+    schoolName: 'South Melbourne Primary School',
     schoolSector: 'primary',
   },
   {
     suburb: 'Carlton',
-    schoolName: 'Sample Carlton Secondary College',
+    schoolName: 'Carlton Gardens Primary School',
+    schoolSector: 'primary',
+  },
+  {
+    suburb: 'Fitzroy',
+    schoolName: 'Fitzroy High School',
     schoolSector: 'secondary',
   },
 ];
