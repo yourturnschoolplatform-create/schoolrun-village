@@ -12,6 +12,7 @@ import {
   tradeBadgeLabel,
   tradeTypeToListingKind,
 } from '../../shared/marketplace';
+import { MARKETPLACE_SCOPE_FILTERS } from '../../shared/marketplace-neighbourhood';
 
 describe('marketplace trade and category helpers', () => {
   it('exposes full kids spectrum categories and trade filters', () => {
@@ -31,6 +32,11 @@ describe('marketplace trade and category helpers', () => {
       'Sell',
       'Free Share (Relay)',
       'Swap / Barter',
+    ]);
+    expect(MARKETPLACE_SCOPE_FILTERS.map((entry) => entry.label)).toEqual([
+      'Nearby (5 km)',
+      'My Suburb',
+      'My School',
     ]);
   });
 

@@ -36,8 +36,7 @@ function priceLabel(item: ItemListing): { text: string; tone: 'sale' | 'free' | 
 }
 
 /**
- * Karrot-style home feed row: square thumb left, title / suburb / time / price right.
- * Heart toggles listing_favorites via parent handler.
+ * Karrot-style feed row with suburb, distance, and Same school badge.
  */
 export function MarketplaceItemCard({
   item,
@@ -53,16 +52,19 @@ export function MarketplaceItemCard({
   onToggleFavorite?: (listing: ItemListing) => void;
 }) {
   const cover = coverListingImage(item.listingImages);
+  const areaLabel = (item.areaLabel || item.schoolSuburb || 'Local suburb').trim();
   const location = resolveSchoolLocation({
     displayName: item.schoolDisplayName || 'Your school',
-    suburb: item.schoolSuburb,
+    suburb: areaLabel,
     schoolSector: item.schoolSector,
   });
   const price = priceLabel(item);
-  const suburb = location.suburb.trim() || 'Local suburb';
   const when = relativeTimeAu(item.created_at);
   const favorited = Boolean(item.viewerHasFavorited);
   const favoriteCount = item.favoriteCount ?? 0;
+  const distanceLabel = item.distanceKm != null && Number.isFinite(item.distanceKm)
+    ? `${item.distanceKm.toFixed(1)} km`
+    : null;
 
   return (
     <article className="karrot-card">
@@ -70,7 +72,7 @@ export function MarketplaceItemCard({
         type="button"
         className="karrot-card__hit"
         onClick={() => onOpen(item)}
-        aria-label={`${item.title}. ${price.text}. ${suburb}`}
+        aria-label={`${item.title}. ${price.text}. ${areaLabel}${distanceLabel ? ` ${distanceLabel}` : ''}`}
       >
         <div className="karrot-card__thumb" aria-hidden={!cover}>
           {cover ? (
@@ -78,11 +80,16 @@ export function MarketplaceItemCard({
           ) : (
             <span className="karrot-card__placeholder">No photo</span>
           )}
+          {item.sameSchool ? (
+            <span className="karrot-card__school-badge">Same school</span>
+          ) : null}
         </div>
         <div className="karrot-card__body">
           <p className="karrot-card__title">{item.title}</p>
           <p className="karrot-card__meta">
-            <span>{suburb}</span>
+            <span>{areaLabel}</span>
+            {distanceLabel ? <span aria-hidden="true"> · </span> : null}
+            {distanceLabel ? <span>{distanceLabel}</span> : null}
             {when ? <span aria-hidden="true"> · </span> : null}
             {when ? <time dateTime={item.created_at}>{when}</time> : null}
           </p>

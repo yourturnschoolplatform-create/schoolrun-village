@@ -17,6 +17,8 @@ export type CreateListingInput = {
   itemCondition?: MarketplaceCondition | null;
   sizeAgeLabel?: string | null;
   householdEnv?: MarketplaceHouseholdEnv[] | null;
+  /** Suburb-only meetup label for neighbourhood discovery. */
+  areaLabel?: string | null;
 };
 
 /**
@@ -33,6 +35,8 @@ export function buildCreateItemListingArgs(input: CreateListingInput): Record<st
     : null;
   const sizeAge = input.sizeAgeLabel?.trim() ? input.sizeAgeLabel.trim().slice(0, 40) : null;
 
+  const areaLabel = input.areaLabel?.trim() ? input.areaLabel.trim().slice(0, 64) : null;
+
   return {
     p_listing_kind: input.kind,
     p_title: input.title.trim(),
@@ -44,6 +48,7 @@ export function buildCreateItemListingArgs(input: CreateListingInput): Record<st
     p_item_condition: condition,
     p_size_age_label: sizeAge,
     p_household_env: householdEnv,
+    p_area_label: areaLabel,
   };
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { generateMarketplaceAiDraft } from '../../shared/marketplace-ai-draft';
 import {
@@ -16,6 +16,7 @@ import {
   type MarketplaceSizeAge,
   type MarketplaceTradeType,
 } from '../../shared/marketplace';
+import type { NeighbourhoodSuburbOption } from '../../shared/marketplace-neighbourhood';
 import { nonPaymentNoticeForTrade } from '../../shared/payment-tracks';
 import { listingsApi } from '../lib/listings-api';
 import { ListingImageUploader } from './ListingImageUploader';
@@ -37,6 +38,7 @@ export function MarketplaceItemCreateForm({
   client,
   defaultTrade = 'sale',
   suburbLabel = 'Local suburb',
+  nearbySuburbs = [],
   boardMode = 'all',
   onNotice,
   onCreated,
@@ -44,6 +46,7 @@ export function MarketplaceItemCreateForm({
   client: SupabaseClient;
   defaultTrade?: MarketplaceTradeType;
   suburbLabel?: string;
+  nearbySuburbs?: NeighbourhoodSuburbOption[];
   boardMode?: 'all' | 'market' | 'relay';
   onNotice: (text: string, tone?: NoticeTone) => void;
   onCreated: () => void | Promise<void>;
@@ -61,10 +64,33 @@ export function MarketplaceItemCreateForm({
   const [aiName, setAiName] = useState('');
   const [aiNotes, setAiNotes] = useState('');
   const [busy, setBusy] = useState(false);
+  const [selectedSuburb, setSelectedSuburb] = useState(suburbLabel);
+
+  const suburbChoices = useMemo(() => {
+    const map = new Map<string, NeighbourhoodSuburbOption | { suburb: string; distanceKm?: number }>();
+    if (suburbLabel.trim()) {
+      map.set(suburbLabel.trim().toLowerCase(), { suburb: suburbLabel.trim(), distanceKm: 0 });
+    }
+    for (const entry of nearbySuburbs) {
+      map.set(entry.suburb.toLowerCase(), entry);
+    }
+    return [...map.values()];
+  }, [nearbySuburbs, suburbLabel]);
 
   useEffect(() => {
     setTrade(defaultTrade);
   }, [defaultTrade]);
+
+  useEffect(() => {
+    if (!suburbLabel.trim()) return;
+    setSelectedSuburb((current) => {
+      if (!current.trim()) return suburbLabel;
+      if (suburbChoices.some((entry) => entry.suburb.toLowerCase() === current.trim().toLowerCase())) {
+        return current;
+      }
+      return suburbLabel;
+    });
+  }, [suburbChoices, suburbLabel]);
 
   const visibleTrades = TRADE_TABS.filter((tab) => {
     if (boardMode === 'relay') return tab.id !== 'sale';
@@ -137,9 +163,10 @@ export function MarketplaceItemCreateForm({
         itemCondition: condition || 'Good',
         sizeAgeLabel: sizeAge || null,
         householdEnv: householdEnv ?? [],
+        areaLabel: selectedSuburb.trim() || suburbLabel.trim() || null,
       });
       resetForm();
-      onNotice('Your listing is on the school marketplace.', 'teal');
+      onNotice('Your listing is on the neighbourhood marketplace.', 'teal');
       await onCreated();
     } catch (error) {
       onNotice(
@@ -254,21 +281,26 @@ export function MarketplaceItemCreateForm({
         </select>
       </label>
 
-      <div className="karrot-compose__field">
-        <span>Preferred meetup</span>
-        <div className="karrot-compose__suburb" aria-live="polite">
-          <span className="karrot-compose__suburb-pin" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M12 21s6.5-5.2 6.5-10.2A6.5 6.5 0 0 0 5.5 10.8C5.5 15.8 12 21 12 21Z" />
-              <circle cx="12" cy="10.5" r="2.2" />
-            </svg>
-          </span>
-          <div>
-            <strong>{suburbLabel}</strong>
-            <small>School pickup · same-school parents only</small>
-          </div>
-        </div>
-      </div>
+      <label className="karrot-compose__field">
+        <span>Meetup suburb</span>
+        <select
+          value={selectedSuburb}
+          onChange={(event) => setSelectedSuburb(event.target.value)}
+          aria-label="Choose meetup suburb within 5 km"
+        >
+          {suburbChoices.map((entry) => (
+            <option key={entry.suburb} value={entry.suburb}>
+              {entry.suburb}
+              {'distanceKm' in entry && entry.distanceKm != null && Number.isFinite(entry.distanceKm)
+                ? ` · ${entry.distanceKm.toFixed(1)} km`
+                : ''}
+            </option>
+          ))}
+        </select>
+        <span className="field-help">
+          Defaults to your current suburb. Pick any neighbour within 5 km. Your school stays attached for Same school filters.
+        </span>
+      </label>
 
       <fieldset className="karrot-compose__field marketplace-spec-field">
         <legend>Condition</legend>

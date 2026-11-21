@@ -584,16 +584,16 @@
     },
     {
       "name": "create_item_listing",
-      "reason": "verified member creates same-school sale with AUD ask cents, optional listing_images jsonb, item_condition, size_age_label and household_env jsonb; free-share/swap without ask",
+      "reason": "verified member creates marketplace listing with AUD ask cents, optional listing_images jsonb, item_condition, size_age_label, household_env jsonb and suburb area_label; school_id still attached for Same school filter",
       "callerDerivation": "auth.uid() verified membership school",
-      "schoolScope": "own school only via SECURITY DEFINER RPC; no direct INSERT policy; restricted items rejected; ask display only; no in-app payment",
+      "schoolScope": "create attaches caller school_id; meetup suburb via p_area_label; restricted items rejected; ask display only; no in-app payment",
       "searchPath": "pg_catalog"
     },
     {
       "name": "search_item_listings",
-      "reason": "search and filter active own-school marketplace listings by trade type and category",
-      "callerDerivation": "auth.uid(); school from membership",
-      "schoolScope": "own verified school only",
+      "reason": "neighbourhood marketplace search: nearby suburb labels (default), my suburb, or my school; filters by trade type and category",
+      "callerDerivation": "auth.uid(); school from membership; optional p_area_labels from client Haversine",
+      "schoolScope": "nearby/suburb can include other-school listings by area_label; school scope is own verified school only",
       "searchPath": "pg_catalog"
     },
     {
@@ -612,9 +612,9 @@
     },
     {
       "name": "toggle_listing_favorite",
-      "reason": "same-school parent toggles marketplace favourite (관심) on an active listing",
+      "reason": "verified parent toggles marketplace favourite (관심) on an active neighbourhood listing",
       "callerDerivation": "auth.uid() verified membership; not the author",
-      "schoolScope": "own-school active listing",
+      "schoolScope": "active listing; school_id taken from listing row",
       "searchPath": "pg_catalog"
     },
     {
@@ -787,9 +787,9 @@
     },
     {
       "name": "get_or_create_listing_chat",
-      "reason": "open or create 1:1 marketplace chat with listing author pinned to the listing",
-      "callerDerivation": "auth.uid() as enquiring parent; not the author",
-      "schoolScope": "own verified school active listing",
+      "reason": "open or create 1:1 marketplace chat with listing author pinned to the listing (neighbourhood-verified parents)",
+      "callerDerivation": "auth.uid() verified membership; not the author",
+      "schoolScope": "active listing; room school_id from listing; participants need not share school membership",
       "searchPath": "pg_catalog"
     },
     {

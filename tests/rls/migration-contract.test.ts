@@ -685,4 +685,23 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
+
+  it('adds neighbourhood marketplace suburb scope without storing live GPS', async () => {
+    const neighbourhood = (await readFile(resolve('db/migrations/0073_marketplace_neighbourhood_scope.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(neighbourhood).toMatch(/add column if not exists area_label text/i);
+    expect(neighbourhood).toMatch(/p_area_label text default null/i);
+    expect(neighbourhood).toMatch(/p_scope text default 'nearby'/i);
+    expect(neighbourhood).toMatch(/p_area_labels text\[]/i);
+    expect(neighbourhood).toMatch(/sameSchool/i);
+    expect(neighbourhood).toMatch(/areaLabel/i);
+    expect(neighbourhood).toMatch(/left join public\.schools school/i);
+    expect(neighbourhood).toMatch(/coalesce\(\s*nullif\(trim\(coalesce\(listing\.area_label/i);
+    expect(neighbourhood).toMatch(/set local search_path = pg_catalog/i);
+    // guard_item_listings blocks UPDATE without status/moderation gates — never backfill rows.
+    expect(neighbourhood).not.toMatch(/update\s+public\.item_listings/i);
+    expect(neighbourhood).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
 });

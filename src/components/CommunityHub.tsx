@@ -34,12 +34,14 @@ export function CommunityHub({
   onBack,
   onOpenChat,
   initialPanel = 'market',
+  viewerSuburb = null,
 }: {
   client: SupabaseClient;
   userId: string;
   onBack: () => void;
   onOpenChat?: (room: ChatRoom) => void;
   initialPanel?: CommunityPanel;
+  viewerSuburb?: string | null;
 }) {
   const [panel, setPanel] = useState<CommunityPanel>(initialPanel);
   const [partnerOpen, setPartnerOpen] = useState(false);
@@ -252,7 +254,13 @@ export function CommunityHub({
       ) : null}
 
       {panel === 'market' ? (
-        <MarketplaceBoard client={client} userId={userId} onOpenChat={onOpenChat} boardMode="market" />
+        <MarketplaceBoard
+          client={client}
+          userId={userId}
+          onOpenChat={onOpenChat}
+          boardMode="market"
+          viewerSuburb={viewerSuburb}
+        />
       ) : null}
 
       {panel === 'trust' ? (
@@ -260,7 +268,13 @@ export function CommunityHub({
       ) : null}
 
       {panel === 'relay' ? (
-        <MarketplaceBoard client={client} userId={userId} onOpenChat={onOpenChat} boardMode="relay" />
+        <MarketplaceBoard
+          client={client}
+          userId={userId}
+          onOpenChat={onOpenChat}
+          boardMode="relay"
+          viewerSuburb={viewerSuburb}
+        />
       ) : null}
 
       {panel === 'deals' ? (

@@ -1016,6 +1016,7 @@ input::placeholder { color: #99a6a2; }
   flex-wrap: wrap;
   gap: .45rem;
 }
+.marketplace-filters--scope { margin-bottom: .15rem; }
 .marketplace-filters--trade { margin-top: -.35rem; }
 .marketplace-filter {
   min-height: 2.35rem;
@@ -1034,6 +1035,16 @@ input::placeholder { color: #99a6a2; }
 .marketplace-filter--active {
   border-color: var(--navy);
   background: var(--navy);
+  color: #fff;
+}
+.marketplace-filter--scope {
+  background: #FFF7F0;
+  border-color: #FFD8C2;
+  color: #9A3412;
+}
+.marketplace-filter--scope.marketplace-filter--active {
+  background: #FF6F0F;
+  border-color: #FF6F0F;
   color: #fff;
 }
 .marketplace-filter--trade { background: #fff; }
@@ -1082,12 +1093,28 @@ input::placeholder { color: #99a6a2; }
   text-align: left;
 }
 .karrot-card__thumb {
+  position: relative;
   width: 6.75rem;
   height: 6.75rem;
   overflow: hidden;
   border-radius: .9rem;
   background: #F1F5F9;
   border: 1px solid #E2E8F0;
+}
+.karrot-card__school-badge {
+  position: absolute;
+  left: .35rem;
+  bottom: .35rem;
+  z-index: 1;
+  max-width: calc(100% - .7rem);
+  padding: .18rem .4rem;
+  border-radius: .45rem;
+  background: rgba(15, 23, 42, .72);
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: .01em;
 }
 .karrot-card__interest {
   display: grid;

@@ -383,6 +383,7 @@ export function ScheduleHub({
           client={client}
           userId={userId}
           initialPanel={communityPanel}
+          viewerSuburb={registeredSuburb || null}
           onBack={() => selectView('today')}
           onOpenChat={openChatRoom}
         />

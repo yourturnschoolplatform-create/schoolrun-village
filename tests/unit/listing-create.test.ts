@@ -22,6 +22,7 @@ describe('listing create payload', () => {
       itemCondition: 'Like New',
       sizeAgeLabel: 'Size 8',
       householdEnv: ['Smoke-free', 'Pet-free'],
+      areaLabel: 'Craigieburn',
     });
 
     expect(args.p_listing_kind).toBe('sale');
@@ -29,6 +30,7 @@ describe('listing create payload', () => {
     expect(args.p_item_condition).toBe('Like New');
     expect(args.p_size_age_label).toBe('Size 8');
     expect(args.p_household_env).toEqual(['Smoke-free', 'Pet-free']);
+    expect(args.p_area_label).toBe('Craigieburn');
     expect(args.p_listing_images).toEqual([
       { src: `data:image/jpeg;base64,${'a'.repeat(40)}`, cover: false },
       { src: `data:image/jpeg;base64,${'b'.repeat(40)}`, cover: true },
@@ -48,6 +50,7 @@ describe('listing create payload', () => {
     expect(args.p_item_condition).toBeNull();
     expect(args.p_size_age_label).toBeNull();
     expect(args.p_household_env).toEqual([]);
+    expect(args.p_area_label).toBeNull();
   });
 
   it('maps RPC failures to clear parent-facing messages', () => {

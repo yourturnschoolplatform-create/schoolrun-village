@@ -42,9 +42,10 @@ export function MarketplaceItemDetail({
 }) {
   const titleId = useId();
   const ownListing = isOwnListing(item.author_id, userId);
+  const areaLabel = (item.areaLabel || item.schoolSuburb || 'Local suburb').trim();
   const location = resolveSchoolLocation({
     displayName: item.schoolDisplayName || 'Your school',
-    suburb: item.schoolSuburb,
+    suburb: areaLabel,
     schoolSector: item.schoolSector,
   });
   const badge = tradeBadgeLabel(item.display_offer_label, item.listing_kind);
@@ -53,6 +54,9 @@ export function MarketplaceItemDetail({
   const payable = isInAppPayableListing(item.listing_kind) && (item.askAudCents ?? 0) > 0;
   const favorited = Boolean(item.viewerHasFavorited);
   const favoriteCount = item.favoriteCount ?? 0;
+  const distanceLabel = item.distanceKm != null && Number.isFinite(item.distanceKm)
+    ? `${item.distanceKm.toFixed(1)} km`
+    : null;
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -88,7 +92,12 @@ export function MarketplaceItemDetail({
             band={item.authorParentTrustBand || item.authorTrustBand}
             suburb={location.suburb}
           />
-          <p className="karrot-detail__place">{formatSchoolLocationChip(location)}</p>
+          <p className="karrot-detail__place">
+            {areaLabel}
+            {distanceLabel ? ` · ${distanceLabel}` : ''}
+            {item.sameSchool ? ' · Same school' : ''}
+          </p>
+          <p className="karrot-detail__place karrot-detail__place--school">{formatSchoolLocationChip(location)}</p>
         </div>
 
         <div className="karrot-detail__copy">

@@ -1,11 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { NEARBY_SUBURB_RADIUS_KM } from '../data/auSuburbsData';
 import {
   MARKETPLACE_CATEGORY_FILTERS,
   MARKETPLACE_TRADE_FILTERS,
   type MarketplaceCategory,
   type MarketplaceTradeType,
 } from '../../shared/marketplace';
+import {
+  enrichListingNeighbourhood,
+  filterListingsByScope,
+  MARKETPLACE_SCOPE_FILTERS,
+  nearbySuburbLabels,
+  nearbySuburbOptions,
+  resolveSuburbPlace,
+  type MarketplaceScope,
+  type NeighbourhoodSuburbOption,
+  type ViewerMarketplacePlace,
+} from '../../shared/marketplace-neighbourhood';
 import { isOwnListing } from '../../shared/listing-create';
 import {
   buyNowLabel,
@@ -19,8 +31,8 @@ import { MarketplaceItemDetail } from './MarketplaceItemDetail';
 import { PaymentCheckout, type PaymentCheckoutRequest } from './PaymentCheckout';
 
 /**
- * Same-school marketplace with Sell (AUD ask), Free Share, and Swap.
- * Karrot-style compose + feed cards. Australian English. No phones.
+ * Neighbourhood marketplace (Karrot-style): Nearby 5 km default, My Suburb,
+ * optional My School. Same-school badge + suburb distance on cards.
  */
 export function MarketplaceBoard({
   client,
@@ -28,6 +40,7 @@ export function MarketplaceBoard({
   onOpenChat,
   initialTradeFilter = 'all',
   boardMode = 'all',
+  viewerSuburb,
 }: {
   client: SupabaseClient;
   userId: string;
@@ -36,6 +49,8 @@ export function MarketplaceBoard({
   initialTradeFilter?: 'all' | MarketplaceTradeType;
   /** Visual mode for Marketplace vs Relay Share panels. */
   boardMode?: 'all' | 'market' | 'relay';
+  /** Optional suburb hint from school / profile (coords resolved locally). */
+  viewerSuburb?: string | null;
 }) {
   const defaultTrade: MarketplaceTradeType = boardMode === 'relay'
     ? 'free_share'
@@ -51,6 +66,9 @@ export function MarketplaceBoard({
   const [items, setItems] = useState<ItemListing[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<'all' | MarketplaceCategory>('all');
   const [tradeFilter, setTradeFilter] = useState<'all' | MarketplaceTradeType>(defaultFilter);
+  const [scopeFilter, setScopeFilter] = useState<MarketplaceScope>('nearby');
+  const [viewerPlace, setViewerPlace] = useState<ViewerMarketplacePlace | null>(null);
+  const [nearbyOptions, setNearbyOptions] = useState<NeighbourhoodSuburbOption[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<'teal' | 'red' | 'amber'>('teal');
@@ -59,9 +77,16 @@ export function MarketplaceBoard({
   const [favoriteBusyId, setFavoriteBusyId] = useState<string | null>(null);
 
   const suburbLabel = useMemo(() => {
-    const fromFeed = items.find((entry) => entry.schoolSuburb?.trim())?.schoolSuburb?.trim();
-    return fromFeed || 'Local suburb';
-  }, [items]);
+    if (viewerPlace?.suburb) return viewerPlace.suburb;
+    const fromFeed = items.find((entry) => (entry.areaLabel || entry.schoolSuburb)?.trim());
+    return (fromFeed?.areaLabel || fromFeed?.schoolSuburb || viewerSuburb || 'Local suburb').trim();
+  }, [items, viewerPlace, viewerSuburb]);
+
+  const areaLabels = useMemo(() => {
+    if (viewerPlace) return nearbySuburbLabels(viewerPlace.lat, viewerPlace.lng, NEARBY_SUBURB_RADIUS_KM);
+    if (suburbLabel && suburbLabel !== 'Local suburb') return [suburbLabel];
+    return [];
+  }, [viewerPlace, suburbLabel]);
 
   function showNotice(text: string, tone: 'teal' | 'red' | 'amber' = 'teal') {
     setMessageTone(tone);
@@ -81,19 +106,80 @@ export function MarketplaceBoard({
     ));
   }
 
+  function enrichItems(raw: ItemListing[], place: ViewerMarketplacePlace | null): ItemListing[] {
+    return raw.map((item) => {
+      const meta = enrichListingNeighbourhood({
+        areaLabel: item.areaLabel,
+        schoolSuburb: item.schoolSuburb,
+        sameSchool: item.sameSchool,
+        schoolId: item.school_id,
+        viewer: place,
+      });
+      return {
+        ...item,
+        areaLabel: meta.areaLabel,
+        schoolSuburb: item.schoolSuburb || meta.areaLabel,
+        sameSchool: meta.sameSchool,
+        distanceKm: meta.distanceKm,
+      };
+    });
+  }
+
   const refresh = useCallback(async () => {
     try {
-      setItems(await listingsApi.search(client, {
+      const raw = await listingsApi.search(client, {
         kind: tradeFilter === 'all' ? null : tradeFilter,
         category: categoryFilter === 'all' ? null : categoryFilter,
-      }));
+        scope: scopeFilter,
+        areaLabels,
+      });
+      setItems(enrichItems(raw, viewerPlace));
     } catch {
       setMessageTone('amber');
       setMessage('Marketplace listings are available after school verification.');
     }
-  }, [categoryFilter, client, tradeFilter]);
+  }, [areaLabels, categoryFilter, client, scopeFilter, tradeFilter, viewerPlace]);
 
   useEffect(() => { void refresh(); }, [refresh]);
+
+  useEffect(() => {
+    const fromHint = viewerSuburb ? resolveSuburbPlace(viewerSuburb) : null;
+    if (fromHint) {
+      setViewerPlace(fromHint);
+      setNearbyOptions(nearbySuburbOptions(fromHint.lat, fromHint.lng));
+    }
+
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const nearby = nearbySuburbOptions(latitude, longitude);
+        const current = nearby[0]
+          ?? resolveSuburbPlace(viewerSuburb || '')
+          ?? null;
+        if (current) {
+          const place: ViewerMarketplacePlace = {
+            suburb: current.suburb,
+            state: current.state,
+            postcode: current.postcode,
+            lat: current.lat,
+            lng: current.lng,
+          };
+          setViewerPlace(place);
+          setNearbyOptions(nearby.length ? nearby : nearbySuburbOptions(place.lat, place.lng));
+        }
+      },
+      () => {
+        // Keep suburb hint / feed-derived place; GPS is optional.
+      },
+      { enableHighAccuracy: false, timeout: 8_000, maximumAge: 120_000 },
+    );
+  }, [viewerSuburb]);
+
+  const visibleItems = useMemo(
+    () => filterListingsByScope(items, scopeFilter, suburbLabel, NEARBY_SUBURB_RADIUS_KM),
+    [items, scopeFilter, suburbLabel],
+  );
 
   function guardOwnListing(authorId: string): boolean {
     if (!isOwnListing(authorId, userId)) return false;
@@ -105,7 +191,7 @@ export function MarketplaceBoard({
     if (guardOwnListing(listing.author_id)) return;
     setBusy(true);
     try {
-      await listingsApi.enquire(client, listing.id, 'Hi — is this still available for school pickup?');
+      await listingsApi.enquire(client, listing.id, 'Hi — is this still available for suburb pickup?');
       showNotice('Enquiry sent to the listing parent.', 'teal');
     } catch (error) {
       showNotice(
@@ -163,21 +249,39 @@ export function MarketplaceBoard({
   return (
     <section className="feed-section marketplace-board" aria-labelledby="marketplace-title" data-board-mode={boardMode}>
       <div className="feed-section__intro">
-        <p className="eyebrow">{boardMode === 'relay' ? 'Relay Share' : boardMode === 'market' ? 'Marketplace' : 'School marketplace'}</p>
+        <p className="eyebrow">{boardMode === 'relay' ? 'Relay Share' : boardMode === 'market' ? 'Marketplace' : 'Neighbourhood marketplace'}</p>
         <h2 id="marketplace-title">
           {boardMode === 'relay'
-            ? 'Free Share & Swap at your school.'
+            ? 'Free Share & Swap near you.'
             : boardMode === 'market'
-              ? 'Kids secondhand & paid Sell.'
-              : 'Sell, share or swap at your school.'}
+              ? 'Kids secondhand near your suburb.'
+              : 'Sell, share or swap in your neighbourhood.'}
         </h2>
         <p className="section-copy">
           {boardMode === 'relay'
-            ? `Relay track: Free Share and Swap stay ${NON_PAYMENT_HANDOVER_COPY}`
+            ? `Relay track: Free Share and Swap stay ${NON_PAYMENT_HANDOVER_COPY} Browse Nearby (5 km) first; use My School when you want same-school only.`
             : boardMode === 'market'
-              ? 'Paid Sell listings use secure SchoolRun Village in-app payment (Stripe / PayID) with platform service shown at checkout.'
-              : `Dual-track settlement: Sell listings use secure in-app payment (Stripe / PayID). Free Share and Swap stay ${NON_PAYMENT_HANDOVER_COPY}`}
+              ? 'Paid Sell listings use secure SchoolRun Village in-app payment (Stripe / PayID). Default feed is Nearby within 5 km of your suburb.'
+              : `Dual-track settlement: Sell listings use secure in-app payment (Stripe / PayID). Free Share and Swap stay ${NON_PAYMENT_HANDOVER_COPY} Default scope is Nearby (5 km).`}
         </p>
+      </div>
+
+      <div className="marketplace-filters marketplace-filters--scope" role="toolbar" aria-label="Neighbourhood scope">
+        {MARKETPLACE_SCOPE_FILTERS.map((filter) => (
+          <button
+            key={filter.id}
+            type="button"
+            className={
+              scopeFilter === filter.id
+                ? 'marketplace-filter marketplace-filter--scope marketplace-filter--active'
+                : 'marketplace-filter marketplace-filter--scope'
+            }
+            aria-pressed={scopeFilter === filter.id}
+            onClick={() => setScopeFilter(filter.id)}
+          >
+            {filter.label}
+          </button>
+        ))}
       </div>
 
       <div className="marketplace-filters" role="toolbar" aria-label="Marketplace categories">
@@ -229,16 +333,23 @@ export function MarketplaceBoard({
         client={client}
         defaultTrade={defaultTrade}
         suburbLabel={suburbLabel}
+        nearbySuburbs={nearbyOptions}
         boardMode={boardMode}
         onNotice={showNotice}
         onCreated={refresh}
       />
 
       <ul className="feed-list marketplace-list karrot-feed">
-        {items.length === 0 && (
-          <li className="section-copy">No active listings for this filter at your school right now.</li>
+        {visibleItems.length === 0 && (
+          <li className="section-copy">
+            {scopeFilter === 'school'
+              ? 'No active listings at your school for this filter right now.'
+              : scopeFilter === 'suburb'
+                ? `No active listings in ${suburbLabel} for this filter right now.`
+                : `No active listings within ${NEARBY_SUBURB_RADIUS_KM} km of ${suburbLabel} right now.`}
+          </li>
         )}
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <li key={item.id} className="karrot-feed__item">
             <MarketplaceItemCard
               item={item}

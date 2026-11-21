@@ -5,6 +5,7 @@ import {
   friendlyListingCreateError,
   type CreateListingInput,
 } from '../../shared/listing-create';
+import type { MarketplaceScope } from '../../shared/marketplace-neighbourhood';
 import type {
   ListingImagePayload,
   MarketplaceCondition,
@@ -29,6 +30,9 @@ export type ItemListing = {
   schoolDisplayName?: string;
   schoolSuburb?: string;
   schoolSector?: 'primary' | 'secondary';
+  areaLabel?: string;
+  sameSchool?: boolean;
+  distanceKm?: number | null;
   authorTrustBand?: string;
   authorParentTrustBand?: string;
   askAudCents?: number | null;
@@ -56,23 +60,61 @@ async function rpc<T>(client: SupabaseClient, name: string, args: Record<string,
   return data as T;
 }
 
+function isMissingArgError(error: unknown): boolean {
+  const text = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return text.includes('pgrst202')
+    || text.includes('could not find the function')
+    || text.includes('unexpected')
+    || text.includes('p_area_label')
+    || text.includes('p_scope')
+    || text.includes('p_area_labels');
+}
+
 export const listingsApi = {
-  search: (
+  search: async (
     client: SupabaseClient,
     input: {
       query?: string | null;
       kind?: MarketplaceListingKind | MarketplaceTradeType | null;
       category?: string | null;
+      scope?: MarketplaceScope | null;
+      areaLabels?: string[] | null;
     } = {},
-  ) => rpc<ItemListing[]>(client, 'search_item_listings', {
-    p_query: input.query ?? null,
-    p_listing_kind: input.kind ?? null,
-    p_category: input.category ?? null,
-  }),
-  create: async (client: SupabaseClient, input: CreateListingInput) => {
+  ) => {
+    const base = {
+      p_query: input.query ?? null,
+      p_listing_kind: input.kind ?? null,
+      p_category: input.category ?? null,
+    };
     try {
-      return await rpc<ItemListing>(client, 'create_item_listing', buildCreateItemListingArgs(input));
+      return await rpc<ItemListing[]>(client, 'search_item_listings', {
+        ...base,
+        p_scope: input.scope ?? 'nearby',
+        p_area_labels: input.areaLabels?.length ? input.areaLabels : null,
+      });
     } catch (error) {
+      if (!isMissingArgError(error)) throw error;
+      // Pre-0073 schema: school-scoped search only.
+      return rpc<ItemListing[]>(client, 'search_item_listings', base);
+    }
+  },
+  create: async (client: SupabaseClient, input: CreateListingInput) => {
+    const args = buildCreateItemListingArgs(input);
+    try {
+      return await rpc<ItemListing>(client, 'create_item_listing', args);
+    } catch (error) {
+      if (isMissingArgError(error) && 'p_area_label' in args) {
+        const { p_area_label: _ignored, ...legacy } = args;
+        try {
+          return await rpc<ItemListing>(client, 'create_item_listing', legacy);
+        } catch (legacyError) {
+          throw new Error(
+            friendlyListingCreateError(
+              legacyError instanceof Error ? legacyError.message : String(legacyError),
+            ),
+          );
+        }
+      }
       throw new Error(friendlyListingCreateError(error instanceof Error ? error.message : String(error)));
     }
   },
