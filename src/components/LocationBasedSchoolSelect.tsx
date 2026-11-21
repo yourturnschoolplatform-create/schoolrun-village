@@ -2,10 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AU_SUBURBS_DATA,
   NEARBY_SUBURB_RADIUS_KM,
-  rankSuburbsNearLocation,
   type RankedSuburbOption,
   type SchoolItem,
 } from '../data/auSuburbsData';
+import {
+  fetchNearbySuburbsAndSchools,
+  fetchSchoolsInSuburb,
+  toRankedSuburbOptions,
+  type LiveSuburb,
+} from '../utils/auLocationService';
 
 export type LocationSchoolOption = {
   id: string;
@@ -18,7 +23,6 @@ export type LocationSchoolOption = {
 type LocationStatus = 'detecting' | 'ready' | 'fallback';
 
 const DETECTING_MESSAGE = 'Detecting your location & nearby suburbs...';
-const READY_MESSAGE = 'Nearby suburbs found based on your location';
 const FALLBACK_UNSUPPORTED =
   'Location is not supported in this browser. Choose any suburb and school below.';
 const FALLBACK_DENIED =
@@ -27,16 +31,14 @@ const FALLBACK_GENERIC =
   'Could not detect your location. Choose any suburb and school below.';
 
 /**
- * Radius-based suburb → school picker for onboarding.
- * Uses Melbourne-real AU_SUBURBS_DATA (no Harbourview / Rivergum mocks).
- * Coordinates are never stored or posted.
+ * Dynamic AU suburb → school picker (Overpass + Nominatim).
+ * Offline fallback: src/data/auSuburbsData.ts. Coordinates are never stored.
  */
 export function LocationBasedSchoolSelect({
   value,
   onChange,
   disabled = false,
 }: {
-  /** @deprecated Catalogue comes from AU_SUBURBS_DATA; prop kept for call-site compat. */
   schools?: LocationSchoolOption[];
   value: string;
   onChange: (schoolId: string) => void;
@@ -45,10 +47,14 @@ export function LocationBasedSchoolSelect({
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('detecting');
   const [rankedSuburbs, setRankedSuburbs] = useState<RankedSuburbOption[] | null>(null);
   const [selectedSuburbId, setSelectedSuburbId] = useState('');
+  const [schoolOptions, setSchoolOptions] = useState<SchoolItem[]>([]);
+  const [schoolQuery, setSchoolQuery] = useState('');
+  const [loadingSchools, setLoadingSchools] = useState(false);
   const [statusMessage, setStatusMessage] = useState(DETECTING_MESSAGE);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const detectedOnce = useRef(false);
+  const schoolFetchSeq = useRef(0);
 
   const suburbList = useMemo(() => {
     if (rankedSuburbs) return rankedSuburbs;
@@ -79,7 +85,11 @@ export function LocationBasedSchoolSelect({
     [suburbList, selectedSuburbId],
   );
 
-  const filteredSchools: SchoolItem[] = selectedSuburb?.schools ?? [];
+  const filteredSchools = useMemo(() => {
+    const needle = schoolQuery.trim().toLowerCase();
+    if (!needle) return schoolOptions;
+    return schoolOptions.filter((school) => school.name.toLowerCase().includes(needle));
+  }, [schoolOptions, schoolQuery]);
 
   function syncSchoolSelection(schools: SchoolItem[], preferredId?: string) {
     if (!schools.length) {
@@ -93,35 +103,79 @@ export function LocationBasedSchoolSelect({
     onChangeRef.current(schools[0].id);
   }
 
-  function applyLocationSuccess(lat: number, lng: number) {
-    const ranked = rankSuburbsNearLocation(lat, lng, NEARBY_SUBURB_RADIUS_KM);
-    setRankedSuburbs(ranked);
-    setLocationStatus('ready');
+  function statusForSuburb(suburb: RankedSuburbOption | LiveSuburb, schoolCount: number): string {
+    const distance = Number.isFinite(suburb.distanceKm) && suburb.distanceKm < Number.POSITIVE_INFINITY
+      ? suburb.distanceKm.toFixed(1)
+      : '—';
+    return `Showing ${schoolCount} school${schoolCount === 1 ? '' : 's'} in ${suburb.name} • ${distance} km away`;
+  }
 
-    const nearby = ranked.filter((entry) => entry.nearby);
-    if (nearby.length > 0) {
-      const nearest = nearby[0];
-      setSelectedSuburbId(nearest.id);
-      syncSchoolSelection(nearest.schools);
-      setStatusMessage(
-        nearby.length === 1
-          ? `${READY_MESSAGE}. Showing schools in ${nearest.name} ${nearest.state}.`
-          : `${READY_MESSAGE}. Nearest suburb selected: ${nearest.name} ${nearest.state}.`,
-      );
+  async function loadSchoolsForSuburb(suburb: RankedSuburbOption | LiveSuburb) {
+    const seq = ++schoolFetchSeq.current;
+    setLoadingSchools(true);
+    setSchoolQuery('');
+    setSchoolOptions([]);
+    onChangeRef.current('');
+    setStatusMessage(`Loading local schools in ${suburb.name}...`);
+
+    try {
+      const schools = await fetchSchoolsInSuburb(suburb.name, suburb.lat, suburb.lng);
+      if (seq !== schoolFetchSeq.current) return;
+      setSchoolOptions(schools);
+      syncSchoolSelection(schools);
+      setStatusMessage(statusForSuburb(suburb, schools.length));
+    } catch {
+      if (seq !== schoolFetchSeq.current) return;
+      setSchoolOptions([]);
+      onChangeRef.current('');
+      setStatusMessage(`Could not load schools for ${suburb.name}. Try another suburb.`);
+    } finally {
+      if (seq === schoolFetchSeq.current) setLoadingSchools(false);
+    }
+  }
+
+  async function applyLocationSuccess(lat: number, lng: number) {
+    setStatusMessage('Finding suburbs near you...');
+    const result = await fetchNearbySuburbsAndSchools(lat, lng);
+    const ranked = toRankedSuburbOptions(result.suburbs);
+    setRankedSuburbs(ranked);
+    setLocationStatus(result.source === 'live' ? 'ready' : 'fallback');
+
+    const pick = result.currentSuburb
+      ?? result.suburbs.find((entry) => entry.nearby)
+      ?? result.suburbs[0]
+      ?? null;
+
+    if (!pick) {
+      setSelectedSuburbId('');
+      setSchoolOptions([]);
+      onChangeRef.current('');
+      setStatusMessage('Choose a suburb below to load local schools. Location is not stored.');
       return;
     }
 
-    setSelectedSuburbId('');
-    onChangeRef.current('');
-    setStatusMessage(
-      `No suburbs within ${NEARBY_SUBURB_RADIUS_KM} km of your location. Choose a suburb below. Location is not stored.`,
-    );
+    setSelectedSuburbId(pick.id);
+    await loadSchoolsForSuburb(pick);
   }
 
   function applyLocationFallback(message: string) {
-    setRankedSuburbs(null);
+    setRankedSuburbs(
+      AU_SUBURBS_DATA.map((suburb) => ({
+        id: suburb.id,
+        name: suburb.name,
+        state: suburb.state,
+        postcode: suburb.postcode,
+        lat: suburb.lat,
+        lng: suburb.lng,
+        distanceKm: Number.POSITIVE_INFINITY,
+        nearby: false,
+        schools: suburb.schools,
+      })),
+    );
     setLocationStatus('fallback');
     setSelectedSuburbId('');
+    setSchoolOptions([]);
+    setSchoolQuery('');
     onChangeRef.current('');
     setStatusMessage(message);
   }
@@ -138,7 +192,7 @@ export function LocationBasedSchoolSelect({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        applyLocationSuccess(position.coords.latitude, position.coords.longitude);
+        void applyLocationSuccess(position.coords.latitude, position.coords.longitude);
       },
       (error) => {
         if (error?.code === 1) {
@@ -147,7 +201,7 @@ export function LocationBasedSchoolSelect({
         }
         applyLocationFallback(FALLBACK_GENERIC);
       },
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
+      { enableHighAccuracy: false, timeout: 12_000, maximumAge: 60_000 },
     );
   }
 
@@ -160,41 +214,37 @@ export function LocationBasedSchoolSelect({
 
   function onSuburbChange(nextSuburbId: string) {
     setSelectedSuburbId(nextSuburbId);
+    setSchoolQuery('');
     if (!nextSuburbId) {
+      setSchoolOptions([]);
       onChange('');
-      setStatusMessage(
-        rankedSuburbs
-          ? 'Choose a nearby suburb to see its schools.'
-          : 'Select a suburb first to see schools.',
-      );
+      setStatusMessage('Select a suburb first to load local schools.');
       return;
     }
 
     const suburb = suburbList.find((entry) => entry.id === nextSuburbId);
     if (!suburb) {
+      setSchoolOptions([]);
       onChange('');
-      setStatusMessage('No schools in this suburb. Try another suburb.');
+      setStatusMessage('That suburb could not be loaded. Try another.');
       return;
     }
 
-    syncSchoolSelection(suburb.schools);
-    const distanceLabel = Number.isFinite(suburb.distanceKm) && suburb.distanceKm < Number.POSITIVE_INFINITY
-      ? ` · ${suburb.distanceKm.toFixed(1)} km`
-      : '';
-    setStatusMessage(`Showing schools in ${suburb.name} ${suburb.state}${distanceLabel}.`);
+    void loadSchoolsForSuburb(suburb);
   }
 
   function onSchoolChange(schoolId: string) {
     onChange(schoolId);
     if (!selectedSuburb) return;
-    const school = selectedSuburb.schools.find((entry) => entry.id === schoolId);
+    const school = schoolOptions.find((entry) => entry.id === schoolId);
     if (school) {
-      setStatusMessage(`Selected ${school.name} in ${selectedSuburb.name} ${selectedSuburb.state}.`);
+      setStatusMessage(statusForSuburb(selectedSuburb, schoolOptions.length));
     }
   }
 
   const geoSupported = typeof navigator !== 'undefined' && Boolean(navigator.geolocation);
-  const showDistance = locationStatus === 'ready' && rankedSuburbs != null;
+  const showDistance = rankedSuburbs != null
+    && rankedSuburbs.some((entry) => Number.isFinite(entry.distanceKm) && entry.distanceKm < Number.POSITIVE_INFINITY);
   const locateLabel = locationStatus === 'detecting'
     ? DETECTING_MESSAGE
     : locationStatus === 'ready'
@@ -209,7 +259,7 @@ export function LocationBasedSchoolSelect({
     <div
       className="location-school-select"
       data-location-school-select={locationStatus}
-      aria-busy={locationStatus === 'detecting'}
+      aria-busy={locationStatus === 'detecting' || loadingSchools}
     >
       <button
         type="button"
@@ -240,7 +290,9 @@ export function LocationBasedSchoolSelect({
               {nearbySuburbs.map((suburb) => (
                 <option key={`nearby-${suburb.id}`} value={suburb.id}>
                   {suburb.name} {suburb.state}
-                  {showDistance ? ` · ${suburb.distanceKm.toFixed(1)} km` : ''}
+                  {showDistance && Number.isFinite(suburb.distanceKm)
+                    ? ` · ${suburb.distanceKm.toFixed(1)} km`
+                    : ''}
                 </option>
               ))}
             </optgroup>
@@ -249,7 +301,9 @@ export function LocationBasedSchoolSelect({
             {(nearbySuburbs.length > 0 ? otherSuburbs : suburbList).map((suburb) => (
               <option key={`other-${suburb.id}`} value={suburb.id}>
                 {suburb.name} {suburb.state}
-                {showDistance && Number.isFinite(suburb.distanceKm) && suburb.distanceKm < Number.POSITIVE_INFINITY
+                {showDistance
+                  && Number.isFinite(suburb.distanceKm)
+                  && suburb.distanceKm < Number.POSITIVE_INFINITY
                   ? ` · ${suburb.distanceKm.toFixed(1)} km`
                   : ''}
               </option>
@@ -259,18 +313,40 @@ export function LocationBasedSchoolSelect({
       </label>
 
       <label>
+        Search schools
+        <input
+          type="search"
+          value={schoolQuery}
+          disabled={disabled || !selectedSuburbId || loadingSchools || schoolOptions.length === 0}
+          onChange={(event) => setSchoolQuery(event.target.value)}
+          placeholder={loadingSchools ? 'Loading local schools...' : 'Type to filter schools'}
+          aria-label="Search schools in the selected suburb"
+        />
+      </label>
+
+      <label>
         School
         <select
           required
           value={schoolSelectValue}
-          disabled={disabled || locationStatus === 'detecting' || !selectedSuburbId || filteredSchools.length === 0}
+          disabled={
+            disabled
+            || locationStatus === 'detecting'
+            || loadingSchools
+            || !selectedSuburbId
+            || filteredSchools.length === 0
+          }
           onChange={(event) => onSchoolChange(event.target.value)}
           aria-label="Choose your school"
         >
           {!selectedSuburbId ? (
             <option value="">Select a suburb first</option>
+          ) : loadingSchools ? (
+            <option value="">Loading local schools...</option>
           ) : filteredSchools.length === 0 ? (
-            <option value="">No schools in this suburb</option>
+            <option value="">
+              {schoolQuery.trim() ? 'No schools match your search' : 'No schools found nearby'}
+            </option>
           ) : (
             filteredSchools.map((school) => (
               <option key={school.id} value={school.id}>
@@ -282,7 +358,7 @@ export function LocationBasedSchoolSelect({
       </label>
 
       <p className="field-help" role="status" data-location-status={locationStatus}>
-        {statusMessage}
+        {loadingSchools ? `Loading local schools...` : statusMessage}
       </p>
     </div>
   );

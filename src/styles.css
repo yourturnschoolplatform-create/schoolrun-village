@@ -635,6 +635,18 @@ input::placeholder { color: #99a6a2; }
 .location-school-select select:disabled {
   opacity: .7;
 }
+.location-school-select input[type='search'] {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: .55rem .75rem;
+  border: 1px solid var(--line, #dde3dd);
+  border-radius: .7rem;
+  background: #fff;
+  font: inherit;
+}
+.location-school-select input[type='search']:disabled {
+  opacity: .7;
+}
 .instant-sheet-overlay {
   position: fixed;
   inset: 0;
