@@ -115,7 +115,17 @@ export type ChatMessage = {
 
 async function rpc<T>(client: SupabaseClient, name: string, args: Record<string, unknown> = {}): Promise<T> {
   const { data, error } = await client.rpc(name, args);
-  if (error) throw new Error('That chat action is not available right now.');
+  if (error) {
+    console.error('chatApi.rpc', {
+      rpc: name,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+      args,
+    });
+    throw Object.assign(new Error('That chat action is not available right now.'), { cause: error });
+  }
   return data as T;
 }
 

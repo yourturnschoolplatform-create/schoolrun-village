@@ -251,6 +251,13 @@
       "searchPath": "pg_catalog"
     },
     {
+      "name": "ensure_and_join_school",
+      "reason": "upsert dynamic Overpass/onboarding school by name+suburb then join verified",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "creates or reuses school then membership for caller",
+      "searchPath": "pg_catalog"
+    },
+    {
       "name": "propose_reciprocal_swap",
       "reason": "propose reciprocal swap",
       "callerDerivation": "auth.uid()",

@@ -272,15 +272,86 @@ export const onboardingApi = {
         p_school_id: schoolId,
       });
       if (error) {
-        console.error('join_school_self_verified', error);
-      } else if (data) {
+        console.error('join_school_self_verified', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
+        throw Object.assign(new Error(error.message || 'That school could not be joined right now.'), {
+          cause: error,
+        });
+      }
+      if (data) {
         return { status: 'verified', membershipId: String(data) };
       }
     } catch (error) {
       console.error('join_school_self_verified', error);
+      throw error instanceof Error
+        ? error
+        : new Error('That school could not be joined right now.');
     }
-    // Soft-fail when RPC/migration is unavailable — hub prepass still unlocks.
-    return { status: 'verified' };
+    throw new Error('That school could not be joined right now.');
+  },
+
+  /**
+   * Upsert a dynamically selected school (Overpass / catalogue) into public.schools,
+   * then join the caller as verified. Returns a real school UUID for membership/pickup.
+   */
+  ensureAndJoinSchool: async (
+    client: SupabaseClient,
+    input: {
+      displayName: string;
+      suburb: string;
+      state?: string;
+      externalKey?: string;
+    },
+  ): Promise<{ status: string; schoolId: string; membershipId?: string }> => {
+    const suburb = input.suburb
+      .replace(/\s*\([^)]*\)/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const args = {
+      p_display_name: input.displayName.trim(),
+      p_suburb: suburb,
+      p_state: (input.state || 'VIC').trim(),
+      p_external_key: input.externalKey?.trim() || null,
+    };
+    try {
+      const { data, error } = await client.rpc('ensure_and_join_school', args);
+      if (error) {
+        console.error('ensure_and_join_school', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          args,
+        });
+        throw Object.assign(
+          new Error(
+            error.message?.trim()
+              || 'That school could not be saved. Please try another school nearby.',
+          ),
+          { cause: error },
+        );
+      }
+      const row = (data ?? {}) as Record<string, unknown>;
+      const schoolId = String(row.schoolId ?? row.school_id ?? '');
+      const membershipId = row.membershipId ?? row.membership_id;
+      if (!schoolId) {
+        console.error('ensure_and_join_school', { reason: 'missing_schoolId', data, args });
+        throw new Error('That school could not be saved. Please try another school nearby.');
+      }
+      return {
+        status: 'verified',
+        schoolId,
+        membershipId: membershipId ? String(membershipId) : undefined,
+      };
+    } catch (error) {
+      if (error instanceof Error && error.message.trim()) throw error;
+      console.error('ensure_and_join_school', error);
+      throw new Error('That school could not be saved. Please try another school nearby.');
+    }
   },
   joinSchool: async (client: SupabaseClient, schoolId: string, inviteCode: string): Promise<{ status: string }> => {
     try {

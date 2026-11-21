@@ -13,7 +13,10 @@ import {
 import { fetchRuntimeConfig, fallbackRuntimeConfig, type BrowserRuntimeConfig } from './lib/runtime-config';
 import { getSupabaseBrowserClient } from './lib/supabaseClient';
 import { PENDING_VERIFICATION_NOTICE, normalizeAccountStatus } from '../shared/account-verification';
-import { LocationBasedSchoolSelect } from './components/LocationBasedSchoolSelect';
+import {
+  LocationBasedSchoolSelect,
+  type SelectedSchoolDetails,
+} from './components/LocationBasedSchoolSelect';
 import { FALLBACK_SCHOOL_LOCATION, LocationChip } from './components/LocationChip';
 import { MyTrustChip } from './components/MyTrustChip';
 import { ScheduleHub } from './components/ScheduleHub';
@@ -521,35 +524,50 @@ function SchoolStep({
   onRefresh: () => Promise<void>;
   onSchoolJoined: (softNotice?: string) => void;
 }) {
-  // Suburb/school catalogue is Melbourne-real AU_SUBURBS_DATA (LocationBasedSchoolSelect).
   const [selectedSchool, setSelectedSchool] = useState('');
+  const [schoolDetails, setSchoolDetails] = useState<SelectedSchoolDetails | null>(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedSchool) return;
+    if (!selectedSchool || !schoolDetails) {
+      setError('Select a suburb and school before continuing.');
+      return;
+    }
     setBusy(true);
-    let softNotice: string | undefined;
+    setError(null);
     try {
-      const joined = await onboardingApi.joinSchoolVerified(client, selectedSchool);
-      if (joined.status !== 'verified') {
-        softNotice = 'School saved. Continuing with verified access.';
-      }
-      await onboardingApi.prepassAccountVerified(client, selectedSchool);
+      // Upsert Overpass/catalogue school into public.schools, then join verified.
+      const joined = await onboardingApi.ensureAndJoinSchool(client, {
+        displayName: schoolDetails.name,
+        suburb: schoolDetails.suburb,
+        state: schoolDetails.state,
+        externalKey: schoolDetails.id,
+      });
+      await onboardingApi.prepassAccountVerified(client, joined.schoolId);
       try {
         await onRefresh();
       } catch {
-        softNotice = softNotice ?? 'School sync is delayed. Continuing with verified access.';
+        /* membership exists; hub refresh can retry */
       }
-    } catch {
-      softNotice = 'School sync is delayed. Continuing with verified access.';
-      try {
-        await onboardingApi.prepassAccountVerified(client, selectedSchool);
-      } catch {
-        /* ignore */
-      }
+      onSchoolJoined(`Joined ${schoolDetails.name} in ${schoolDetails.suburb}.`);
+    } catch (err) {
+      console.error('School join failed:', err);
+      const cause = err instanceof Error && 'cause' in err
+        ? (err as Error & { cause?: { message?: string; details?: string } }).cause
+        : undefined;
+      console.error('School join detailed error:', {
+        message: err instanceof Error ? err.message : String(err),
+        details: cause?.details,
+        causeMessage: cause?.message,
+      });
+      setError(
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : 'That school could not be saved. Please try another school nearby.',
+      );
     } finally {
-      onSchoolJoined(softNotice);
       setBusy(false);
     }
   }
@@ -567,9 +585,11 @@ function SchoolStep({
         <LocationBasedSchoolSelect
           value={selectedSchool}
           onChange={setSelectedSchool}
+          onSchoolDetailsChange={setSchoolDetails}
           disabled={busy}
         />
-        <PrimaryButton type="submit" disabled={busy || !selectedSchool}>
+        {error ? <p className="notice notice--amber" role="alert">{error}</p> : null}
+        <PrimaryButton type="submit" disabled={busy || !selectedSchool || !schoolDetails}>
           {busy ? 'Joining…' : 'Continue to SchoolRun Village'}
         </PrimaryButton>
       </form>

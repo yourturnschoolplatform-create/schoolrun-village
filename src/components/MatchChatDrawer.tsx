@@ -75,11 +75,27 @@ export function MatchChatDrawer({
     if (!body || busy) return;
     setBusy(true);
     setError(null);
+    const optimisticId = `local-${Date.now()}`;
+    const optimistic: ChatMessage = {
+      id: optimisticId,
+      roomId: room.id,
+      senderId: userId,
+      body,
+      createdAt: new Date().toISOString(),
+      mine: true,
+      readByPeer: false,
+    };
+    setMessages((current) => [...current, optimistic]);
+    setDraft('');
     try {
       const sent = await chatApi.send(client, room.id, body);
-      setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
-      setDraft('');
-    } catch {
+      setMessages((current) => current.map((message) => (
+        message.id === optimisticId ? sent : message
+      )));
+    } catch (err) {
+      console.error('Failed to send chat message:', err);
+      setMessages((current) => current.filter((message) => message.id !== optimisticId));
+      setDraft(body);
       setError('That message could not be sent. Keep it phone-free and try again.');
     } finally {
       setBusy(false);

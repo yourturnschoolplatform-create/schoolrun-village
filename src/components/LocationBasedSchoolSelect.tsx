@@ -20,6 +20,13 @@ export type LocationSchoolOption = {
   lng?: number;
 };
 
+export type SelectedSchoolDetails = {
+  id: string;
+  name: string;
+  suburb: string;
+  state: string;
+};
+
 type LocationStatus = 'detecting' | 'ready' | 'fallback';
 
 const DETECTING_MESSAGE = 'Detecting your location & nearby suburbs...';
@@ -37,11 +44,13 @@ const FALLBACK_GENERIC =
 export function LocationBasedSchoolSelect({
   value,
   onChange,
+  onSchoolDetailsChange,
   disabled = false,
 }: {
   schools?: LocationSchoolOption[];
   value: string;
   onChange: (schoolId: string) => void;
+  onSchoolDetailsChange?: (details: SelectedSchoolDetails | null) => void;
   disabled?: boolean;
 }) {
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('detecting');
@@ -53,6 +62,8 @@ export function LocationBasedSchoolSelect({
   const [statusMessage, setStatusMessage] = useState(DETECTING_MESSAGE);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onDetailsRef = useRef(onSchoolDetailsChange);
+  onDetailsRef.current = onSchoolDetailsChange;
   const detectedOnce = useRef(false);
   const schoolFetchSeq = useRef(0);
 
@@ -91,16 +102,37 @@ export function LocationBasedSchoolSelect({
     return schoolOptions.filter((school) => school.name.toLowerCase().includes(needle));
   }, [schoolOptions, schoolQuery]);
 
-  function syncSchoolSelection(schools: SchoolItem[], preferredId?: string) {
-    if (!schools.length) {
+  function emitSchoolSelection(
+    school: SchoolItem | null,
+    suburb: RankedSuburbOption | LiveSuburb | null,
+  ) {
+    if (!school || !suburb) {
       onChangeRef.current('');
+      onDetailsRef.current?.(null);
       return;
     }
-    if (preferredId && schools.some((school) => school.id === preferredId)) {
-      onChangeRef.current(preferredId);
+    onChangeRef.current(school.id);
+    onDetailsRef.current?.({
+      id: school.id,
+      name: school.name,
+      suburb: suburb.name,
+      state: suburb.state || 'VIC',
+    });
+  }
+
+  function syncSchoolSelection(
+    schools: SchoolItem[],
+    suburb: RankedSuburbOption | LiveSuburb | null,
+    preferredId?: string,
+  ) {
+    if (!schools.length || !suburb) {
+      emitSchoolSelection(null, null);
       return;
     }
-    onChangeRef.current(schools[0].id);
+    const pick = preferredId
+      ? schools.find((school) => school.id === preferredId) ?? schools[0]
+      : schools[0];
+    emitSchoolSelection(pick, suburb);
   }
 
   function statusForSuburb(suburb: RankedSuburbOption | LiveSuburb, schoolCount: number): string {
@@ -115,19 +147,19 @@ export function LocationBasedSchoolSelect({
     setLoadingSchools(true);
     setSchoolQuery('');
     setSchoolOptions([]);
-    onChangeRef.current('');
+    emitSchoolSelection(null, null);
     setStatusMessage(`Loading local schools in ${suburb.name}...`);
 
     try {
       const schools = await fetchSchoolsInSuburb(suburb.name, suburb.lat, suburb.lng);
       if (seq !== schoolFetchSeq.current) return;
       setSchoolOptions(schools);
-      syncSchoolSelection(schools);
+      syncSchoolSelection(schools, suburb);
       setStatusMessage(statusForSuburb(suburb, schools.length));
     } catch {
       if (seq !== schoolFetchSeq.current) return;
       setSchoolOptions([]);
-      onChangeRef.current('');
+      emitSchoolSelection(null, null);
       setStatusMessage(`Could not load schools for ${suburb.name}. Try another suburb.`);
     } finally {
       if (seq === schoolFetchSeq.current) setLoadingSchools(false);
@@ -149,7 +181,7 @@ export function LocationBasedSchoolSelect({
     if (!pick) {
       setSelectedSuburbId('');
       setSchoolOptions([]);
-      onChangeRef.current('');
+      emitSchoolSelection(null, null);
       setStatusMessage('Choose a suburb below to load local schools. Location is not stored.');
       return;
     }
@@ -176,7 +208,7 @@ export function LocationBasedSchoolSelect({
     setSelectedSuburbId('');
     setSchoolOptions([]);
     setSchoolQuery('');
-    onChangeRef.current('');
+    emitSchoolSelection(null, null);
     setStatusMessage(message);
   }
 
@@ -217,7 +249,7 @@ export function LocationBasedSchoolSelect({
     setSchoolQuery('');
     if (!nextSuburbId) {
       setSchoolOptions([]);
-      onChange('');
+      emitSchoolSelection(null, null);
       setStatusMessage('Select a suburb first to load local schools.');
       return;
     }
@@ -225,7 +257,7 @@ export function LocationBasedSchoolSelect({
     const suburb = suburbList.find((entry) => entry.id === nextSuburbId);
     if (!suburb) {
       setSchoolOptions([]);
-      onChange('');
+      emitSchoolSelection(null, null);
       setStatusMessage('That suburb could not be loaded. Try another.');
       return;
     }
@@ -234,9 +266,12 @@ export function LocationBasedSchoolSelect({
   }
 
   function onSchoolChange(schoolId: string) {
-    onChange(schoolId);
-    if (!selectedSuburb) return;
-    const school = schoolOptions.find((entry) => entry.id === schoolId);
+    if (!selectedSuburb) {
+      emitSchoolSelection(null, null);
+      return;
+    }
+    const school = schoolOptions.find((entry) => entry.id === schoolId) ?? null;
+    emitSchoolSelection(school, selectedSuburb);
     if (school) {
       setStatusMessage(statusForSuburb(selectedSuburb, schoolOptions.length));
     }

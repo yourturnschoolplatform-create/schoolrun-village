@@ -319,8 +319,18 @@ export const instantPickupApi = {
       .single();
 
     if (error || !data) {
-      console.error('Insert error:', error?.message ?? 'no row returned');
-      throw new Error('That request could not be posted. Use a suburb label and keep notes phone-free.');
+      console.error('Insert error:', {
+        message: error?.message ?? 'no row returned',
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        schoolId,
+      });
+      throw new Error(
+        error?.message?.includes('membership') || error?.code === '42501'
+          ? 'Join a school before posting an instant pickup request.'
+          : 'That request could not be posted. Use a suburb label and keep notes phone-free.',
+      );
     }
 
     return mapRow(data as InstantPickupRow, userId);

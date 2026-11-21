@@ -85,13 +85,28 @@ export function InstantPickupBoard({
   const [selectedMatch, setSelectedMatch] = useState<InstantPickupRequest | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [composeStep, setComposeStep] = useState<1 | 2 | 3>(1);
-  const resolvedUserId = userId ?? '';
+  const [sessionUserId, setSessionUserId] = useState(userId ?? '');
+  const resolvedUserId = userId || sessionUserId;
   const registeredSuburb = useMemo(() => {
     const fromProp = defaultSuburb.trim();
     if (fromProp) return fromProp;
     const fromBoard = items.find((item) => item.schoolSuburb?.trim())?.schoolSuburb?.trim();
     return fromBoard ?? '';
   }, [defaultSuburb, items]);
+
+  useEffect(() => {
+    if (userId) {
+      setSessionUserId(userId);
+      return;
+    }
+    let cancelled = false;
+    void client.auth.getSession().then(({ data }) => {
+      if (!cancelled && data.session?.user?.id) {
+        setSessionUserId(data.session.user.id);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [client, userId]);
 
   useEffect(() => {
     if (!composeOpen) return;
@@ -140,6 +155,7 @@ export function InstantPickupBoard({
     event.preventDefault();
     if (composeStep !== 3 || !areaLabel.trim() || busy) return;
     setBusy(true);
+    setMessage(null);
     try {
       await instantPickupApi.create(client, {
         intent,
@@ -149,10 +165,13 @@ export function InstantPickupBoard({
       });
       setNotes('');
       setMessage('Your instant request is on the school board.');
+      setToast('Posted to the school board.');
+      window.setTimeout(() => setToast(null), 2800);
       onComposeOpenChange?.(false);
       setComposeStep(1);
       await refresh();
     } catch (error) {
+      console.error('Post to school board failed:', error);
       setMessage(
         error instanceof Error && error.message
           ? error.message
@@ -195,12 +214,26 @@ export function InstantPickupBoard({
         setMessage('Please sign in again, then finish school onboarding before requesting a match.');
         return;
       }
-      // RPC: accept_instant_pickup_request(p_request_id uuid)
+      // RPC: accept_instant_pickup_request(p_request_id uuid) → { request, chatRoom }
       const result = await instantPickupApi.accept(client, id);
-      await refresh();
-      setMatchRoom(result.chatRoom);
+      let room = result.chatRoom;
+      if (!room?.id) {
+        room = await instantPickupApi.openChat(client, id);
+      }
+      if (!room?.id) {
+        setMessage('Match saved, but the chat room is not ready yet. Use 1:1 Chat on the card.');
+        await refresh();
+        return;
+      }
+      // Prefer in-board drawer; also route to Messages if session user id is still resolving.
+      const uid = resolvedUserId || sessionData.session.user.id;
+      if (uid) setSessionUserId(uid);
+      setMatchRoom(room);
+      setSelectedMatch(null);
       setToast('Private match chat opened. You can send your confirmation code.');
       setMessage('Match requested. Share your household confirmation code in chat when ready.');
+      if (!uid) onOpenChat(room);
+      await refresh();
     } catch (err) {
       const cause =
         err instanceof Error && 'cause' in err ? (err as Error & { cause?: unknown }).cause : undefined;
@@ -720,10 +753,10 @@ export function InstantPickupBoard({
         </div>
       ) : null}
 
-      {matchRoom && resolvedUserId ? (
+      {matchRoom && (resolvedUserId || sessionUserId) ? (
         <MatchChatDrawer
           client={client}
-          userId={resolvedUserId}
+          userId={resolvedUserId || sessionUserId}
           room={matchRoom}
           onClose={() => setMatchRoom(null)}
           onToast={(text) => {
