@@ -6,8 +6,10 @@ import {
   type SchoolItem,
 } from '../data/auSuburbsData';
 import {
+  createManualSchoolOption,
   fetchNearbySuburbsAndSchools,
   fetchSchoolsInSuburb,
+  searchAustralianSuburbs,
   toRankedSuburbOptions,
   type LiveSuburb,
 } from '../utils/auLocationService';
@@ -31,15 +33,17 @@ type LocationStatus = 'detecting' | 'ready' | 'fallback';
 
 const DETECTING_MESSAGE = 'Detecting your location & nearby suburbs...';
 const FALLBACK_UNSUPPORTED =
-  'Location is not supported in this browser. Choose any suburb and school below.';
+  'Location is not supported in this browser. Search any Australian suburb or postcode below.';
 const FALLBACK_DENIED =
-  'Location permission was denied or unavailable. You can still choose any suburb and school below.';
+  'Location permission was denied or unavailable. Search any Australian suburb or postcode below.';
 const FALLBACK_GENERIC =
-  'Could not detect your location. Choose any suburb and school below.';
+  'Could not detect your location. Search any Australian suburb or postcode below.';
+const MANUAL_SCHOOL_HINT = "Can't find your school? Enter school name manually";
 
 /**
- * Dynamic AU suburb → school picker (Overpass + Nominatim).
- * Offline fallback: src/data/auSuburbsData.ts. Coordinates are never stored.
+ * Local AU suburb master (instant) → Overpass schools (multi-mirror, 5s timeout)
+ * with manual school-name fallback so signup is never blocked.
+ * Coordinates are never stored.
  */
 export function LocationBasedSchoolSelect({
   value,
@@ -56,8 +60,11 @@ export function LocationBasedSchoolSelect({
   const [locationStatus, setLocationStatus] = useState<LocationStatus>('detecting');
   const [rankedSuburbs, setRankedSuburbs] = useState<RankedSuburbOption[] | null>(null);
   const [selectedSuburbId, setSelectedSuburbId] = useState('');
+  const [suburbSearch, setSuburbSearch] = useState('');
   const [schoolOptions, setSchoolOptions] = useState<SchoolItem[]>([]);
   const [schoolQuery, setSchoolQuery] = useState('');
+  const [manualSchoolName, setManualSchoolName] = useState('');
+  const [showManualSchool, setShowManualSchool] = useState(false);
   const [loadingSchools, setLoadingSchools] = useState(false);
   const [statusMessage, setStatusMessage] = useState(DETECTING_MESSAGE);
   const onChangeRef = useRef(onChange);
@@ -66,6 +73,11 @@ export function LocationBasedSchoolSelect({
   onDetailsRef.current = onSchoolDetailsChange;
   const detectedOnce = useRef(false);
   const schoolFetchSeq = useRef(0);
+
+  const searchHits = useMemo(
+    () => searchAustralianSuburbs(suburbSearch),
+    [suburbSearch],
+  );
 
   const suburbList = useMemo(() => {
     if (rankedSuburbs) return rankedSuburbs;
@@ -84,10 +96,6 @@ export function LocationBasedSchoolSelect({
 
   const nearbySuburbs = useMemo(
     () => suburbList.filter((entry) => entry.nearby),
-    [suburbList],
-  );
-  const otherSuburbs = useMemo(
-    () => suburbList.filter((entry) => !entry.nearby),
     [suburbList],
   );
 
@@ -139,7 +147,41 @@ export function LocationBasedSchoolSelect({
     const distance = Number.isFinite(suburb.distanceKm) && suburb.distanceKm < Number.POSITIVE_INFINITY
       ? suburb.distanceKm.toFixed(1)
       : '—';
+    if (schoolCount === 0) {
+      return `No schools listed for ${suburb.name} yet. Enter your school name below to continue.`;
+    }
     return `Showing ${schoolCount} school${schoolCount === 1 ? '' : 's'} in ${suburb.name} • ${distance} km away`;
+  }
+
+  function mergeSuburbIntoList(suburb: LiveSuburb | RankedSuburbOption) {
+    const nextEntry: RankedSuburbOption = {
+      id: suburb.id,
+      name: suburb.name,
+      state: suburb.state,
+      postcode: suburb.postcode,
+      lat: suburb.lat,
+      lng: suburb.lng,
+      distanceKm: suburb.distanceKm,
+      nearby: suburb.nearby,
+      schools: [],
+    };
+    setRankedSuburbs((prev) => {
+      const base = prev ?? AU_SUBURBS_DATA.map((entry) => ({
+        id: entry.id,
+        name: entry.name,
+        state: entry.state,
+        postcode: entry.postcode,
+        lat: entry.lat,
+        lng: entry.lng,
+        distanceKm: Number.POSITIVE_INFINITY,
+        nearby: false,
+        schools: entry.schools,
+      }));
+      if (base.some((entry) => entry.id === suburb.id)) {
+        return base.map((entry) => (entry.id === suburb.id ? { ...entry, ...nextEntry, schools: entry.schools } : entry));
+      }
+      return [nextEntry, ...base];
+    });
   }
 
   async function loadSchoolsForSuburb(suburb: RankedSuburbOption | LiveSuburb) {
@@ -147,6 +189,8 @@ export function LocationBasedSchoolSelect({
     setLoadingSchools(true);
     setSchoolQuery('');
     setSchoolOptions([]);
+    setManualSchoolName('');
+    setShowManualSchool(false);
     emitSchoolSelection(null, null);
     setStatusMessage(`Loading local schools in ${suburb.name}...`);
 
@@ -154,13 +198,21 @@ export function LocationBasedSchoolSelect({
       const schools = await fetchSchoolsInSuburb(suburb.name, suburb.lat, suburb.lng);
       if (seq !== schoolFetchSeq.current) return;
       setSchoolOptions(schools);
-      syncSchoolSelection(schools, suburb);
+      if (schools.length === 0) {
+        setShowManualSchool(true);
+        emitSchoolSelection(null, null);
+      } else {
+        syncSchoolSelection(schools, suburb);
+      }
       setStatusMessage(statusForSuburb(suburb, schools.length));
     } catch {
       if (seq !== schoolFetchSeq.current) return;
       setSchoolOptions([]);
+      setShowManualSchool(true);
       emitSchoolSelection(null, null);
-      setStatusMessage(`Could not load schools for ${suburb.name}. Try another suburb.`);
+      setStatusMessage(
+        `Could not load schools for ${suburb.name}. Enter your school name below to continue.`,
+      );
     } finally {
       if (seq === schoolFetchSeq.current) setLoadingSchools(false);
     }
@@ -172,6 +224,7 @@ export function LocationBasedSchoolSelect({
     const ranked = toRankedSuburbOptions(result.suburbs);
     setRankedSuburbs(ranked);
     setLocationStatus(result.source === 'live' ? 'ready' : 'fallback');
+    setSuburbSearch('');
 
     const pick = result.currentSuburb
       ?? result.suburbs.find((entry) => entry.nearby)
@@ -182,7 +235,7 @@ export function LocationBasedSchoolSelect({
       setSelectedSuburbId('');
       setSchoolOptions([]);
       emitSchoolSelection(null, null);
-      setStatusMessage('Choose a suburb below to load local schools. Location is not stored.');
+      setStatusMessage('Search any Australian suburb or postcode below. Location is not stored.');
       return;
     }
 
@@ -208,6 +261,9 @@ export function LocationBasedSchoolSelect({
     setSelectedSuburbId('');
     setSchoolOptions([]);
     setSchoolQuery('');
+    setManualSchoolName('');
+    setShowManualSchool(false);
+    setSuburbSearch('');
     emitSchoolSelection(null, null);
     setStatusMessage(message);
   }
@@ -247,6 +303,8 @@ export function LocationBasedSchoolSelect({
   function onSuburbChange(nextSuburbId: string) {
     setSelectedSuburbId(nextSuburbId);
     setSchoolQuery('');
+    setManualSchoolName('');
+    setShowManualSchool(false);
     if (!nextSuburbId) {
       setSchoolOptions([]);
       emitSchoolSelection(null, null);
@@ -265,6 +323,16 @@ export function LocationBasedSchoolSelect({
     void loadSchoolsForSuburb(suburb);
   }
 
+  function onPickSearchSuburb(hit: LiveSuburb) {
+    mergeSuburbIntoList(hit);
+    setSelectedSuburbId(hit.id);
+    setSuburbSearch('');
+    setSchoolQuery('');
+    setManualSchoolName('');
+    setShowManualSchool(false);
+    void loadSchoolsForSuburb(hit);
+  }
+
   function onSchoolChange(schoolId: string) {
     if (!selectedSuburb) {
       emitSchoolSelection(null, null);
@@ -273,8 +341,24 @@ export function LocationBasedSchoolSelect({
     const school = schoolOptions.find((entry) => entry.id === schoolId) ?? null;
     emitSchoolSelection(school, selectedSuburb);
     if (school) {
+      setManualSchoolName('');
       setStatusMessage(statusForSuburb(selectedSuburb, schoolOptions.length));
     }
+  }
+
+  function applyManualSchool() {
+    if (!selectedSuburb) return;
+    const trimmed = manualSchoolName.trim();
+    if (trimmed.length < 2) return;
+    const school = createManualSchoolOption(selectedSuburb.name, trimmed);
+    setSchoolOptions((prev) => {
+      if (prev.some((entry) => entry.id === school.id || entry.name.toLowerCase() === school.name.toLowerCase())) {
+        return prev;
+      }
+      return [...prev, school];
+    });
+    emitSchoolSelection(school, selectedSuburb);
+    setStatusMessage(`Using “${school.name}” in ${selectedSuburb.name}. You can continue.`);
   }
 
   const geoSupported = typeof navigator !== 'undefined' && Boolean(navigator.geolocation);
@@ -289,6 +373,9 @@ export function LocationBasedSchoolSelect({
   const schoolSelectValue = filteredSchools.some((school) => school.id === value)
     ? value
     : '';
+
+  const manualReady = Boolean(selectedSuburb) && manualSchoolName.trim().length >= 2;
+  const forceManual = showManualSchool || (!loadingSchools && Boolean(selectedSuburbId) && schoolOptions.length === 0);
 
   return (
     <div
@@ -312,6 +399,37 @@ export function LocationBasedSchoolSelect({
       </button>
 
       <label>
+        Search suburb or postcode
+        <input
+          type="search"
+          value={suburbSearch}
+          disabled={disabled || locationStatus === 'detecting'}
+          onChange={(event) => setSuburbSearch(event.target.value)}
+          placeholder="e.g. Craigieburn, 3030, Pakenham"
+          aria-label="Search any Australian suburb or postcode"
+          autoComplete="off"
+        />
+      </label>
+      {suburbSearch.trim().length >= 2 && searchHits.length > 0 ? (
+        <ul className="location-school-select__suburb-hits" role="listbox" aria-label="Suburb search results">
+          {searchHits.map((hit) => (
+            <li key={hit.id}>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onPickSearchSuburb(hit)}
+              >
+                {hit.name} {hit.state} · {hit.postcode}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {suburbSearch.trim().length >= 2 && searchHits.length === 0 ? (
+        <p className="field-help">No suburbs match that search.</p>
+      ) : null}
+
+      <label>
         Suburb
         <select
           value={selectedSuburbId}
@@ -319,7 +437,7 @@ export function LocationBasedSchoolSelect({
           onChange={(event) => onSuburbChange(event.target.value)}
           aria-label="Filter schools by suburb"
         >
-          <option value="">All suburbs</option>
+          <option value="">Select a suburb</option>
           {nearbySuburbs.length > 0 ? (
             <optgroup label={`Nearby (within ${NEARBY_SUBURB_RADIUS_KM} km)`}>
               {nearbySuburbs.map((suburb) => (
@@ -332,8 +450,11 @@ export function LocationBasedSchoolSelect({
               ))}
             </optgroup>
           ) : null}
-          <optgroup label={nearbySuburbs.length > 0 ? 'Other suburbs' : 'All suburbs'}>
-            {(nearbySuburbs.length > 0 ? otherSuburbs : suburbList).map((suburb) => (
+          <optgroup label={nearbySuburbs.length > 0 ? 'Other selected suburbs' : 'Suburbs'}>
+            {(nearbySuburbs.length > 0
+              ? suburbList.filter((entry) => !entry.nearby)
+              : suburbList
+            ).map((suburb) => (
               <option key={`other-${suburb.id}`} value={suburb.id}>
                 {suburb.name} {suburb.state}
                 {showDistance
@@ -362,7 +483,7 @@ export function LocationBasedSchoolSelect({
       <label>
         School
         <select
-          required
+          required={!forceManual && !manualReady}
           value={schoolSelectValue}
           disabled={
             disabled
@@ -392,8 +513,47 @@ export function LocationBasedSchoolSelect({
         </select>
       </label>
 
+      {selectedSuburbId && !loadingSchools ? (
+        <div className="location-school-select__manual">
+          {!forceManual ? (
+            <button
+              type="button"
+              className="location-school-select__manual-toggle"
+              disabled={disabled}
+              onClick={() => setShowManualSchool(true)}
+            >
+              {MANUAL_SCHOOL_HINT}
+            </button>
+          ) : null}
+          {forceManual ? (
+            <label>
+              Enter your school name
+              <input
+                type="text"
+                value={manualSchoolName}
+                disabled={disabled}
+                onChange={(event) => setManualSchoolName(event.target.value)}
+                placeholder="Enter your school name"
+                aria-label="Enter your school name manually"
+                autoComplete="organization"
+              />
+            </label>
+          ) : null}
+          {forceManual ? (
+            <button
+              type="button"
+              className="location-school-select__manual-apply"
+              disabled={disabled || !manualReady}
+              onClick={applyManualSchool}
+            >
+              Continue to SchoolRun Village
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       <p className="field-help" role="status" data-location-status={locationStatus}>
-        {loadingSchools ? `Loading local schools...` : statusMessage}
+        {loadingSchools ? 'Loading local schools...' : statusMessage}
       </p>
     </div>
   );
