@@ -1,5 +1,6 @@
 -- Upsert a dynamically chosen AU school (Overpass / onboarding) then join as verified.
 -- Frontend: rpc('ensure_and_join_school', { p_display_name, p_suburb, p_state, p_external_key })
+-- Locals use v_school_id / v_membership_id so they never collide with column school_id.
 begin;
 set local search_path = pg_catalog;
 
@@ -16,8 +17,8 @@ set search_path = pg_catalog
 as $fn$
 declare
   caller uuid := auth.uid();
-  school_id uuid;
-  membership_id uuid;
+  v_school_id uuid;
+  v_membership_id uuid;
   clean_name text;
   clean_suburb text;
   clean_state text;
@@ -52,32 +53,32 @@ begin
   end if;
 
   -- Match an existing active school by suburb + display name (case-insensitive).
-  select school.id into school_id
-  from public.schools as school
-  where school.is_active
-    and lower(school.display_name) = lower(clean_name)
+  select s.id into v_school_id
+  from public.schools as s
+  where s.is_active
+    and lower(s.display_name) = lower(clean_name)
     and (
-      school.suburb is null
-      or lower(trim(school.suburb)) = lower(clean_suburb)
+      s.suburb is null
+      or lower(trim(s.suburb)) = lower(clean_suburb)
     )
-  order by school.created_at asc
+  order by s.created_at asc
   limit 1;
 
-  if school_id is null and p_external_key is not null and length(trim(p_external_key)) > 1 then
+  if v_school_id is null and p_external_key is not null and length(trim(p_external_key)) > 1 then
     base_slug := lower(trim(p_external_key));
     base_slug := regexp_replace(base_slug, '[^a-z0-9]+', '-', 'g');
     base_slug := trim(both '-' from base_slug);
     if base_slug <> '' then
-      select school.id into school_id
-      from public.schools as school
-      where school.slug = left(base_slug, 80)
-         or school.slug like left(base_slug, 60) || '-%'
-      order by school.created_at asc
+      select s.id into v_school_id
+      from public.schools as s
+      where s.slug = left(base_slug, 80)
+         or s.slug like left(base_slug, 60) || '-%'
+      order by s.created_at asc
       limit 1;
     end if;
   end if;
 
-  if school_id is null then
+  if v_school_id is null then
     base_slug := lower(clean_name || '-' || clean_suburb);
     base_slug := regexp_replace(base_slug, '[^a-z0-9]+', '-', 'g');
     base_slug := trim(both '-' from base_slug);
@@ -86,7 +87,7 @@ begin
     end if;
     base_slug := left(base_slug, 60);
     final_slug := base_slug;
-    if exists (select 1 from public.schools where slug = final_slug) then
+    if exists (select 1 from public.schools as s where s.slug = final_slug) then
       final_slug := left(base_slug, 50) || '-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 8);
     end if;
 
@@ -102,23 +103,23 @@ begin
       else 'primary'
     end;
 
-    insert into public.schools (slug, display_name, timezone, suburb, school_sector, is_active)
+    insert into public.schools as s (slug, display_name, timezone, suburb, school_sector, is_active)
     values (final_slug, left(clean_name, 160), tz, left(clean_suburb, 64), sector, true)
-    returning id into school_id;
+    returning s.id into v_school_id;
 
-    insert into public.school_configs (school_id)
-    values (school_id)
+    insert into public.school_configs as sc (school_id)
+    values (v_school_id)
     on conflict (school_id) do nothing;
   end if;
 
-  select membership.id into membership_id
-  from public.school_memberships as membership
-  where membership.school_id = school_id
-    and membership.user_id = caller
+  select m.id into v_membership_id
+  from public.school_memberships as m
+  where m.school_id = v_school_id
+    and m.user_id = caller
   for update;
 
-  if membership_id is null then
-    insert into public.school_memberships (
+  if v_membership_id is null then
+    insert into public.school_memberships as m (
       school_id,
       user_id,
       status,
@@ -127,7 +128,7 @@ begin
       approved_by,
       approved_at
     ) values (
-      school_id,
+      v_school_id,
       caller,
       'verified',
       pg_catalog.now(),
@@ -135,22 +136,22 @@ begin
       caller,
       pg_catalog.now()
     )
-    returning id into membership_id;
+    returning m.id into v_membership_id;
   else
-    update public.school_memberships as membership
+    update public.school_memberships as m
     set
       status = 'verified',
-      verified_email_at = coalesce(membership.verified_email_at, pg_catalog.now()),
-      invite_code_verified_at = coalesce(membership.invite_code_verified_at, pg_catalog.now()),
-      approved_by = coalesce(membership.approved_by, caller),
-      approved_at = coalesce(membership.approved_at, pg_catalog.now()),
+      verified_email_at = coalesce(m.verified_email_at, pg_catalog.now()),
+      invite_code_verified_at = coalesce(m.invite_code_verified_at, pg_catalog.now()),
+      approved_by = coalesce(m.approved_by, caller),
+      approved_at = coalesce(m.approved_at, pg_catalog.now()),
       updated_at = pg_catalog.now()
-    where membership.id = membership_id;
+    where m.id = v_membership_id;
   end if;
 
   return pg_catalog.jsonb_build_object(
-    'schoolId', school_id,
-    'membershipId', membership_id,
+    'schoolId', v_school_id,
+    'membershipId', v_membership_id,
     'displayName', clean_name,
     'suburb', clean_suburb
   );

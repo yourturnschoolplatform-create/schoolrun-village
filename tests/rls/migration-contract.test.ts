@@ -686,6 +686,18 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     );
   });
 
+  it('fixes ensure_and_join_school school_id ambiguity with v_school_id locals', async () => {
+    const fix = (await readFile(resolve('db/migrations/0074_fix_ambiguous_school_id.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/v_school_id uuid/i);
+    expect(fix).toMatch(/v_membership_id uuid/i);
+    expect(fix).toMatch(/where m\.school_id = v_school_id/i);
+    expect(fix).toMatch(/values \(v_school_id\)/i);
+    expect(fix).toMatch(/returning m\.id into v_membership_id/i);
+    expect(fix).not.toMatch(/^\s*school_id uuid;/m);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
+  });
+
   it('adds neighbourhood marketplace suburb scope without storing live GPS', async () => {
     const neighbourhood = (await readFile(resolve('db/migrations/0073_marketplace_neighbourhood_scope.sql'), 'utf8'))
       .replace(/\r\n/g, '\n');
