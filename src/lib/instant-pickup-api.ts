@@ -52,7 +52,7 @@ type InstantPickupRow = {
 };
 
 /**
- * SQL contract (db/migrations/0056, 0069, 0070):
+ * SQL contract (db/migrations/0056, 0069, 0070, 0075):
  *   accept_instant_pickup_request(p_request_id uuid)
  *   cancel_instant_pickup_request(p_request_id uuid)
  *   check_in_instant_pickup(p_request_id uuid, p_confirm boolean)
@@ -118,7 +118,11 @@ function logPickupError(scope: string, error: unknown, meta?: Record<string, unk
 
 function friendlyPickupError(error: unknown, fallback: string): Error {
   const parts = extractErrorParts(error);
-  const lower = `${parts.message} ${parts.details} ${parts.hint}`.toLowerCase();
+  const real = [parts.message, parts.details, parts.hint]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(' — ');
+  const lower = real.toLowerCase();
   if (
     lower.includes('sign in')
     || lower.includes('authentication')
@@ -127,22 +131,15 @@ function friendlyPickupError(error: unknown, fallback: string): Error {
   ) {
     return new Error('Please sign in again, then finish school onboarding before requesting a match.');
   }
-  if (lower.includes('own instant pickup') || lower.includes('your own')) {
+  if (
+    lower.includes('own instant pickup')
+    || lower.includes('your own pickup')
+    || lower.includes('your own')
+  ) {
     return new Error('You cannot request a match on your own pickup post.');
   }
   if (lower.includes('not open')) {
     return new Error('That pickup request is no longer open.');
-  }
-  if (lower.includes('request unavailable') || lower.includes('requester unavailable')) {
-    return new Error('That pickup request is not available for your school right now.');
-  }
-  if (
-    lower.includes('membership')
-    || lower.includes('join a school')
-    || lower.includes('verified')
-    || lower.includes('no verified school')
-  ) {
-    return new Error('Join and verify your school profile before requesting a match.');
   }
   if (lower.includes('window has already passed')) {
     return new Error('That pickup window has already passed.');
@@ -159,8 +156,15 @@ function friendlyPickupError(error: unknown, fallback: string): Error {
     || lower.includes('unexpected argument')
   ) {
     return new Error(
-      'That match could not be started because the database RPC is out of date. Refresh after migration 0070, then try again.',
+      'That match could not be started because the database RPC is out of date. Refresh after migration 0075, then try again.',
     );
+  }
+  // Prefer the real PostgreSQL / Supabase message over a generic mask.
+  if (parts.message.trim()) {
+    return new Error(parts.message.trim());
+  }
+  if (real) {
+    return new Error(real);
   }
   return new Error(fallback);
 }
@@ -343,7 +347,7 @@ export const instantPickupApi = {
   },
   /**
    * SQL: accept_instant_pickup_request(p_request_id uuid) → { request, chatRoom }
-   * Arg key MUST be `p_request_id` (see db/migrations/0070_accept_instant_pickup_rpc_contract.sql).
+   * Arg key MUST be `p_request_id` (see db/migrations/0075_fix_accept_instant_pickup_request.sql).
    */
   accept: async (client: SupabaseClient, requestId: string) => {
     await requireSessionUserId(client);
@@ -354,16 +358,18 @@ export const instantPickupApi = {
         p_request_id: args.p_request_id,
       });
       if (error) {
+        const parts = extractErrorParts(error);
         console.error('Request match detailed error:', error);
         console.error('Request match detailed error:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
+          message: parts.message,
+          details: parts.details,
+          hint: parts.hint,
+          code: parts.code,
           rpc: 'accept_instant_pickup_request',
           args,
           expectedParams: ['p_request_id'],
         });
+        // Surface the real Postgres/Supabase message (friendlyPickupError preserves it).
         throw Object.assign(
           friendlyPickupError(error, 'That match request could not be started right now.'),
           { cause: error },
@@ -377,12 +383,14 @@ export const instantPickupApi = {
         console.error('Request match detailed error:', {
           reason: 'missing_chatRoom_in_rpc_payload',
           message: 'RPC returned without chatRoom',
-          details: '',
+          details: typeof data === 'object' && data ? JSON.stringify(data) : String(data ?? ''),
           hint: 'Expected jsonb { request, chatRoom } from accept_instant_pickup_request',
           args,
           data,
         });
-        throw new Error('That match request could not be started right now.');
+        throw new Error(
+          'Match RPC succeeded but returned no chatRoom. Refresh after migration 0075, then try again.',
+        );
       }
       return { request, chatRoom } satisfies InstantPickupAcceptResult;
     } catch (error) {

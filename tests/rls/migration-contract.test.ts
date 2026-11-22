@@ -698,6 +698,20 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(fix).toMatch(/set local search_path = pg_catalog/i);
   });
 
+  it('fixes accept_instant_pickup_request for soft-joined school members', async () => {
+    const fix = (await readFile(resolve('db/migrations/0075_fix_accept_instant_pickup_request.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/function public\.instant_pickup_has_school_access/i);
+    expect(fix).toMatch(/is_approved_school_member/i);
+    expect(fix).toMatch(/You cannot request a match on your own pickup post/i);
+    expect(fix).toMatch(/function public\.accept_instant_pickup_request/i);
+    expect(fix).not.toMatch(/membership := public\.instant_pickup_caller_membership\(\)/i);
+    expect(fix).toMatch(/instant_pickup_has_school_access\(request\.school_id\)/i);
+    expect(fix).toMatch(/function public\.get_instant_pickup_chat/i);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
+  });
+
   it('adds neighbourhood marketplace suburb scope without storing live GPS', async () => {
     const neighbourhood = (await readFile(resolve('db/migrations/0073_marketplace_neighbourhood_scope.sql'), 'utf8'))
       .replace(/\r\n/g, '\n');

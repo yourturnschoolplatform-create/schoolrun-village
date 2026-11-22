@@ -849,6 +849,13 @@
       "searchPath": "pg_catalog"
     },
     {
+      "name": "instant_pickup_has_school_access",
+      "reason": "RLS + RPC school access for soft-joined parents (approved membership or signup school)",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "request school via is_approved_school_member or signup_school_id",
+      "searchPath": "pg_catalog"
+    },
+    {
       "name": "accept_instant_pickup_request",
       "reason": "accept open same-school instant pickup and open 1:1 chat",
       "callerDerivation": "auth.uid() as matched accepter; not requester",

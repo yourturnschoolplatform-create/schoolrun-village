@@ -15,6 +15,8 @@ describe('Day 11/12 instant pickup board boundary', () => {
     expect(api).toContain("client.rpc('get_instant_pickup_chat'");
     expect(api).toContain('get_instant_pickup_chat');
     expect(api).toMatch(/p_request_id:\s*args\.p_request_id|p_request_id:\s*assertRequestId/);
+    // Accept must surface the real Supabase/Postgres message, not only a generic mask.
+    expect(api).toMatch(/parts\.message\.trim\(\)/);
     expect(api).toContain("table: 'instant_pickup_requests'");
     expect(api).toContain(".from('instant_pickup_requests')");
     expect(api).toContain('.insert(payload)');
@@ -34,6 +36,12 @@ describe('Day 11/12 instant pickup board boundary', () => {
     expect(day12).toMatch(/interval '30 minutes'/i);
     expect(day12).toMatch(/pg_catalog\.date_part\('isodow'/i);
     expect(day12).not.toMatch(/pg_catalog\.extract\s*\(\s*isodow\s+from/i);
+    const fixAccept = await readFile(
+      resolve('db/migrations/0075_fix_accept_instant_pickup_request.sql'),
+      'utf8',
+    );
+    expect(fixAccept).toMatch(/instant_pickup_has_school_access/i);
+    expect(fixAccept).toMatch(/You cannot request a match on your own pickup post/i);
     expect(sql).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );

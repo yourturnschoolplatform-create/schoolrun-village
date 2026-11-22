@@ -352,7 +352,14 @@ export function InstantPickupBoard({
           code: typeof row.code === 'string' ? row.code : undefined,
         };
       };
-      const primary = bag(cause ?? err);
+      const fromCause = bag(cause);
+      const fromErr = bag(err);
+      const primary = {
+        message: fromCause.message || fromErr.message,
+        details: fromCause.details || fromErr.details,
+        hint: fromCause.hint || fromErr.hint,
+        code: fromCause.code || fromErr.code,
+      };
       console.error('Request match detailed error:', err);
       console.error('Request match detailed error:', {
         message: primary.message,
@@ -362,11 +369,11 @@ export function InstantPickupBoard({
         rpc: 'accept_instant_pickup_request',
         args: { p_request_id: id },
       });
-      setMessage(
-        err instanceof Error && err.message.trim()
-          ? err.message
-          : 'That match request could not be started right now.',
-      );
+      const visible =
+        (err instanceof Error && err.message.trim())
+        || primary.message.trim()
+        || 'That match request could not be started right now.';
+      setMessage(visible);
     } finally {
       setBusy(false);
     }
