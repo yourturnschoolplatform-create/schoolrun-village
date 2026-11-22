@@ -41,8 +41,8 @@ const FALLBACK_GENERIC =
 const MANUAL_SCHOOL_HINT = "Can't find your school? Enter school name manually";
 
 /**
- * Local AU suburb master (instant) → Overpass schools (multi-mirror, 5s timeout)
- * with manual school-name fallback so signup is never blocked.
+ * Local AU suburb + school masters (instant, no Overpass).
+ * Manual school-name entry remains an optional fallback.
  * Coordinates are never stored.
  */
 export function LocationBasedSchoolSelect({
@@ -194,42 +194,22 @@ export function LocationBasedSchoolSelect({
     emitSchoolSelection(null, null);
     setStatusMessage(`Loading local schools in ${suburb.name}...`);
 
-    // Safety net: never leave the spinner stuck if a hung network promise slips past AbortSignal.
-    const safetyTimer = setTimeout(() => {
-      if (seq !== schoolFetchSeq.current) return;
-      setIsLoadingSchools(false);
-      setShowManualSchool(true);
-      setStatusMessage(
-        `School lookup is taking too long for ${suburb.name}. Enter your school name below to continue.`,
-      );
-    }, 6_500);
-
     try {
+      // Local ACARA master — resolves in-memory with no Overpass / network wait.
       const result = await lookupSchoolsInSuburb(suburb.name, suburb.lat, suburb.lng);
       if (seq !== schoolFetchSeq.current) return;
 
       const schools = result.schools;
       setSchoolOptions(schools);
-
-      const needsManual = schools.length === 0
-        || result.source !== 'live'
-        || result.timedOut;
-      setShowManualSchool(needsManual);
+      // Manual entry only auto-opens when the catalogue has nothing for this suburb.
+      setShowManualSchool(schools.length === 0);
 
       if (schools.length === 0) {
         emitSchoolSelection(null, null);
-        setStatusMessage(
-          result.timedOut
-            ? `Could not reach the school directory for ${suburb.name}. Enter your school name below to continue.`
-            : statusForSuburb(suburb, 0),
-        );
+        setStatusMessage(statusForSuburb(suburb, 0));
       } else {
         syncSchoolSelection(schools, suburb);
-        setStatusMessage(
-          result.source === 'live'
-            ? statusForSuburb(suburb, schools.length)
-            : `Showing local schools for ${suburb.name}. You can also enter your school name below.`,
-        );
+        setStatusMessage(statusForSuburb(suburb, schools.length));
       }
     } catch {
       if (seq !== schoolFetchSeq.current) return;
@@ -240,8 +220,6 @@ export function LocationBasedSchoolSelect({
         `Could not load schools for ${suburb.name}. Enter your school name below to continue.`,
       );
     } finally {
-      clearTimeout(safetyTimer);
-      // Always clear the spinner for the active request — never leave "Loading local schools..." stuck.
       if (seq === schoolFetchSeq.current) {
         setIsLoadingSchools(false);
       }

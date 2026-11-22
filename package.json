@@ -46,7 +46,8 @@
     "test:notification-events:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/notification-events-live.test.ts --reporter=verbose",
     "test:admin-moderation:live": "npm run db:migrate:test && tsx scripts/verify-function-allowlist.ts && vitest run --config vitest.rls.config.ts tests/rls/admin-moderation-live.test.ts --reporter=verbose",
     "handover:reminders:install:test": "tsx scripts/install-handover-reminders-test.ts",
-    "generate:au-suburbs": "node scripts/generate-au-all-suburbs.mjs"
+    "generate:au-suburbs": "node scripts/generate-au-all-suburbs.mjs",
+    "generate:au-schools": "python scripts/generate-au-all-schools.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

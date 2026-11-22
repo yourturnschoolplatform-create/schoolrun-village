@@ -6,19 +6,13 @@ import {
   type SchoolItem,
 } from '../data/auSuburbsData';
 import { AU_ALL_SUBURBS, type AuSuburbRecord } from '../data/auAllSuburbs';
+import { AU_ALL_SCHOOLS, type AuSchoolRecord } from '../data/auAllSchools';
 
-const OVERPASS_MIRRORS = [
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass-api.de/api/interpreter',
-] as const;
-
-const SCHOOL_RADIUS_M = 3500;
-/** Per-mirror fetch budget. Mobile browsers sometimes ignore AbortSignal — race a hard reject. */
-const SCHOOL_FETCH_TIMEOUT_MS = 4_000;
-/** Hard ceiling for the whole school lookup (all mirrors). */
-const SCHOOL_LOOKUP_OVERALL_MS = 5_000;
 const MAX_NEARBY_SUBURBS = 40;
 const MAX_SEARCH_RESULTS = 40;
+const MIN_SUBURB_SCHOOLS = 3;
+const NEARBY_SCHOOL_RADIUS_KM = NEARBY_SUBURB_RADIUS_KM;
+const MAX_NEARBY_SCHOOLS = 40;
 
 export type SchoolLookupResult = {
   schools: SchoolItem[];
@@ -43,15 +37,6 @@ export type NearbyLocationResult = {
   source: 'live' | 'fallback';
 };
 
-type OverpassElement = {
-  type: string;
-  id: number;
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags?: Record<string, string>;
-};
-
 function slugify(value: string): string {
   return value
     .trim()
@@ -59,6 +44,10 @@ function slugify(value: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     || 'place';
+}
+
+function normaliseSuburbName(value: string): string {
+  return value.trim().toLowerCase().replace(/\s*\(cbd\)\s*$/i, '').trim();
 }
 
 function toLiveSuburb(record: AuSuburbRecord, distanceKm: number, nearby: boolean): LiveSuburb {
@@ -71,6 +60,13 @@ function toLiveSuburb(record: AuSuburbRecord, distanceKm: number, nearby: boolea
     lng: record.lng,
     distanceKm,
     nearby,
+  };
+}
+
+function toSchoolItem(record: AuSchoolRecord): SchoolItem {
+  return {
+    id: record.id || `${slugify(record.suburb)}-${slugify(record.name)}`,
+    name: record.name,
   };
 }
 
@@ -186,166 +182,88 @@ export async function fetchNearbySuburbsAndSchools(
   return getNearbySuburbs(lat, lng, NEARBY_SUBURB_RADIUS_KM);
 }
 
-function isAbortError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-  const name = 'name' in error ? String((error as { name?: string }).name) : '';
-  return name === 'AbortError' || name === 'TimeoutError';
-}
-
-/** Reject after timeoutMs even if fetch/AbortSignal hangs (common on mobile). */
-function rejectAfter(timeoutMs: number, label: string): Promise<never> {
-  return new Promise((_, reject) => {
-    setTimeout(() => {
-      reject(new DOMException(`${label} timed out after ${timeoutMs}ms`, 'AbortError'));
-    }, timeoutMs);
+function offlineSchoolsForSuburb(suburbName: string): SchoolItem[] {
+  const needle = normaliseSuburbName(suburbName);
+  const match = AU_SUBURBS_DATA.find((suburb) => {
+    const name = normaliseSuburbName(suburb.name);
+    return name === needle || name.startsWith(needle) || needle.startsWith(name);
   });
-}
-
-async function fetchWithTimeout(
-  input: RequestInfo | URL,
-  init: RequestInit = {},
-  timeoutMs = SCHOOL_FETCH_TIMEOUT_MS,
-): Promise<Response> {
-  const controller = new AbortController();
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      try {
-        controller.abort();
-      } catch {
-        // ignore
-      }
-      reject(new DOMException(`Request timed out after ${timeoutMs}ms`, 'AbortError'));
-    }, timeoutMs);
-  });
-  try {
-    return await Promise.race([
-      fetch(input, {
-        ...init,
-        signal: controller.signal,
-        headers: {
-          Accept: 'application/json',
-          ...(init.headers ?? {}),
-        },
-      }),
-      timeoutPromise,
-    ]);
-  } finally {
-    if (timer !== undefined) clearTimeout(timer);
-  }
-}
-
-async function queryOverpassMirror(url: string, query: string): Promise<OverpassElement[]> {
-  const response = await fetchWithTimeout(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-    },
-    body: `data=${encodeURIComponent(query)}`,
-  }, SCHOOL_FETCH_TIMEOUT_MS);
-  if (!response.ok) {
-    throw new Error(`Overpass request failed (${response.status}) at ${url}`);
-  }
-  const payload = await response.json() as { elements?: OverpassElement[] };
-  return payload.elements ?? [];
-}
-
-/** Query Overpass mirrors with a hard timeout each; first success wins. */
-async function queryOverpass(query: string): Promise<OverpassElement[]> {
-  let lastError: unknown;
-  for (const mirror of OVERPASS_MIRRORS) {
-    try {
-      return await queryOverpassMirror(mirror, query);
-    } catch (error) {
-      lastError = error;
-      console.warn(`Overpass mirror failed (${mirror}):`, error);
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error('All Overpass mirrors failed');
-}
-
-function mapOverpassSchools(suburbName: string, elements: OverpassElement[]): SchoolItem[] {
-  const byName = new Map<string, SchoolItem>();
-  for (const element of elements) {
-    const name = (element.tags?.name ?? '').trim();
-    if (!name) continue;
-    const key = name.toLowerCase();
-    if (byName.has(key)) continue;
-    byName.set(key, {
-      id: `${slugify(suburbName)}-${slugify(name)}`,
-      name,
-    });
-  }
-  return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+  return match ? [...match.schools] : [];
 }
 
 /**
- * Live schools near a suburb centre via Overpass (multi-mirror + hard timeouts).
- * Always resolves — never hangs. Falls back to static catalogue / empty for manual entry.
+ * Instant local Australian school lookup (ACARA master) — no Overpass / network.
+ * Exact suburb first; if fewer than 3, expand to schools within 5 km of the pin.
+ */
+export function getSchoolsInSuburb(
+  suburbName: string,
+  lat: number,
+  lng: number,
+): SchoolLookupResult {
+  const needle = normaliseSuburbName(suburbName);
+  const byName = new Map<string, SchoolItem>();
+
+  const exact: Array<{ record: AuSchoolRecord; distanceKm: number }> = [];
+  for (const record of AU_ALL_SCHOOLS) {
+    if (normaliseSuburbName(record.suburb) !== needle) continue;
+    const distanceKm = Number.isFinite(lat) && Number.isFinite(lng)
+      ? calculateDistanceKm(lat, lng, record.lat, record.lng)
+      : 0;
+    exact.push({ record, distanceKm });
+  }
+  exact.sort((a, b) => a.distanceKm - b.distanceKm || a.record.name.localeCompare(b.record.name));
+  for (const entry of exact) {
+    byName.set(entry.record.name.toLowerCase(), toSchoolItem(entry.record));
+  }
+
+  if (byName.size < MIN_SUBURB_SCHOOLS && Number.isFinite(lat) && Number.isFinite(lng)) {
+    const nearby = AU_ALL_SCHOOLS
+      .map((record) => ({
+        record,
+        distanceKm: calculateDistanceKm(lat, lng, record.lat, record.lng),
+      }))
+      .filter((entry) => entry.distanceKm <= NEARBY_SCHOOL_RADIUS_KM)
+      .sort((a, b) => a.distanceKm - b.distanceKm || a.record.name.localeCompare(b.record.name));
+
+    for (const entry of nearby) {
+      const key = entry.record.name.toLowerCase();
+      if (byName.has(key)) continue;
+      byName.set(key, toSchoolItem(entry.record));
+      if (byName.size >= MAX_NEARBY_SCHOOLS) break;
+    }
+  }
+
+  // Merge tiny onboarding catalogue extras (e.g. branded campus labels).
+  for (const school of offlineSchoolsForSuburb(suburbName)) {
+    const key = school.name.toLowerCase();
+    if (!byName.has(key)) byName.set(key, school);
+  }
+
+  const schools = Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+  if (schools.length) {
+    return { schools, source: 'live', timedOut: false };
+  }
+  return { schools: [], source: 'empty', timedOut: false };
+}
+
+/**
+ * Async wrapper kept for call-site compatibility — resolves immediately from local data.
  */
 export async function lookupSchoolsInSuburb(
   suburbName: string,
   lat: number,
   lng: number,
 ): Promise<SchoolLookupResult> {
-  const fallback = offlineSchoolsForSuburb(suburbName);
-  const query = `
-[out:json][timeout:3];
-(
-  node["amenity"="school"](around:${SCHOOL_RADIUS_M},${lat},${lng});
-  way["amenity"="school"](around:${SCHOOL_RADIUS_M},${lat},${lng});
-  relation["amenity"="school"](around:${SCHOOL_RADIUS_M},${lat},${lng});
-);
-out center tags;
-`.trim();
-
-  try {
-    const elements = await Promise.race([
-      queryOverpass(query),
-      rejectAfter(SCHOOL_LOOKUP_OVERALL_MS, 'School lookup'),
-    ]);
-    const schools = mapOverpassSchools(suburbName, elements);
-    if (schools.length) {
-      return { schools, source: 'live', timedOut: false };
-    }
-    return {
-      schools: fallback,
-      source: fallback.length ? 'fallback' : 'empty',
-      timedOut: false,
-    };
-  } catch (error) {
-    const timedOut = isAbortError(error);
-    console.warn(
-      timedOut
-        ? 'School live lookup timed out; using offline catalogue.'
-        : 'School live lookup failed; using offline catalogue.',
-      error,
-    );
-    return {
-      schools: fallback,
-      source: fallback.length ? 'fallback' : 'empty',
-      timedOut,
-    };
-  }
+  return getSchoolsInSuburb(suburbName, lat, lng);
 }
 
-/** @deprecated Prefer lookupSchoolsInSuburb for timeout / source metadata. */
+/** @deprecated Prefer lookupSchoolsInSuburb / getSchoolsInSuburb. */
 export async function fetchSchoolsInSuburb(
   suburbName: string,
   lat: number,
   lng: number,
 ): Promise<SchoolItem[]> {
-  const result = await lookupSchoolsInSuburb(suburbName, lat, lng);
-  return result.schools;
-}
-
-function offlineSchoolsForSuburb(suburbName: string): SchoolItem[] {
-  const needle = suburbName.trim().toLowerCase().replace(/\s*\(cbd\)\s*$/i, '').trim();
-  const match = AU_SUBURBS_DATA.find((suburb) => {
-    const name = suburb.name.toLowerCase().replace(/\s*\(cbd\)\s*$/i, '').trim();
-    return name === needle || name.startsWith(needle) || needle.startsWith(name);
-  });
-  return match ? [...match.schools] : [];
+  return getSchoolsInSuburb(suburbName, lat, lng).schools;
 }
 
 /** Build a manual school option parents can type themselves. */

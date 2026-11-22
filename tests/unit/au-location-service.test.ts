@@ -3,6 +3,7 @@ import {
   fetchNearbySuburbsAndSchools,
   fetchSchoolsInSuburb,
   getNearbySuburbs,
+  getSchoolsInSuburb,
   lookupSchoolsInSuburb,
   searchAustralianSuburbs,
 } from '../../src/utils/auLocationService';
@@ -11,7 +12,6 @@ describe('auLocationService', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
-    vi.useRealTimers();
   });
 
   it('resolves nearby suburbs in-memory for Docklands without fetch', async () => {
@@ -27,7 +27,6 @@ describe('auLocationService', () => {
   });
 
   it('finds outer-Melbourne suburbs (Craigieburn) within 5 km locally', () => {
-    // ~40 km north of CBD — must not fall back to Docklands/Fitzroy/St Kilda only
     const result = getNearbySuburbs(-37.594, 144.934, 5);
     expect(result.source).toBe('live');
     expect(result.currentSuburb?.name).toMatch(/Craigieburn/i);
@@ -44,65 +43,37 @@ describe('auLocationService', () => {
     expect(byName.some((hit) => /Pakenham/i.test(hit.name))).toBe(true);
   });
 
-  it('falls back to offline Melbourne schools when Overpass mirrors fail', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => {
-      throw new Error('network down');
-    }));
-
-    const schools = await fetchSchoolsInSuburb('Docklands', -37.815, 144.946);
-    expect(schools.some((school) => /Docklands Primary/i.test(school.name))).toBe(true);
-
-    const lookup = await lookupSchoolsInSuburb('Docklands', -37.815, 144.946);
-    expect(lookup.source).toBe('fallback');
-    expect(lookup.timedOut).toBe(false);
-  });
-
-  it('returns empty fallback for outer suburbs like Cranbourne North so UI can show manual entry', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => {
-      throw new Error('network down');
-    }));
+  it('returns Cranbourne North schools instantly from the local ACARA master', async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
 
     const lookup = await lookupSchoolsInSuburb('Cranbourne North', -38.074, 145.302);
-    expect(lookup.schools).toEqual([]);
-    expect(lookup.source).toBe('empty');
+    expect(lookup.source).toBe('live');
+    expect(lookup.timedOut).toBe(false);
+    expect(lookup.schools.length).toBeGreaterThanOrEqual(3);
+    expect(lookup.schools.some((school) => /Alkira|Courtenay|Tulliallan/i.test(school.name))).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('tries secondary Overpass mirror after the first times out', async () => {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url.includes('overpass.kumi.systems')) {
-        throw new Error('timeout');
-      }
-      return {
-        ok: true,
-        json: async () => ({
-          elements: [
-            { type: 'node', id: 1, tags: { name: 'Mirror High School' } },
-          ],
-        }),
-      };
-    });
-    vi.stubGlobal('fetch', fetchMock);
-
-    const schools = await fetchSchoolsInSuburb('Craigieburn', -37.594, 144.934);
-    expect(schools.some((school) => school.name === 'Mirror High School')).toBe(true);
-    expect(fetchMock).toHaveBeenCalled();
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('overpass.kumi.systems');
-    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('overpass-api.de');
+  it('returns Narre Warren South, Craigieburn and Pakenham schools locally', () => {
+    expect(getSchoolsInSuburb('Narre Warren South', -38.05, 145.3).schools.length).toBeGreaterThan(0);
+    expect(getSchoolsInSuburb('Craigieburn', -37.594, 144.934).schools.some((s) => /Craigieburn/i.test(s.name))).toBe(true);
+    expect(getSchoolsInSuburb('Pakenham', -38.073, 145.485).schools.length).toBeGreaterThan(0);
   });
 
-  it('settles with timedOut when fetch never resolves (hung AbortSignal)', async () => {
-    vi.useFakeTimers();
-    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {
-      // Intentionally never resolves — simulates mobile hang ignoring abort.
-    })));
+  it('expands to nearby schools within 5 km when the suburb has fewer than 3', () => {
+    // Docklands has 2 exact campuses; nearby expansion should fill past MIN_SUBURB_SCHOOLS.
+    const result = getSchoolsInSuburb('Docklands', -37.817, 144.942);
+    expect(result.source).toBe('live');
+    expect(result.schools.length).toBeGreaterThanOrEqual(3);
+    expect(result.schools.some((school) => /Docklands Primary/i.test(school.name))).toBe(true);
+  });
 
-    const pending = lookupSchoolsInSuburb('Cranbourne North', -38.074, 145.302);
-    // Advance past SCHOOL_LOOKUP_OVERALL_MS (5s) + buffer
-    await vi.advanceTimersByTimeAsync(5_500);
-    const lookup = await pending;
-    expect(lookup.timedOut).toBe(true);
-    expect(lookup.source).toBe('empty');
-    expect(lookup.schools).toEqual([]);
+  it('keeps fetchSchoolsInSuburb sync with local lookup and never calls network', async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    const schools = await fetchSchoolsInSuburb('Docklands', -37.815, 144.946);
+    expect(schools.some((school) => /Docklands Primary/i.test(school.name))).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
