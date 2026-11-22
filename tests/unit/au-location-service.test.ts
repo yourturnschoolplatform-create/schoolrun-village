@@ -3,6 +3,7 @@ import {
   fetchNearbySuburbsAndSchools,
   fetchSchoolsInSuburb,
   getNearbySuburbs,
+  lookupSchoolsInSuburb,
   searchAustralianSuburbs,
 } from '../../src/utils/auLocationService';
 
@@ -10,6 +11,7 @@ describe('auLocationService', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it('resolves nearby suburbs in-memory for Docklands without fetch', async () => {
@@ -49,6 +51,20 @@ describe('auLocationService', () => {
 
     const schools = await fetchSchoolsInSuburb('Docklands', -37.815, 144.946);
     expect(schools.some((school) => /Docklands Primary/i.test(school.name))).toBe(true);
+
+    const lookup = await lookupSchoolsInSuburb('Docklands', -37.815, 144.946);
+    expect(lookup.source).toBe('fallback');
+    expect(lookup.timedOut).toBe(false);
+  });
+
+  it('returns empty fallback for outer suburbs like Cranbourne North so UI can show manual entry', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new Error('network down');
+    }));
+
+    const lookup = await lookupSchoolsInSuburb('Cranbourne North', -38.074, 145.302);
+    expect(lookup.schools).toEqual([]);
+    expect(lookup.source).toBe('empty');
   });
 
   it('tries secondary Overpass mirror after the first times out', async () => {
@@ -73,5 +89,20 @@ describe('auLocationService', () => {
     expect(fetchMock).toHaveBeenCalled();
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain('overpass.kumi.systems');
     expect(String(fetchMock.mock.calls[1]?.[0])).toContain('overpass-api.de');
+  });
+
+  it('settles with timedOut when fetch never resolves (hung AbortSignal)', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {
+      // Intentionally never resolves — simulates mobile hang ignoring abort.
+    })));
+
+    const pending = lookupSchoolsInSuburb('Cranbourne North', -38.074, 145.302);
+    // Advance past SCHOOL_LOOKUP_OVERALL_MS (5s) + buffer
+    await vi.advanceTimersByTimeAsync(5_500);
+    const lookup = await pending;
+    expect(lookup.timedOut).toBe(true);
+    expect(lookup.source).toBe('empty');
+    expect(lookup.schools).toEqual([]);
   });
 });

@@ -8,7 +8,7 @@ import {
 import {
   createManualSchoolOption,
   fetchNearbySuburbsAndSchools,
-  fetchSchoolsInSuburb,
+  lookupSchoolsInSuburb,
   searchAustralianSuburbs,
   toRankedSuburbOptions,
   type LiveSuburb,
@@ -65,7 +65,7 @@ export function LocationBasedSchoolSelect({
   const [schoolQuery, setSchoolQuery] = useState('');
   const [manualSchoolName, setManualSchoolName] = useState('');
   const [showManualSchool, setShowManualSchool] = useState(false);
-  const [loadingSchools, setLoadingSchools] = useState(false);
+  const [isLoadingSchools, setIsLoadingSchools] = useState(false);
   const [statusMessage, setStatusMessage] = useState(DETECTING_MESSAGE);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -186,7 +186,7 @@ export function LocationBasedSchoolSelect({
 
   async function loadSchoolsForSuburb(suburb: RankedSuburbOption | LiveSuburb) {
     const seq = ++schoolFetchSeq.current;
-    setLoadingSchools(true);
+    setIsLoadingSchools(true);
     setSchoolQuery('');
     setSchoolOptions([]);
     setManualSchoolName('');
@@ -194,17 +194,43 @@ export function LocationBasedSchoolSelect({
     emitSchoolSelection(null, null);
     setStatusMessage(`Loading local schools in ${suburb.name}...`);
 
-    try {
-      const schools = await fetchSchoolsInSuburb(suburb.name, suburb.lat, suburb.lng);
+    // Safety net: never leave the spinner stuck if a hung network promise slips past AbortSignal.
+    const safetyTimer = setTimeout(() => {
       if (seq !== schoolFetchSeq.current) return;
+      setIsLoadingSchools(false);
+      setShowManualSchool(true);
+      setStatusMessage(
+        `School lookup is taking too long for ${suburb.name}. Enter your school name below to continue.`,
+      );
+    }, 6_500);
+
+    try {
+      const result = await lookupSchoolsInSuburb(suburb.name, suburb.lat, suburb.lng);
+      if (seq !== schoolFetchSeq.current) return;
+
+      const schools = result.schools;
       setSchoolOptions(schools);
+
+      const needsManual = schools.length === 0
+        || result.source !== 'live'
+        || result.timedOut;
+      setShowManualSchool(needsManual);
+
       if (schools.length === 0) {
-        setShowManualSchool(true);
         emitSchoolSelection(null, null);
+        setStatusMessage(
+          result.timedOut
+            ? `Could not reach the school directory for ${suburb.name}. Enter your school name below to continue.`
+            : statusForSuburb(suburb, 0),
+        );
       } else {
         syncSchoolSelection(schools, suburb);
+        setStatusMessage(
+          result.source === 'live'
+            ? statusForSuburb(suburb, schools.length)
+            : `Showing local schools for ${suburb.name}. You can also enter your school name below.`,
+        );
       }
-      setStatusMessage(statusForSuburb(suburb, schools.length));
     } catch {
       if (seq !== schoolFetchSeq.current) return;
       setSchoolOptions([]);
@@ -214,7 +240,11 @@ export function LocationBasedSchoolSelect({
         `Could not load schools for ${suburb.name}. Enter your school name below to continue.`,
       );
     } finally {
-      if (seq === schoolFetchSeq.current) setLoadingSchools(false);
+      clearTimeout(safetyTimer);
+      // Always clear the spinner for the active request — never leave "Loading local schools..." stuck.
+      if (seq === schoolFetchSeq.current) {
+        setIsLoadingSchools(false);
+      }
     }
   }
 
@@ -375,13 +405,14 @@ export function LocationBasedSchoolSelect({
     : '';
 
   const manualReady = Boolean(selectedSuburb) && manualSchoolName.trim().length >= 2;
-  const forceManual = showManualSchool || (!loadingSchools && Boolean(selectedSuburbId) && schoolOptions.length === 0);
+  const forceManual = showManualSchool
+    || (!isLoadingSchools && Boolean(selectedSuburbId) && schoolOptions.length === 0);
 
   return (
     <div
       className="location-school-select"
       data-location-school-select={locationStatus}
-      aria-busy={locationStatus === 'detecting' || loadingSchools}
+      aria-busy={locationStatus === 'detecting' || isLoadingSchools}
     >
       <button
         type="button"
@@ -473,9 +504,9 @@ export function LocationBasedSchoolSelect({
         <input
           type="search"
           value={schoolQuery}
-          disabled={disabled || !selectedSuburbId || loadingSchools || schoolOptions.length === 0}
+          disabled={disabled || !selectedSuburbId || isLoadingSchools || schoolOptions.length === 0}
           onChange={(event) => setSchoolQuery(event.target.value)}
-          placeholder={loadingSchools ? 'Loading local schools...' : 'Type to filter schools'}
+          placeholder={isLoadingSchools ? 'Loading local schools...' : 'Type to filter schools'}
           aria-label="Search schools in the selected suburb"
         />
       </label>
@@ -488,7 +519,7 @@ export function LocationBasedSchoolSelect({
           disabled={
             disabled
             || locationStatus === 'detecting'
-            || loadingSchools
+            || isLoadingSchools
             || !selectedSuburbId
             || filteredSchools.length === 0
           }
@@ -497,7 +528,7 @@ export function LocationBasedSchoolSelect({
         >
           {!selectedSuburbId ? (
             <option value="">Select a suburb first</option>
-          ) : loadingSchools ? (
+          ) : isLoadingSchools ? (
             <option value="">Loading local schools...</option>
           ) : filteredSchools.length === 0 ? (
             <option value="">
@@ -513,7 +544,7 @@ export function LocationBasedSchoolSelect({
         </select>
       </label>
 
-      {selectedSuburbId && !loadingSchools ? (
+      {selectedSuburbId && !isLoadingSchools ? (
         <div className="location-school-select__manual">
           {!forceManual ? (
             <button
@@ -553,7 +584,7 @@ export function LocationBasedSchoolSelect({
       ) : null}
 
       <p className="field-help" role="status" data-location-status={locationStatus}>
-        {loadingSchools ? 'Loading local schools...' : statusMessage}
+        {isLoadingSchools ? 'Loading local schools...' : statusMessage}
       </p>
     </div>
   );

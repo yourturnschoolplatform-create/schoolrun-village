@@ -13,9 +13,18 @@ const OVERPASS_MIRRORS = [
 ] as const;
 
 const SCHOOL_RADIUS_M = 3500;
-const SCHOOL_FETCH_TIMEOUT_MS = 5_000;
+/** Per-mirror fetch budget. Mobile browsers sometimes ignore AbortSignal — race a hard reject. */
+const SCHOOL_FETCH_TIMEOUT_MS = 4_000;
+/** Hard ceiling for the whole school lookup (all mirrors). */
+const SCHOOL_LOOKUP_OVERALL_MS = 5_000;
 const MAX_NEARBY_SUBURBS = 40;
 const MAX_SEARCH_RESULTS = 40;
+
+export type SchoolLookupResult = {
+  schools: SchoolItem[];
+  source: 'live' | 'fallback' | 'empty';
+  timedOut: boolean;
+};
 
 export type LiveSuburb = {
   id: string;
@@ -177,24 +186,52 @@ export async function fetchNearbySuburbsAndSchools(
   return getNearbySuburbs(lat, lng, NEARBY_SUBURB_RADIUS_KM);
 }
 
+function isAbortError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const name = 'name' in error ? String((error as { name?: string }).name) : '';
+  return name === 'AbortError' || name === 'TimeoutError';
+}
+
+/** Reject after timeoutMs even if fetch/AbortSignal hangs (common on mobile). */
+function rejectAfter(timeoutMs: number, label: string): Promise<never> {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new DOMException(`${label} timed out after ${timeoutMs}ms`, 'AbortError'));
+    }, timeoutMs);
+  });
+}
+
 async function fetchWithTimeout(
   input: RequestInfo | URL,
   init: RequestInit = {},
   timeoutMs = SCHOOL_FETCH_TIMEOUT_MS,
 ): Promise<Response> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      try {
+        controller.abort();
+      } catch {
+        // ignore
+      }
+      reject(new DOMException(`Request timed out after ${timeoutMs}ms`, 'AbortError'));
+    }, timeoutMs);
+  });
   try {
-    return await fetch(input, {
-      ...init,
-      signal: controller.signal,
-      headers: {
-        Accept: 'application/json',
-        ...(init.headers ?? {}),
-      },
-    });
+    return await Promise.race([
+      fetch(input, {
+        ...init,
+        signal: controller.signal,
+        headers: {
+          Accept: 'application/json',
+          ...(init.headers ?? {}),
+        },
+      }),
+      timeoutPromise,
+    ]);
   } finally {
-    clearTimeout(timer);
+    if (timer !== undefined) clearTimeout(timer);
   }
 }
 
@@ -213,7 +250,7 @@ async function queryOverpassMirror(url: string, query: string): Promise<Overpass
   return payload.elements ?? [];
 }
 
-/** Query Overpass mirrors with a strict 5s timeout each; first success wins. */
+/** Query Overpass mirrors with a hard timeout each; first success wins. */
 async function queryOverpass(query: string): Promise<OverpassElement[]> {
   let lastError: unknown;
   for (const mirror of OVERPASS_MIRRORS) {
@@ -227,45 +264,79 @@ async function queryOverpass(query: string): Promise<OverpassElement[]> {
   throw lastError instanceof Error ? lastError : new Error('All Overpass mirrors failed');
 }
 
+function mapOverpassSchools(suburbName: string, elements: OverpassElement[]): SchoolItem[] {
+  const byName = new Map<string, SchoolItem>();
+  for (const element of elements) {
+    const name = (element.tags?.name ?? '').trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (byName.has(key)) continue;
+    byName.set(key, {
+      id: `${slugify(suburbName)}-${slugify(name)}`,
+      name,
+    });
+  }
+  return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 /**
- * Live schools near a suburb centre via Overpass (multi-mirror, 5s timeout each).
- * Falls back to static auSuburbsData schools; empty array if nothing found (UI shows manual entry).
+ * Live schools near a suburb centre via Overpass (multi-mirror + hard timeouts).
+ * Always resolves — never hangs. Falls back to static catalogue / empty for manual entry.
  */
-export async function fetchSchoolsInSuburb(
+export async function lookupSchoolsInSuburb(
   suburbName: string,
   lat: number,
   lng: number,
-): Promise<SchoolItem[]> {
-  try {
-    const elements = await queryOverpass(`
-[out:json][timeout:4];
+): Promise<SchoolLookupResult> {
+  const fallback = offlineSchoolsForSuburb(suburbName);
+  const query = `
+[out:json][timeout:3];
 (
   node["amenity"="school"](around:${SCHOOL_RADIUS_M},${lat},${lng});
   way["amenity"="school"](around:${SCHOOL_RADIUS_M},${lat},${lng});
   relation["amenity"="school"](around:${SCHOOL_RADIUS_M},${lat},${lng});
 );
 out center tags;
-`.trim());
+`.trim();
 
-    const byName = new Map<string, SchoolItem>();
-    for (const element of elements) {
-      const name = (element.tags?.name ?? '').trim();
-      if (!name) continue;
-      const key = name.toLowerCase();
-      if (byName.has(key)) continue;
-      byName.set(key, {
-        id: `${slugify(suburbName)}-${slugify(name)}`,
-        name,
-      });
+  try {
+    const elements = await Promise.race([
+      queryOverpass(query),
+      rejectAfter(SCHOOL_LOOKUP_OVERALL_MS, 'School lookup'),
+    ]);
+    const schools = mapOverpassSchools(suburbName, elements);
+    if (schools.length) {
+      return { schools, source: 'live', timedOut: false };
     }
-
-    const schools = Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
-    if (schools.length) return schools;
-    return offlineSchoolsForSuburb(suburbName);
+    return {
+      schools: fallback,
+      source: fallback.length ? 'fallback' : 'empty',
+      timedOut: false,
+    };
   } catch (error) {
-    console.warn('School live lookup failed; using offline catalogue.', error);
-    return offlineSchoolsForSuburb(suburbName);
+    const timedOut = isAbortError(error);
+    console.warn(
+      timedOut
+        ? 'School live lookup timed out; using offline catalogue.'
+        : 'School live lookup failed; using offline catalogue.',
+      error,
+    );
+    return {
+      schools: fallback,
+      source: fallback.length ? 'fallback' : 'empty',
+      timedOut,
+    };
   }
+}
+
+/** @deprecated Prefer lookupSchoolsInSuburb for timeout / source metadata. */
+export async function fetchSchoolsInSuburb(
+  suburbName: string,
+  lat: number,
+  lng: number,
+): Promise<SchoolItem[]> {
+  const result = await lookupSchoolsInSuburb(suburbName, lat, lng);
+  return result.schools;
 }
 
 function offlineSchoolsForSuburb(suburbName: string): SchoolItem[] {
