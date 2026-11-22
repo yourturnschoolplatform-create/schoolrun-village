@@ -423,6 +423,7 @@ export function ScheduleHub({
             client={client}
             userId={userId}
             defaultSuburb={registeredSuburb}
+            defaultSchoolName={(overview?.schoolDisplayName ?? '').trim() || undefined}
             onOpenChat={openChatRoom}
             composeOpen={pickupComposeOpen}
             onComposeOpenChange={setPickupComposeOpen}

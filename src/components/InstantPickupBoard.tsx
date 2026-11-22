@@ -6,11 +6,28 @@ import {
   intentLabelEnglish,
   statusLabelEnglish,
 } from '../../shared/au-location';
+import {
+  nearbySuburbOptions,
+  resolveSuburbPlace,
+} from '../../shared/marketplace-neighbourhood';
+import { NEARBY_SUBURB_RADIUS_KM } from '../data/auSuburbsData';
+import { AU_ALL_SCHOOLS } from '../data/auAllSchools';
 import { nonPaymentNoticeForTrade, PICKUP_NO_SHOW_POLICY_COPY } from '../../shared/payment-tracks';
 import type { ChatRoom } from '../lib/chat-api';
 import { instantPickupApi, type InstantPickupRequest } from '../lib/instant-pickup-api';
+import { getSchoolsInSuburb } from '../utils/auLocationService';
 import { MatchChatDrawer } from './MatchChatDrawer';
 import { ParentTrustBadge } from './ParentTrustBadge';
+
+type AreaPickOption = {
+  id: string;
+  kind: 'registered' | 'suburb' | 'school';
+  /** Short chip label */
+  label: string;
+  /** Value written into Suburb-level area label (suburb only) */
+  areaLabel: string;
+  schoolName?: string;
+};
 
 function formatClock(value: string): string {
   return new Date(value).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
@@ -58,6 +75,7 @@ export function InstantPickupBoard({
   client,
   userId,
   defaultSuburb = '',
+  defaultSchoolName = '',
   onOpenChat,
   composeOpen = false,
   onComposeOpenChange,
@@ -66,6 +84,8 @@ export function InstantPickupBoard({
   client: SupabaseClient;
   userId?: string;
   defaultSuburb?: string;
+  /** Registered school display name for quick-select chips. */
+  defaultSchoolName?: string;
   onOpenChat: (room: ChatRoom) => void;
   composeOpen?: boolean;
   onComposeOpenChange?: (open: boolean) => void;
@@ -76,6 +96,7 @@ export function InstantPickupBoard({
   const [direction, setDirection] = useState<SchoolRunDirection>('pickup');
   const [areaLabel, setAreaLabel] = useState(defaultSuburb.trim());
   const [suburbEditing, setSuburbEditing] = useState(false);
+  const [selectedPickId, setSelectedPickId] = useState('');
   const [policyOpen, setPolicyOpen] = useState(false);
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
@@ -93,6 +114,64 @@ export function InstantPickupBoard({
     const fromBoard = items.find((item) => item.schoolSuburb?.trim())?.schoolSuburb?.trim();
     return fromBoard ?? '';
   }, [defaultSuburb, items]);
+  const registeredSchool = defaultSchoolName.trim();
+
+  const areaPickOptions = useMemo(() => {
+    const options: AreaPickOption[] = [];
+    const seen = new Set<string>();
+    const push = (option: AreaPickOption) => {
+      const key = `${option.kind}:${option.areaLabel.toLowerCase()}:${(option.schoolName ?? '').toLowerCase()}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      options.push(option);
+    };
+
+    if (registeredSuburb) {
+      push({
+        id: 'registered-suburb',
+        kind: 'registered',
+        label: registeredSuburb,
+        areaLabel: registeredSuburb,
+      });
+    }
+    if (registeredSchool && registeredSuburb) {
+      push({
+        id: 'registered-school',
+        kind: 'school',
+        label: registeredSchool,
+        areaLabel: registeredSuburb,
+        schoolName: registeredSchool,
+      });
+    }
+
+    const place = registeredSuburb ? resolveSuburbPlace(registeredSuburb) : null;
+    if (place) {
+      for (const suburb of nearbySuburbOptions(place.lat, place.lng, NEARBY_SUBURB_RADIUS_KM).slice(0, 8)) {
+        if (suburb.suburb.toLowerCase() === registeredSuburb.toLowerCase()) continue;
+        push({
+          id: `nearby-suburb-${suburb.id}`,
+          kind: 'suburb',
+          label: `${suburb.suburb} · ${suburb.distanceKm.toFixed(1)} km`,
+          areaLabel: suburb.suburb,
+        });
+      }
+
+      const localSchools = getSchoolsInSuburb(registeredSuburb, place.lat, place.lng).schools;
+      for (const school of localSchools.slice(0, 10)) {
+        if (registeredSchool && school.name.toLowerCase() === registeredSchool.toLowerCase()) continue;
+        const record = AU_ALL_SCHOOLS.find((entry) => entry.id === school.id);
+        push({
+          id: `nearby-school-${school.id}`,
+          kind: 'school',
+          label: school.name,
+          areaLabel: record?.suburb || registeredSuburb,
+          schoolName: school.name,
+        });
+      }
+    }
+
+    return options;
+  }, [registeredSchool, registeredSuburb]);
 
   useEffect(() => {
     if (userId) {
@@ -132,7 +211,31 @@ export function InstantPickupBoard({
   useEffect(() => {
     if (!registeredSuburb) return;
     setAreaLabel((current) => (current.trim() ? current : registeredSuburb));
+    setSelectedPickId((current) => current || 'registered-suburb');
   }, [registeredSuburb]);
+
+  useEffect(() => {
+    if (!composeOpen || composeStep !== 3) return;
+    if (!areaLabel.trim() && registeredSuburb) {
+      setAreaLabel(registeredSuburb);
+      setSelectedPickId('registered-suburb');
+      setSuburbEditing(false);
+    }
+  }, [areaLabel, composeOpen, composeStep, registeredSuburb]);
+
+  function applyAreaPick(option: AreaPickOption) {
+    setAreaLabel(option.areaLabel);
+    setSelectedPickId(option.id);
+    setSuburbEditing(false);
+    if (option.schoolName) {
+      setNotes((current) => {
+        const needle = option.schoolName!.toLowerCase();
+        if (current.toLowerCase().includes(needle)) return current;
+        const next = current.trim() ? `${current.trim()} · ${option.schoolName}` : option.schoolName!;
+        return next.slice(0, 500);
+      });
+    }
+  }
 
   useEffect(() => {
     const schoolId = items[0]?.schoolId;
@@ -494,34 +597,112 @@ export function InstantPickupBoard({
                 <>
                   <div className="friendly-field" role="group" aria-label="Suburb-level area label">
                     <span className="friendly-field__label">Suburb-level area label</span>
+
+                    {areaPickOptions.length > 0 ? (
+                      <>
+                        <label className="area-pick-select-label">
+                          <span className="visually-hidden">Pick registered or nearby area</span>
+                          <select
+                            className="area-pick-select"
+                            value={
+                              areaPickOptions.some((option) => option.id === selectedPickId)
+                                ? selectedPickId
+                                : ''
+                            }
+                            onChange={(event) => {
+                              const next = areaPickOptions.find((option) => option.id === event.target.value);
+                              if (next) applyAreaPick(next);
+                            }}
+                            aria-label="Pick suburb or school"
+                          >
+                            <option value="">Choose suburb or school…</option>
+                            {registeredSuburb || registeredSchool ? (
+                              <optgroup label="Registered">
+                                {areaPickOptions
+                                  .filter((option) => option.kind === 'registered' || option.id === 'registered-school')
+                                  .map((option) => (
+                                    <option key={`opt-${option.id}`} value={option.id}>
+                                      {option.kind === 'school'
+                                        ? `${option.schoolName} · ${option.areaLabel}`
+                                        : option.areaLabel}
+                                    </option>
+                                  ))}
+                              </optgroup>
+                            ) : null}
+                            {areaPickOptions.some((option) => option.kind === 'suburb') ? (
+                              <optgroup label={`Nearby suburbs (${NEARBY_SUBURB_RADIUS_KM} km)`}>
+                                {areaPickOptions
+                                  .filter((option) => option.kind === 'suburb')
+                                  .map((option) => (
+                                    <option key={`opt-${option.id}`} value={option.id}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                              </optgroup>
+                            ) : null}
+                            {areaPickOptions.some((option) => option.kind === 'school' && option.id !== 'registered-school') ? (
+                              <optgroup label="Nearby schools">
+                                {areaPickOptions
+                                  .filter((option) => option.kind === 'school' && option.id !== 'registered-school')
+                                  .map((option) => (
+                                    <option key={`opt-${option.id}`} value={option.id}>
+                                      {option.schoolName}
+                                      {option.areaLabel && option.areaLabel !== registeredSuburb
+                                        ? ` · ${option.areaLabel}`
+                                        : ''}
+                                    </option>
+                                  ))}
+                              </optgroup>
+                            ) : null}
+                          </select>
+                        </label>
+
+                        <div className="area-pick-chips" role="group" aria-label="Quick suburb and school picks">
+                          {areaPickOptions.slice(0, 12).map((option) => (
+                            <button
+                              key={option.id}
+                              type="button"
+                              className={
+                                selectedPickId === option.id || (
+                                  !selectedPickId
+                                  && areaLabel.trim().toLowerCase() === option.areaLabel.toLowerCase()
+                                  && (!option.schoolName || notes.toLowerCase().includes(option.schoolName.toLowerCase()))
+                                )
+                                  ? 'area-pick-chip area-pick-chip--active'
+                                  : 'area-pick-chip'
+                              }
+                              onClick={() => applyAreaPick(option)}
+                            >
+                              {option.kind === 'registered' ? `📍 ${option.label}` : null}
+                              {option.kind === 'suburb' ? option.label : null}
+                              {option.kind === 'school' ? `🏫 ${option.label}` : null}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    ) : null}
+
                     {!suburbEditing && areaLabel.trim() ? (
                       <div className="suburb-autofill">
                         <span className="suburb-autofill__value">📍 {areaLabel}{/\bVIC\b/i.test(areaLabel) ? '' : ' VIC'}</span>
                         <button type="button" className="text-button" onClick={() => setSuburbEditing(true)}>Edit</button>
                       </div>
                     ) : (
-                      <>
-                        <input
-                          required
-                          maxLength={64}
-                          value={areaLabel}
-                          onChange={(event) => setAreaLabel(event.target.value)}
-                          placeholder={registeredSuburb || 'e.g. Docklands'}
-                        />
-                        {registeredSuburb ? (
-                          <button
-                            type="button"
-                            className="text-button"
-                            onClick={() => {
-                              setAreaLabel(registeredSuburb);
-                              setSuburbEditing(false);
-                            }}
-                          >
-                            Use registered suburb ({registeredSuburb})
-                          </button>
-                        ) : null}
-                      </>
+                      <input
+                        required
+                        maxLength={64}
+                        value={areaLabel}
+                        onChange={(event) => {
+                          setAreaLabel(event.target.value);
+                          setSelectedPickId('');
+                        }}
+                        placeholder={registeredSuburb || 'e.g. Cranbourne North'}
+                        aria-label="Type suburb-level area label"
+                      />
                     )}
+                    <p className="field-help">
+                      Tap a chip or use the list — suburb only. Manual typing still works.
+                    </p>
                   </div>
 
                   <div className="friendly-field" role="group" aria-label="Optional note">
@@ -546,7 +727,7 @@ export function InstantPickupBoard({
                     />
                   </div>
 
-                  <div className="instant-sheet__actions">
+                  <div className="instant-sheet__actions instant-sheet__actions--sticky">
                     <button type="button" className="text-button" onClick={() => setComposeStep(2)}>Back</button>
                     <button className="primary-button instant-compose__cta" type="submit" disabled={busy || !areaLabel.trim()}>
                       {busy ? 'Posting…' : 'Post to school board'}

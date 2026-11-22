@@ -249,6 +249,7 @@ export function CommunityHub({
         <InstantPickupBoard
           client={client}
           userId={userId}
+          defaultSuburb={viewerSuburb ?? ''}
           onOpenChat={onOpenChat ?? (() => undefined)}
         />
       ) : null}
