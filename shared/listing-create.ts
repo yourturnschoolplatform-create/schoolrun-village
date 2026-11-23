@@ -14,6 +14,8 @@ export type CreateListingInput = {
   offerLabel: string;
   askAudCents?: number | null;
   listingImages?: ListingImagePayload[] | null;
+  /** Optional public HTTPS URL for one listing video (Storage). */
+  videoUrl?: string | null;
   itemCondition?: MarketplaceCondition | null;
   sizeAgeLabel?: string | null;
   householdEnv?: MarketplaceHouseholdEnv[] | null;
@@ -36,6 +38,8 @@ export function buildCreateItemListingArgs(input: CreateListingInput): Record<st
   const sizeAge = input.sizeAgeLabel?.trim() ? input.sizeAgeLabel.trim().slice(0, 40) : null;
 
   const areaLabel = input.areaLabel?.trim() ? input.areaLabel.trim().slice(0, 64) : null;
+  const videoUrlRaw = input.videoUrl?.trim() ?? '';
+  const videoUrl = /^https:\/\//i.test(videoUrlRaw) ? videoUrlRaw.slice(0, 2048) : null;
 
   const askCents = input.askAudCents == null
     ? null
@@ -50,6 +54,7 @@ export function buildCreateItemListingArgs(input: CreateListingInput): Record<st
     // Whole AUD cents integer (e.g. 5000 for $50). Never send dollars here.
     p_ask_aud_cents: askCents != null && Number.isFinite(askCents) ? askCents : null,
     p_listing_images: images,
+    p_video_url: videoUrl,
     p_item_condition: condition,
     p_size_age_label: sizeAge,
     // jsonb array — keep as a plain array for PostgREST
@@ -80,6 +85,9 @@ export function friendlyListingCreateError(raw: string | null | undefined): stri
     || text.includes('send cents')
   ) {
     return 'Sell listings need a valid AUD ask of at least $1 (for example 50).';
+  }
+  if (text.includes('video')) {
+    return 'Listing video must be one HTTPS MP4, MOV or WebM file (max 50 MB).';
   }
   if (text.includes('image')) {
     return 'Listing images must be up to six compressed images with one cover selected.';

@@ -74,12 +74,24 @@ export function MarketplaceItemCard({
         onClick={() => onOpen(item)}
         aria-label={`${item.title}. ${price.text}. ${areaLabel}${distanceLabel ? ` ${distanceLabel}` : ''}`}
       >
-        <div className="karrot-card__thumb" aria-hidden={!cover}>
+        <div className="karrot-card__thumb" aria-hidden={!cover && !item.videoUrl}>
           {cover ? (
             <img src={cover.src} alt="" className="karrot-card__image" />
+          ) : item.videoUrl ? (
+            <video
+              className="karrot-card__image karrot-card__video"
+              src={item.videoUrl}
+              muted
+              playsInline
+              preload="metadata"
+              aria-hidden="true"
+            />
           ) : (
             <span className="karrot-card__placeholder">No photo</span>
           )}
+          {item.videoUrl ? (
+            <span className="karrot-card__video-badge">Video</span>
+          ) : null}
           {item.sameSchool ? (
             <span className="karrot-card__school-badge">Same school</span>
           ) : null}

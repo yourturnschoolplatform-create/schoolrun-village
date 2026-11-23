@@ -38,6 +38,7 @@ export type ItemListing = {
   askAudCents?: number | null;
   askAudDisplay?: string | null;
   listingImages?: ListingImagePayload[] | null;
+  videoUrl?: string | null;
   itemCondition?: MarketplaceCondition | null;
   sizeAgeLabel?: string | null;
   householdEnv?: MarketplaceHouseholdEnv[] | null;
@@ -122,19 +123,30 @@ export const listingsApi = {
       || error.code === 'PGRST202'
       || error.code === 'PGRST203';
 
-    // Pre-0073 / pre-0079 schema: retry without p_area_label when signature misses.
-    if (missingSignature && 'p_area_label' in args) {
-      const { p_area_label: _ignored, ...legacy } = args;
-      const legacyResult = await client.rpc('create_item_listing', legacy);
+    // Older schemas: retry without newer optional args (video / area).
+    if (missingSignature && ('p_video_url' in args || 'p_area_label' in args)) {
+      const {
+        p_video_url: _videoIgnored,
+        p_area_label: _areaIgnored,
+        ...legacy
+      } = args;
+      const legacyResult = await client.rpc('create_item_listing', {
+        ...legacy,
+        ...('p_area_label' in args && !String(detail).toLowerCase().includes('p_area_label')
+          ? { p_area_label: args.p_area_label }
+          : {}),
+      });
       if (!legacyResult.error) return legacyResult.data as ItemListing;
+      const stripped = await client.rpc('create_item_listing', legacy);
+      if (!stripped.error) return stripped.data as ItemListing;
       const legacyDetail = [
-        legacyResult.error.message,
-        legacyResult.error.details,
-        legacyResult.error.hint,
+        stripped.error.message,
+        stripped.error.details,
+        stripped.error.hint,
       ].filter(Boolean).join(' — ');
       throw Object.assign(
         new Error(friendlyListingCreateError(legacyDetail) || legacyDetail),
-        { cause: legacyResult.error },
+        { cause: stripped.error },
       );
     }
 

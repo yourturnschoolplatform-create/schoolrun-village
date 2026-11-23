@@ -18,6 +18,7 @@ import {
 } from '../../shared/marketplace';
 import type { NeighbourhoodSuburbOption } from '../../shared/marketplace-neighbourhood';
 import { nonPaymentNoticeForTrade } from '../../shared/payment-tracks';
+import { uploadListingVideo } from '../lib/listing-media';
 import { listingsApi } from '../lib/listings-api';
 import { ListingImageUploader } from './ListingImageUploader';
 
@@ -57,6 +58,8 @@ export function MarketplaceItemCreateForm({
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<MarketplaceCategory>('School & Nursery');
   const [images, setImages] = useState<ListingImagePayload[]>([]);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   const [condition, setCondition] = useState<MarketplaceCondition | ''>('Good');
   const [sizeAge, setSizeAge] = useState<MarketplaceSizeAge | ''>('');
   const [householdEnv, setHouseholdEnv] = useState<MarketplaceHouseholdEnv[]>([]);
@@ -65,6 +68,16 @@ export function MarketplaceItemCreateForm({
   const [aiNotes, setAiNotes] = useState('');
   const [busy, setBusy] = useState(false);
   const [selectedSuburb, setSelectedSuburb] = useState(suburbLabel);
+
+  useEffect(() => {
+    if (!videoFile) {
+      setVideoPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(videoFile);
+    setVideoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [videoFile]);
 
   const suburbChoices = useMemo(() => {
     const map = new Map<string, NeighbourhoodSuburbOption | { suburb: string; distanceKm?: number }>();
@@ -111,6 +124,7 @@ export function MarketplaceItemCreateForm({
     setDescription('');
     setAskDollars('');
     setImages([]);
+    setVideoFile(null);
     setCondition('Good');
     setSizeAge('');
     setHouseholdEnv([]);
@@ -152,6 +166,16 @@ export function MarketplaceItemCreateForm({
     }
     setBusy(true);
     try {
+      let videoUrl: string | null = null;
+      if (videoFile) {
+        const { data: sessionData } = await client.auth.getSession();
+        const userId = sessionData.session?.user?.id;
+        if (!userId) {
+          onNotice('Sign in again to upload a listing video.', 'amber');
+          return;
+        }
+        videoUrl = await uploadListingVideo(client, userId, videoFile);
+      }
       await listingsApi.create(client, {
         kind: tradeTypeToListingKind(trade),
         title: title.trim(),
@@ -160,6 +184,7 @@ export function MarketplaceItemCreateForm({
         offerLabel: offerLabelForTrade(trade),
         askAudCents,
         listingImages: images,
+        videoUrl,
         itemCondition: condition || 'Good',
         sizeAgeLabel: sizeAge || null,
         householdEnv: householdEnv ?? [],
@@ -186,12 +211,15 @@ export function MarketplaceItemCreateForm({
     >
       <div className="karrot-compose__head">
         <h3 id="karrot-compose-title">Write a listing</h3>
-        <p>Photos, title, trade type and school pickup suburb.</p>
+        <p>Photos, optional video, title, trade type and school pickup suburb.</p>
       </div>
 
       <ListingImageUploader
         images={images}
         onChange={setImages}
+        videoFile={videoFile}
+        videoPreviewUrl={videoPreviewUrl}
+        onVideoChange={setVideoFile}
         disabled={busy}
         variant="karrot"
       />

@@ -35,6 +35,7 @@ describe('listing create payload', () => {
       { src: `data:image/jpeg;base64,${'a'.repeat(40)}`, cover: false },
       { src: `data:image/jpeg;base64,${'b'.repeat(40)}`, cover: true },
     ]);
+    expect(args.p_video_url).toBeNull();
   });
 
   it('falls back optional fields to null or empty arrays', () => {
@@ -47,15 +48,32 @@ describe('listing create payload', () => {
     });
     expect(args.p_ask_aud_cents).toBeNull();
     expect(args.p_listing_images).toEqual([]);
+    expect(args.p_video_url).toBeNull();
     expect(args.p_item_condition).toBeNull();
     expect(args.p_size_age_label).toBeNull();
     expect(args.p_household_env).toEqual([]);
     expect(args.p_area_label).toBeNull();
   });
 
+  it('passes a single HTTPS video URL through create args', () => {
+    const args = buildCreateItemListingArgs({
+      kind: 'sale',
+      title: 'Balance bike',
+      description: 'Includes a short demo video.',
+      category: 'Toys & Outdoor',
+      offerLabel: 'SALE',
+      askAudCents: 2500,
+      videoUrl: 'https://example.supabase.co/storage/v1/object/public/listing-media/u/clip.mp4',
+    });
+    expect(args.p_video_url).toBe(
+      'https://example.supabase.co/storage/v1/object/public/listing-media/u/clip.mp4',
+    );
+  });
+
   it('maps RPC failures to clear parent-facing messages', () => {
     expect(friendlyListingCreateError('sale listings need an AUD ask between $1 and $999999')).toMatch(/AUD ask/i);
     expect(friendlyListingCreateError('listing images must be up to six')).toMatch(/images/i);
+    expect(friendlyListingCreateError('listing video must be one HTTPS URL')).toMatch(/video/i);
     // Signature misses must not be mislabelled as an AUD ask problem.
     const missing = friendlyListingCreateError(
       'Could not find the function public.create_item_listing(p_ask_aud_cents) in the schema cache',

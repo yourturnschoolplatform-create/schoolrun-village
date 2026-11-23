@@ -1621,6 +1621,25 @@ input::placeholder { color: #99a6a2; }
   line-height: 1.2;
   letter-spacing: .01em;
 }
+.karrot-card__video-badge {
+  position: absolute;
+  right: .35rem;
+  top: .35rem;
+  z-index: 1;
+  padding: .18rem .4rem;
+  border-radius: .45rem;
+  background: rgba(15, 23, 42, .78);
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 750;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.karrot-card__video {
+  background: #0F172A;
+  object-fit: cover;
+  pointer-events: none;
+}
 .karrot-card__interest {
   display: grid;
   align-content: end;
@@ -1936,6 +1955,15 @@ input::placeholder { color: #99a6a2; }
   border-radius: 14px;
   background: #F1F5F9;
 }
+.marketplace-carousel__video {
+  display: block;
+  width: 100%;
+  max-height: 14rem;
+  margin-top: .55rem;
+  border-radius: 14px;
+  background: #0F172A;
+  object-fit: contain;
+}
 .marketplace-carousel__controls {
   position: absolute;
   left: .35rem;
@@ -2033,6 +2061,13 @@ input::placeholder { color: #99a6a2; }
   height: 100%;
   object-fit: cover;
 }
+.listing-image-strip__preview--video {
+  background: #0F172A;
+  object-fit: contain;
+}
+.listing-image-strip__item--video {
+  min-width: 7.5rem;
+}
 .listing-image-strip__badge {
   position: absolute;
   left: .3rem;
@@ -2045,6 +2080,9 @@ input::placeholder { color: #99a6a2; }
   font-weight: 800;
   letter-spacing: .03em;
   text-transform: uppercase;
+}
+.listing-image-strip__badge--video {
+  background: rgba(15, 23, 42, .88);
 }
 .listing-image-strip__cover {
   position: absolute;

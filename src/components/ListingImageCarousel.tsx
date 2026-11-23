@@ -3,24 +3,30 @@ import type { ListingImagePayload } from '../../shared/marketplace';
 import { coverListingImage } from '../../shared/marketplace';
 
 /**
- * Compact listing gallery: cover thumbnail with optional multi-image carousel.
+ * Compact listing gallery: cover thumbnail with optional multi-image carousel
+ * and an optional listing video below the photos.
  */
 export function ListingImageCarousel({
   images,
   title,
+  videoUrl = null,
 }: {
   images: ListingImagePayload[] | null | undefined;
   title: string;
+  videoUrl?: string | null;
 }) {
   const list = images?.length ? images : [];
   const cover = coverListingImage(list);
+  const video = typeof videoUrl === 'string' && /^https:\/\//i.test(videoUrl.trim())
+    ? videoUrl.trim()
+    : null;
   const [index, setIndex] = useState(() => {
     if (!list.length) return 0;
     const coverIdx = list.findIndex((entry) => entry.cover);
     return coverIdx >= 0 ? coverIdx : 0;
   });
 
-  if (!cover) {
+  if (!cover && !video) {
     return (
       <div className="marketplace-card__media marketplace-card__media--empty" aria-hidden="true">
         <span className="marketplace-card__thumb">Item</span>
@@ -28,16 +34,20 @@ export function ListingImageCarousel({
     );
   }
 
-  const current = list[Math.min(index, list.length - 1)] ?? cover;
+  const current = list.length
+    ? (list[Math.min(index, list.length - 1)] ?? cover)
+    : null;
   const showControls = list.length > 1;
 
   return (
     <div className="marketplace-card__media marketplace-carousel">
-      <img
-        className="marketplace-carousel__image"
-        src={current.src}
-        alt={`${title} listing image ${Math.min(index, list.length - 1) + 1} of ${list.length}`}
-      />
+      {current ? (
+        <img
+          className="marketplace-carousel__image"
+          src={current.src}
+          alt={`${title} listing image ${Math.min(index, list.length - 1) + 1} of ${list.length}`}
+        />
+      ) : null}
       {showControls ? (
         <div className="marketplace-carousel__controls">
           <button
@@ -58,6 +68,16 @@ export function ListingImageCarousel({
             ›
           </button>
         </div>
+      ) : null}
+      {video ? (
+        <video
+          className="marketplace-carousel__video"
+          src={video}
+          controls
+          playsInline
+          preload="metadata"
+          aria-label={`${title} listing video`}
+        />
       ) : null}
     </div>
   );

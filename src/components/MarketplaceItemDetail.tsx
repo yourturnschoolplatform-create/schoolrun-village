@@ -81,7 +81,11 @@ export function MarketplaceItemDetail({
         </div>
 
         <div className="karrot-detail__media">
-          <ListingImageCarousel images={item.listingImages} title={item.title} />
+          <ListingImageCarousel
+            images={item.listingImages}
+            title={item.title}
+            videoUrl={item.videoUrl}
+          />
         </div>
 
         <div className="karrot-detail__seller">

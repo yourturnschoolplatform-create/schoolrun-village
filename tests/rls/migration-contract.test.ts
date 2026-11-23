@@ -787,6 +787,18 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(fix).toMatch(/set local search_path = pg_catalog/i);
   });
 
+  it('adds optional listing video_url and listing-media storage bucket', async () => {
+    const fix = (await readFile(resolve('db/migrations/0085_listing_video_url.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/add column if not exists video_url text/i);
+    expect(fix).toMatch(/listing_video_url_is_valid/i);
+    expect(fix).toMatch(/p_video_url text default null/i);
+    expect(fix).toMatch(/'videoUrl', video_value/);
+    expect(fix).toMatch(/listing-media/);
+    expect(fix).toMatch(/52428800/);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+  });
+
   it('opens chat Realtime SELECT to room participants without is_member gate', async () => {
     const fix = (await readFile(resolve('db/migrations/0084_fix_chat_realtime_alerts_rls.sql'), 'utf8'))
       .replace(/\r\n/g, '\n');
