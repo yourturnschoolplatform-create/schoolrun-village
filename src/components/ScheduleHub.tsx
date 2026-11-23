@@ -459,7 +459,7 @@ export function ScheduleHub({
   }
 
   return (
-    <section className="schedule-shell" aria-labelledby="schedule-title" data-schedule-hub="ready">
+    <section className="schedule-shell min-w-0 overflow-x-hidden" aria-labelledby="schedule-title" data-schedule-hub="ready">
       <QuickActions onSelect={selectQuickAction} />
       {/* Locked 5-tab primary navigation. */}
       <ScheduleNav view={view} onSelect={selectView} messagesUnread={messagesUnread} />

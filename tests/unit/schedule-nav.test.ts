@@ -36,9 +36,17 @@ describe('Schedule dashboard navigation', () => {
     expect(css).toContain('wordmark__text');
     expect(css).toContain('gap: 12px');
     expect(css).toContain('.quick-actions');
+    expect(css).toContain('overflow-x: hidden');
+    expect(css).toContain('safe-area-inset-top');
     expect(css).toContain('.my-trust-chip');
     expect(css).toContain('.marketplace-ask');
     expect(css).toContain('topbar__actions');
+    expect(quick).toContain('min-w-0');
+    expect(quick).toContain('overflow-hidden');
+    expect(quick).toContain('p-3 sm:p-4');
+
+    const html = await readFile(resolve('index.html'), 'utf8');
+    expect(html).toContain('viewport-fit=cover');
 
     expect(app).toContain('showSchoolLocation={showLocation}');
     expect(app).toContain('verificationPending={verificationPending}');

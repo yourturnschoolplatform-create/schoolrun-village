@@ -28,9 +28,13 @@ export function ScheduleNav({
     : null;
 
   return (
-    <nav className="schedule-nav" aria-label="School run sections" data-schedule-nav="primary">
+    <nav
+      className="schedule-nav min-w-0 max-w-full"
+      aria-label="School run sections"
+      data-schedule-nav="primary"
+    >
       <div
-        className="schedule-tabs"
+        className="schedule-tabs min-w-0"
         role="tablist"
         aria-label="Today, Calendar, Matches, Messages, Community"
         data-tab-count={SCHEDULE_NAV_TABS.length}

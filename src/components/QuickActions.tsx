@@ -26,12 +26,17 @@ export function QuickActions({
   onSelect: (view: ScheduleNavView, focus?: QuickActionFocus) => void;
 }) {
   return (
-    <div className="quick-actions" role="navigation" aria-label="Quick actions" data-quick-actions="ready">
+    <div
+      className="quick-actions min-w-0 overflow-hidden"
+      role="navigation"
+      aria-label="Quick actions"
+      data-quick-actions="ready"
+    >
       {ACTIONS.map((action) => (
         <button
           key={action.id}
           type="button"
-          className="quick-action"
+          className="quick-action min-w-0 overflow-hidden p-3 sm:p-4"
           data-quick-action={action.id}
           onClick={() => onSelect(action.view, action.focus)}
         >

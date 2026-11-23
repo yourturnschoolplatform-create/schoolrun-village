@@ -112,11 +112,11 @@ function AppHeader({
   verificationPending?: boolean;
 }) {
   return (
-    <header className="topbar" data-app-header="primary">
-      <div className="topbar__brand">
+    <header className="topbar min-w-0" data-app-header="primary">
+      <div className="topbar__brand min-w-0">
         <SchoolRunWordmark appName={appName} />
       </div>
-      <div className="topbar__actions">
+      <div className="topbar__actions min-w-0">
         {showSchoolLocation ? (
           <LocationChip
             location={schoolLocation ?? FALLBACK_SCHOOL_LOCATION}
