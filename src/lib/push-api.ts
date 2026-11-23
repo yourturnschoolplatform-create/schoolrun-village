@@ -83,6 +83,33 @@ async function activeRegistration(): Promise<ServiceWorkerRegistration | null> {
 /** Endpoint last successfully upserted into push_subscriptions (this tab session). */
 let lastPersistedEndpoint: string | null = null;
 
+const VAPID_PUBLIC_FP_KEY = 'srv.push.vapidPublicKey';
+
+function readStoredVapidPublicKey(): string | null {
+  try {
+    const value = localStorage.getItem(VAPID_PUBLIC_FP_KEY)?.trim() ?? '';
+    return value || null;
+  } catch {
+    return null;
+  }
+}
+
+function storeVapidPublicKey(vapidPublicKey: string): void {
+  try {
+    localStorage.setItem(VAPID_PUBLIC_FP_KEY, vapidPublicKey.trim());
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearStoredVapidPublicKey(): void {
+  try {
+    localStorage.removeItem(VAPID_PUBLIC_FP_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 function bufferEquals(a: ArrayBuffer, b: ArrayBuffer): boolean {
   if (a.byteLength !== b.byteLength) return false;
   const left = new Uint8Array(a);
@@ -112,6 +139,16 @@ function applicationServerKeysMatch(
   } catch {
     return true;
   }
+}
+
+/** Rotate when stored public key differs, or browser applicationServerKey mismatches. */
+function shouldRotateSubscription(
+  subscription: PushSubscription,
+  vapidPublicKey: string,
+): boolean {
+  const stored = readStoredVapidPublicKey();
+  if (stored && stored !== vapidPublicKey.trim()) return true;
+  return !applicationServerKeysMatch(subscription, vapidPublicKey);
 }
 
 export const pushApi = {
@@ -146,7 +183,8 @@ export const pushApi = {
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return false;
 
-    return pushApi.persistBrowserSubscription(client, key);
+    // Explicit re-enable always rotates so stale 403 VAPID endpoints are replaced.
+    return pushApi.persistBrowserSubscription(client, key, { forceRotate: true });
   },
 
   disable: async (client: SupabaseClient): Promise<void> => {
@@ -161,6 +199,7 @@ export const pushApi = {
       }
     }
     lastPersistedEndpoint = null;
+    clearStoredVapidPublicKey();
     if (endpoint) {
       try {
         await client.rpc('delete_push_subscription', { p_endpoint: endpoint });
@@ -173,11 +212,12 @@ export const pushApi = {
   /**
    * After Notification.permission === 'granted', create/reuse pushManager.subscribe
    * and upsert into push_subscriptions. Shared by enable() + syncSubscription().
-   * Rotates the browser subscription when the VAPID applicationServerKey changed.
+   * Rotates when VAPID public key changed (localStorage fingerprint or applicationServerKey).
    */
   persistBrowserSubscription: async (
     client: SupabaseClient,
     vapidPublicKey: string,
+    options?: { forceRotate?: boolean },
   ): Promise<boolean> => {
     try {
       const registration = await activeRegistration();
@@ -187,7 +227,9 @@ export const pushApi = {
       }
 
       let subscription = await registration.pushManager.getSubscription();
-      if (subscription && !applicationServerKeysMatch(subscription, vapidPublicKey)) {
+      const rotate = Boolean(options?.forceRotate)
+        || (subscription ? shouldRotateSubscription(subscription, vapidPublicKey) : false);
+      if (subscription && rotate) {
         try {
           await subscription.unsubscribe();
         } catch {
@@ -230,6 +272,7 @@ export const pushApi = {
         return false;
       }
       lastPersistedEndpoint = endpoint;
+      storeVapidPublicKey(vapidPublicKey);
       return true;
     } catch (error) {
       lastPersistedEndpoint = null;
@@ -245,6 +288,7 @@ export const pushApi = {
    * When permission is already granted, ensure the browser subscription exists
    * and is upserted into push_subscriptions (login / chat entry sync).
    * Does not call Notification.requestPermission (no gesture required).
+   * Rotates only when the stored / browser VAPID public key changed.
    */
   syncSubscription: async (
     client: SupabaseClient,

@@ -15,14 +15,34 @@ type PushTarget = {
   auth?: unknown;
 };
 
+function cleanVapidKey(raw: string | undefined | null): string {
+  return (raw ?? '')
+    .trim()
+    .replace(/^["']+|["']+$/g, '')
+    .replace(/\s+/g, '');
+}
+
+function normalizeVapidSubject(raw: string | undefined | null): string {
+  const fallback = 'mailto:support@schoolrunvillage.local';
+  const cleaned = (raw ?? '').trim().replace(/^["']+|["']+$/g, '');
+  if (!cleaned) return fallback;
+  if (/^mailto:/i.test(cleaned) || /^https:\/\//i.test(cleaned)) return cleaned;
+  if (/^http:\/\//i.test(cleaned)) return cleaned.replace(/^http:\/\//i, 'https://');
+  if (cleaned.includes('@')) return `mailto:${cleaned}`;
+  return fallback;
+}
+
 function readVapidConfig(): { publicKey: string; privateKey: string; subject: string } | null {
-  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim()
-    || process.env.VITE_VAPID_PUBLIC_KEY?.trim()
-    || '';
-  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim() || '';
-  const subject = process.env.VAPID_SUBJECT?.trim() || 'mailto:support@schoolrunvillage.local';
+  const publicKey = cleanVapidKey(process.env.VAPID_PUBLIC_KEY)
+    || cleanVapidKey(process.env.VITE_VAPID_PUBLIC_KEY);
+  const privateKey = cleanVapidKey(process.env.VAPID_PRIVATE_KEY);
+  const subject = normalizeVapidSubject(process.env.VAPID_SUBJECT);
   if (!publicKey || !privateKey) return null;
   return { publicKey, privateKey, subject };
+}
+
+function isStalePushStatus(status: number): boolean {
+  return status === 404 || status === 410 || status === 403;
 }
 
 function uuid(value: unknown): string {
@@ -77,7 +97,18 @@ async function sendToTargets(
       const status = typeof error === 'object' && error && 'statusCode' in error
         ? Number((error as { statusCode?: unknown }).statusCode)
         : 0;
-      if (status === 404 || status === 410) gone.push(target.endpoint);
+      if (isStalePushStatus(status)) {
+        // 403 often = VAPID mismatch for this endpoint; drop so peer can re-subscribe.
+        console.error('webpush_send_failed', {
+          status,
+          reason: status === 403
+            ? 'forbidden_vapid_or_unauthorized'
+            : 'subscription_expired',
+        });
+        gone.push(target.endpoint);
+      } else if (status) {
+        console.error('webpush_send_failed', { status, reason: `push_service_${status}` });
+      }
     }
   }));
 

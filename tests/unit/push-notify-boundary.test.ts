@@ -66,6 +66,8 @@ describe('Karrot-style chat push / realtime alerts', () => {
     expect(api).toContain('persistBrowserSubscription');
     expect(api).toContain('lastPersistedEndpoint');
     expect(api).toContain('applicationServerKeysMatch');
+    expect(api).toContain('shouldRotateSubscription');
+    expect(api).toContain('forceRotate: true');
     expect(api).toContain("lastPersistedEndpoint === existing.endpoint ? 'subscribed' : 'granted'");
     expect(hub).toContain('PushNotifyToggle');
     expect(hub).toContain('One-time match code');
@@ -95,6 +97,12 @@ describe('Karrot-style chat push / realtime alerts', () => {
     expect(edge).toContain('chatDeepLink');
     expect(edge).toContain('callerDisplayName');
     expect(edge).toMatch(/404|410/);
+    expect(edge).toContain('normalizeVapidSubject');
+    expect(edge).toContain('cleanVapidKey');
+    expect(edge).toContain('isStalePushStatus');
+    expect(edge).toContain('forbidden_vapid_or_unauthorized');
+    expect(router).toContain('normalizeVapidSubject');
+    expect(router).toContain('isStalePushStatus');
     expect(sql).toMatch(/chat_messages/);
     expect(sql).toMatch(/instant_pickup_requests/);
     expect(sql).toMatch(/push_subscriptions/i);

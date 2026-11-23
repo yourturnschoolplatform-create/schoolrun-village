@@ -12,7 +12,7 @@
  *   { kind: "match", requestId, roomId? }
  *
  * Caller must send Authorization: Bearer <user JWT>.
- * Expired endpoints (404/410) are removed from push_subscriptions.
+ * Stale endpoints (404/410/403 VAPID mismatch) are removed from push_subscriptions.
  *
  * Uses @block65/webcrypto-web-push (Web Crypto) — Node's `web-push` package
  * does not work on Supabase Edge / Deno (crypto.ECDH missing).
@@ -83,15 +83,50 @@ function env(name: string): string {
   return Deno.env.get(name)?.trim() ?? "";
 }
 
+/** Strip secrets pasted with quotes / whitespace (common Dashboard paste issue). */
+function cleanVapidKey(raw: string | undefined | null): string {
+  return (raw ?? "")
+    .trim()
+    .replace(/^["']+|["']+$/g, "")
+    .replace(/\s+/g, "");
+}
+
+/**
+ * Web Push contact URI must be mailto: or https://.
+ * Bare emails become mailto:; http:// is upgraded to https://.
+ */
+function normalizeVapidSubject(raw: string | undefined | null): string {
+  const fallback = "mailto:support@schoolrunvillage.local";
+  const cleaned = (raw ?? "").trim().replace(/^["']+|["']+$/g, "");
+  if (!cleaned) return fallback;
+  if (/^mailto:/i.test(cleaned) || /^https:\/\//i.test(cleaned)) return cleaned;
+  if (/^http:\/\//i.test(cleaned)) return cleaned.replace(/^http:\/\//i, "https://");
+  if (cleaned.includes("@")) return `mailto:${cleaned}`;
+  return fallback;
+}
+
 function readVapid(): { publicKey: string; privateKey: string; subject: string } | null {
-  const publicKey = Deno.env.get("VITE_VAPID_PUBLIC_KEY")?.trim()
-    || Deno.env.get("VAPID_PUBLIC_KEY")?.trim()
-    || "";
-  const privateKey = Deno.env.get("VAPID_PRIVATE_KEY")?.trim() || "";
-  const subject = Deno.env.get("VAPID_SUBJECT")?.trim()
-    || "mailto:support@schoolrunvillage.local";
+  const publicKey = cleanVapidKey(Deno.env.get("VITE_VAPID_PUBLIC_KEY"))
+    || cleanVapidKey(Deno.env.get("VAPID_PUBLIC_KEY"));
+  const privateKey = cleanVapidKey(Deno.env.get("VAPID_PRIVATE_KEY"));
+  const subject = normalizeVapidSubject(Deno.env.get("VAPID_SUBJECT"));
   if (!publicKey || !privateKey) return null;
   return { publicKey, privateKey, subject };
+}
+
+/** Statuses that mean the stored endpoint can never succeed with this VAPID pair. */
+function isStalePushStatus(status: number): boolean {
+  // 404/410 = expired. 403 = often VAPID mismatch / unauthorized for this sender.
+  return status === 404 || status === 410 || status === 403;
+}
+
+function describePushFailure(status: number): string {
+  if (status === 403) {
+    return "forbidden_vapid_or_unauthorized (check VAPID key pair matches SPA subscribe key; re-enable alerts)";
+  }
+  if (status === 401) return "unauthorized_vapid";
+  if (status === 404 || status === 410) return "subscription_expired";
+  return `push_service_${status}`;
 }
 
 function isUuid(value: unknown): value is string {
@@ -224,7 +259,9 @@ Deno.serve(async (request) => {
   const messageData = JSON.stringify(payload);
   let sent = 0;
   const gone: string[] = [];
+  let failed = 0;
 
+  // Per-target: never abort the whole batch on one bad subscription.
   await Promise.all(targets.map(async (target) => {
     if (
       typeof target.endpoint !== "string"
@@ -251,7 +288,12 @@ Deno.serve(async (request) => {
       );
 
       const response = await fetch(target.endpoint, requestInit);
-      if (response.status === 404 || response.status === 410) {
+      if (isStalePushStatus(response.status)) {
+        console.error("webpush_send_failed", {
+          status: response.status,
+          reason: describePushFailure(response.status),
+          cleaned: true,
+        });
         gone.push(target.endpoint);
         return;
       }
@@ -259,20 +301,35 @@ Deno.serve(async (request) => {
         sent += 1;
         return;
       }
-      console.error("webpush_send_failed", response.status);
+      failed += 1;
+      console.error("webpush_send_failed", {
+        status: response.status,
+        reason: describePushFailure(response.status),
+        cleaned: false,
+      });
     } catch (error) {
       const status = typeof error === "object" && error && "statusCode" in error
         ? Number((error as { statusCode?: unknown }).statusCode)
         : 0;
-      if (status === 404 || status === 410) {
+      if (isStalePushStatus(status)) {
+        console.error("webpush_send_error", {
+          status,
+          reason: describePushFailure(status),
+          cleaned: true,
+        });
         gone.push(target.endpoint);
       } else {
-        console.error("webpush_send_error", status || "unknown");
+        failed += 1;
+        console.error("webpush_send_error", {
+          status: status || "unknown",
+          reason: error instanceof Error ? error.message : "unknown",
+          cleaned: false,
+        });
       }
     }
   }));
 
-  // Clean expired / unsubscribed endpoints (service role bypasses RLS).
+  // Clean expired / unauthorized endpoints (service role bypasses RLS).
   if (gone.length > 0) {
     const { error: cleanupError } = await admin
       .from("push_subscriptions")
@@ -286,6 +343,8 @@ Deno.serve(async (request) => {
   return json(200, {
     ok: true,
     sent,
+    failed,
     cleaned: gone.length,
+    vapidSubjectOk: /^mailto:|^https:\/\//i.test(vapid.subject),
   });
 });
