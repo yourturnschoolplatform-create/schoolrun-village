@@ -8,6 +8,14 @@ export type CommunityThread = {
   title: string;
   status: string;
   created_at: string;
+  /** Active posts in the thread (from list_community_threads engagement enrich). */
+  post_count?: number;
+  /** Active comments across posts in the thread. */
+  comment_count?: number;
+  /** Likes on posts + comments in the thread. */
+  like_count?: number;
+  /** Latest of thread / post / comment timestamps. */
+  last_activity_at?: string;
 };
 
 export type CommunityPost = {

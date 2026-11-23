@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { statusLabelEnglish } from '../../shared/au-location';
 import {
@@ -8,6 +8,11 @@ import {
   type CommunityThread,
 } from '../lib/community-api';
 import { chatApi, withThreadChatSummary, type ChatRoom } from '../lib/chat-api';
+import {
+  DISCUSSION_SORT_OPTIONS,
+  sortDiscussionThreads,
+  type DiscussionSortMode,
+} from '../lib/discussion-sort';
 import { DiscussionShareButton } from './DiscussionShareButton';
 import { HotDealsBoard } from './HotDealsBoard';
 import { InstantPickupBoard } from './InstantPickupBoard';
@@ -69,6 +74,7 @@ export function CommunityHub({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [discussionSort, setDiscussionSort] = useState<DiscussionSortMode>('recommended');
 
   useEffect(() => {
     setPanel(initialPanel);
@@ -212,6 +218,10 @@ export function CommunityHub({
     }
   }
 
+  const sortedThreads = useMemo(
+    () => sortDiscussionThreads(threads, discussionSort),
+    [discussionSort, threads],
+  );
   const selectedThread = threads.find((thread) => thread.id === selectedThreadId) ?? null;
   const canChatAuthor = Boolean(
     selectedThread
@@ -344,6 +354,34 @@ export function CommunityHub({
               Do not post child full names, photos, mobile numbers or email addresses.
             </p>
           </div>
+
+          <div
+            className="discussion-sort"
+            role="toolbar"
+            aria-label="Sort discussions"
+          >
+            {DISCUSSION_SORT_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={
+                  discussionSort === option.id
+                    ? 'discussion-sort__pill discussion-sort__pill--active'
+                    : 'discussion-sort__pill'
+                }
+                aria-pressed={discussionSort === option.id}
+                onClick={() => setDiscussionSort(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <p className="field-help discussion-sort__hint">
+            {discussionSort === 'recommended'
+              ? 'Recommended shows active, helpful threads first.'
+              : 'Latest shows the newest activity first.'}
+          </p>
+
           <form className="stack-form feed-compose" onSubmit={(event) => void createThread(event)}>
             <label>
               Thread title
@@ -371,17 +409,26 @@ export function CommunityHub({
             <button className="primary-button" type="submit" disabled={busy}>Start discussion</button>
           </form>
 
-          {threads.length === 0 ? (
+          {sortedThreads.length === 0 ? (
             <p className="section-copy">No discussions yet. Start one for your school community.</p>
           ) : (
             <ul className="feed-list">
-              {threads.map((thread) => (
+              {sortedThreads.map((thread) => (
                 <li key={thread.id} className="feed-card">
                   <div className="feed-card__top">
                     <strong>{thread.title}</strong>
                     <span className="feed-card__status">{statusLabelEnglish(thread.status)}</span>
                   </div>
                   <small className="feed-card__byline">{thread.author_display_name}</small>
+                  {(thread.post_count != null || thread.like_count != null) ? (
+                    <small className="feed-card__byline discussion-thread__stats">
+                      {Math.max(0, thread.post_count ?? 0)} post{(thread.post_count ?? 0) === 1 ? '' : 's'}
+                      {' · '}
+                      {Math.max(0, thread.comment_count ?? 0)} comment{(thread.comment_count ?? 0) === 1 ? '' : 's'}
+                      {' · '}
+                      {Math.max(0, thread.like_count ?? 0)} like{(thread.like_count ?? 0) === 1 ? '' : 's'}
+                    </small>
+                  ) : null}
                   <div className="feed-card__actions">
                     <button
                       className="primary-button feed-card__cta"
