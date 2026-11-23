@@ -712,6 +712,17 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(fix).toMatch(/set local search_path = pg_catalog/i);
   });
 
+  it('reasserts get_instant_pickup_chat(p_request_id uuid) for PostgREST', async () => {
+    const fix = (await readFile(resolve('db/migrations/0076_get_instant_pickup_chat_rpc_contract.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/drop function if exists public\.get_instant_pickup_chat\(uuid\)/i);
+    expect(fix).toMatch(/create function public\.get_instant_pickup_chat\(p_request_id uuid\)/i);
+    expect(fix).toMatch(/p_request_id is required/i);
+    expect(fix).toMatch(/chat_weekday_label\(p_weekday integer\)/i);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
+  });
+
   it('adds neighbourhood marketplace suburb scope without storing live GPS', async () => {
     const neighbourhood = (await readFile(resolve('db/migrations/0073_marketplace_neighbourhood_scope.sql'), 'utf8'))
       .replace(/\r\n/g, '\n');

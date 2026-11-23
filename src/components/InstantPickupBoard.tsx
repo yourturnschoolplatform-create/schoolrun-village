@@ -423,11 +423,36 @@ export function InstantPickupBoard({
       setMessage(null);
       await refresh();
     } catch (err) {
+      const cause =
+        err instanceof Error && 'cause' in err ? (err as Error & { cause?: unknown }).cause : undefined;
+      const bag = (value: unknown) => {
+        if (!value || typeof value !== 'object') {
+          return { message: String(value ?? ''), details: '', hint: '', code: undefined as string | undefined };
+        }
+        const row = value as Record<string, unknown>;
+        return {
+          message: typeof row.message === 'string' ? row.message : String(row.message ?? ''),
+          details: typeof row.details === 'string' ? row.details : '',
+          hint: typeof row.hint === 'string' ? row.hint : '',
+          code: typeof row.code === 'string' ? row.code : undefined,
+        };
+      };
+      const fromCause = bag(cause);
+      const fromErr = bag(err);
       console.error('Failed to open chat room:', err);
+      console.error('Failed to open chat room:', {
+        message: fromCause.message || fromErr.message,
+        details: fromCause.details || fromErr.details,
+        hint: fromCause.hint || fromErr.hint,
+        code: fromCause.code || fromErr.code,
+        rpc: 'get_instant_pickup_chat',
+        args: { p_request_id: item.id },
+      });
       setMessage(
-        err instanceof Error && err.message.trim()
-          ? err.message
-          : 'Could not open chat room due to a permission or network error.',
+        (err instanceof Error && err.message.trim())
+        || fromCause.message.trim()
+        || fromErr.message.trim()
+        || 'Could not open chat room due to a permission or network error.',
       );
     } finally {
       setBusy(false);

@@ -52,7 +52,7 @@ type InstantPickupRow = {
 };
 
 /**
- * SQL contract (db/migrations/0056, 0069, 0070, 0075):
+ * SQL contract (db/migrations/0056, 0069, 0070, 0075, 0076):
  *   accept_instant_pickup_request(p_request_id uuid)
  *   cancel_instant_pickup_request(p_request_id uuid)
  *   check_in_instant_pickup(p_request_id uuid, p_confirm boolean)
@@ -147,19 +147,8 @@ function friendlyPickupError(error: unknown, fallback: string): Error {
   if (lower.includes('p_request_id is required')) {
     return new Error('That pickup request id is missing. Refresh and try again.');
   }
-  // PostgREST param / signature mismatches (PGRST202 / 42883).
-  if (
-    parts.code === 'PGRST202'
-    || parts.code === '42883'
-    || lower.includes('could not find the function')
-    || lower.includes('function public.accept_instant_pickup')
-    || lower.includes('unexpected argument')
-  ) {
-    return new Error(
-      'That match could not be started because the database RPC is out of date. Refresh after migration 0075, then try again.',
-    );
-  }
-  // Prefer the real PostgreSQL / Supabase message over a generic mask.
+  // Prefer the exact PostgreSQL / Supabase message (incl. 42883 / PGRST202).
+  // Never mask signature mismatches — callers need the real text to debug RPC args.
   if (parts.message.trim()) {
     return new Error(parts.message.trim());
   }
@@ -419,41 +408,60 @@ export const instantPickupApi = {
     return rpc<InstantPickupRequest>(client, 'check_in_instant_pickup', args);
   },
   /**
-   * get_instant_pickup_chat(p_request_id) — get or create room for matched parties.
+   * SQL: get_instant_pickup_chat(p_request_id uuid) → chat_room_json
+   * Arg key MUST be `p_request_id` (see db/migrations/0076_get_instant_pickup_chat_rpc_contract.sql).
    * Do not require chatRoomId on the client; the RPC heals a missing chat_room_id.
    */
   openChat: async (client: SupabaseClient, requestId: string) => {
     await requireSessionUserId(client);
     const args: OpenChatRpcArgs = { p_request_id: assertRequestId(requestId) };
     try {
+      // Literal key `p_request_id` — must match the Postgres parameter name exactly.
       const { data, error } = await client.rpc('get_instant_pickup_chat', {
         p_request_id: args.p_request_id,
       });
       if (error) {
+        const parts = extractErrorParts(error);
+        console.error('Failed to open chat room:', error);
         console.error('Failed to open chat room:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
+          message: parts.message,
+          details: parts.details,
+          hint: parts.hint,
+          code: parts.code,
           rpc: 'get_instant_pickup_chat',
           args,
+          expectedParams: ['p_request_id'],
         });
+        // Surface the exact Supabase/Postgres message (do not mask 42883 / PGRST202).
         throw Object.assign(
-          friendlyPickupError(error, 'Could not open chat room due to a permission or network error.'),
+          new Error(
+            parts.message.trim()
+            || [parts.details, parts.hint].map((part) => part.trim()).filter(Boolean).join(' — ')
+            || 'Could not open chat room due to a permission or network error.',
+          ),
           { cause: error },
         );
       }
       const room = data as ChatRoom | null;
       if (!room?.id) {
-        console.error('Failed to open chat room:', { reason: 'empty_chat_payload', args, data });
+        console.error('Failed to open chat room:', {
+          reason: 'empty_chat_payload',
+          message: 'RPC returned without chat room id',
+          args,
+          data,
+        });
         throw new Error('Chat room is not ready yet.');
       }
       return room;
     } catch (error) {
       if (error instanceof Error && error.message.trim()) throw error;
       console.error('Failed to open chat room:', error);
+      const parts = extractErrorParts(error);
       throw Object.assign(
-        friendlyPickupError(error, 'Could not open chat room due to a permission or network error.'),
+        new Error(
+          parts.message.trim()
+          || 'Could not open chat room due to a permission or network error.',
+        ),
         { cause: error },
       );
     }

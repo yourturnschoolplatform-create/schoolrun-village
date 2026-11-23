@@ -15,8 +15,10 @@ describe('Day 11/12 instant pickup board boundary', () => {
     expect(api).toContain("client.rpc('get_instant_pickup_chat'");
     expect(api).toContain('get_instant_pickup_chat');
     expect(api).toMatch(/p_request_id:\s*args\.p_request_id|p_request_id:\s*assertRequestId/);
-    // Accept must surface the real Supabase/Postgres message, not only a generic mask.
+    // Accept + openChat must surface the real Supabase/Postgres message (incl. 42883).
     expect(api).toMatch(/parts\.message\.trim\(\)/);
+    expect(api).not.toMatch(/database RPC is out of date/);
+    expect(api).toMatch(/expectedParams: \['p_request_id'\]/);
     expect(api).toContain("table: 'instant_pickup_requests'");
     expect(api).toContain(".from('instant_pickup_requests')");
     expect(api).toContain('.insert(payload)');
