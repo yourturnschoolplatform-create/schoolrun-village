@@ -515,7 +515,7 @@ export function InstantPickupBoard({
   }
 
   return (
-    <section className="feed-section instant-board" aria-labelledby="instant-board-title">
+    <section className="feed-section instant-board min-w-0 max-w-full w-full overflow-x-hidden" aria-labelledby="instant-board-title">
       <div className="feed-section__intro">
         <p className="eyebrow">School board</p>
         <h2 id="instant-board-title">Live ask &amp; offer posts</h2>

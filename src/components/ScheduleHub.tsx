@@ -523,14 +523,14 @@ export function ScheduleHub({
       ) : null}
 
       {view === 'today' ? (
-        <div className="schedule-hero schedule-hero--home">
+        <div className="schedule-hero schedule-hero--home min-w-0 max-w-full w-full overflow-x-hidden">
           <p className="eyebrow">{registeredSuburb ? `${registeredSuburb} VIC` : 'SchoolRun Village'}</p>
           <h1 id="schedule-title">Need a pickup today, or can you help?</h1>
           <p>One clear action — ask for help or offer a seat. Suburb only, phone-free.</p>
-          <div className="home-hero-actions" role="group" aria-label="Today actions">
+          <div className="home-hero-actions min-w-0 max-w-full w-full" role="group" aria-label="Today actions">
             <button
               type="button"
-              className="home-hero-cta home-hero-cta--ask"
+              className="home-hero-cta home-hero-cta--ask min-w-0 max-w-full w-full"
               onClick={() => openPickupCompose('need_help')}
             >
               <span className="home-hero-cta__title">Ask for a ride</span>
@@ -538,7 +538,7 @@ export function ScheduleHub({
             </button>
             <button
               type="button"
-              className="home-hero-cta home-hero-cta--offer"
+              className="home-hero-cta home-hero-cta--offer min-w-0 max-w-full w-full"
               onClick={() => openPickupCompose('can_help')}
             >
               <span className="home-hero-cta__title">Offer a seat</span>
@@ -582,20 +582,20 @@ export function ScheduleHub({
       {view === 'matches' ? <MatchHub client={client} onOpenChat={openChatRoom} /> : null}
 
       {view === 'today' ? (
-        <>
+        <div className="today-panel min-w-0 max-w-full w-full overflow-x-hidden">
           {message && <p className="notice notice--teal" role="status">{message}</p>}
           {!overview && !message && <p className="section-copy">Loading your protected schedule…</p>}
-          <section className="day-view day-view--summary" aria-labelledby="today-title">
-            <div>
+          <section className="day-view day-view--summary min-w-0 max-w-full w-full overflow-x-hidden" aria-labelledby="today-title">
+            <div className="min-w-0 max-w-full">
               <p className="eyebrow">{displayDate(start, timezone)}</p>
               <h2 id="today-title">Today’s schedule</h2>
             </div>
             {todayInstances.length ? (
-              <ul className="instance-list">
+              <ul className="instance-list min-w-0 max-w-full w-full">
                 {todayInstances.map((instance) => (
-                  <li key={instance.id}>
+                  <li key={instance.id} className="min-w-0 max-w-full">
                     <span className="instance-list__time">{instance.window_start.slice(0, 5)}–{instance.window_end.slice(0, 5)}</span>
-                    <div>
+                    <div className="instance-list__body min-w-0 max-w-full">
                       <strong>{intentLabel(instance.intent)} · {directionLabel(instance.direction)}</strong>
                       <span>{instance.area_label} · {instance.capacity} seat{instance.capacity === 1 ? '' : 's'}</span>
                     </div>
@@ -623,7 +623,7 @@ export function ScheduleHub({
             onComposeOpenChange={setPickupComposeOpen}
             presetIntent={pickupPresetIntent}
           />
-        </>
+        </div>
       ) : null}
 
       {view === 'calendar' ? (

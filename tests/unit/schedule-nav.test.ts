@@ -121,6 +121,9 @@ describe('Schedule dashboard navigation', () => {
     expect(css).toContain('.status-tag--active');
     expect(css).toContain('household-code__trigger');
     expect(css).toContain('.home-hero-cta');
+    expect(css).toContain('.today-panel');
+    expect(css).toContain('safe-area-inset-top');
+    expect(hub).toContain('today-panel');
     expect(css).toContain('.instant-sheet');
 
     const community = await readFile(resolve('src/components/CommunityHub.tsx'), 'utf8');
