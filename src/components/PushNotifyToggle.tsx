@@ -76,7 +76,7 @@ export function PushNotifyToggle({
         <div>
           <strong>Message alerts</strong>
           <p className="field-help">
-            Get a ping when a parent messages you or a pickup match starts — Karrot-style instant chat alerts.
+            Get a ping when a parent messages you or a pickup match starts — instant chat alerts.
           </p>
         </div>
         <button
