@@ -80,21 +80,7 @@ export function MarketplaceItemDetail({
       >
         <div className="karrot-detail__top">
           <button type="button" className="text-button" onClick={onClose}>Close</button>
-          <div className="karrot-detail__top-actions">
-            <MarketplaceShareButton
-              listingId={item.id}
-              title={item.title}
-              listingKind={item.listing_kind}
-              displayOfferLabel={item.display_offer_label}
-              askAudCents={item.askAudCents}
-              askAudDisplay={item.askAudDisplay}
-              suburb={areaLabel}
-              compact
-              stopPropagation
-              onFeedback={onShareFeedback}
-            />
-            <span className="karrot-detail__status">{statusLabelEnglish(item.status)}</span>
-          </div>
+          <span className="karrot-detail__status">{statusLabelEnglish(item.status)}</span>
         </div>
 
         <div className="karrot-detail__media">
@@ -137,7 +123,15 @@ export function MarketplaceItemDetail({
           ) : null}
         </div>
 
-        <div className={`karrot-detail__bar${ownListing ? ' karrot-detail__bar--own' : ''}`}>
+        <div
+          className={
+            ownListing
+              ? 'karrot-detail__bar karrot-detail__bar--own'
+              : payable
+                ? 'karrot-detail__bar karrot-detail__bar--buyer karrot-detail__bar--buy'
+                : 'karrot-detail__bar karrot-detail__bar--buyer'
+          }
+        >
           {ownListing ? (
             <>
               <MarketplaceShareButton
@@ -176,24 +170,37 @@ export function MarketplaceItemDetail({
                   <span className="karrot-detail__heart-count">{favoriteCount}</span>
                 ) : null}
               </button>
-              <button
-                type="button"
-                className="karrot-detail__chat"
-                disabled={busy}
-                onClick={() => void onChat(item)}
-              >
-                Chat 1:1
-              </button>
-              {payable ? (
+              <div className="karrot-detail__cta-row">
                 <button
                   type="button"
-                  className="karrot-detail__buy"
+                  className="karrot-detail__chat"
                   disabled={busy}
-                  onClick={() => onBuyNow(item)}
+                  onClick={() => void onChat(item)}
                 >
-                  {buyNowLabel(item.askAudCents)}
+                  Chat 1:1
                 </button>
-              ) : null}
+                {payable ? (
+                  <button
+                    type="button"
+                    className="karrot-detail__buy"
+                    disabled={busy}
+                    onClick={() => onBuyNow(item)}
+                  >
+                    {buyNowLabel(item.askAudCents)}
+                  </button>
+                ) : null}
+                <MarketplaceShareButton
+                  listingId={item.id}
+                  title={item.title}
+                  listingKind={item.listing_kind}
+                  displayOfferLabel={item.display_offer_label}
+                  askAudCents={item.askAudCents}
+                  askAudDisplay={item.askAudDisplay}
+                  suburb={areaLabel}
+                  stopPropagation
+                  onFeedback={onShareFeedback}
+                />
+              </div>
             </>
           )}
           {!ownListing && !payable ? (

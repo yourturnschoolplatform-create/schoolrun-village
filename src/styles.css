@@ -1776,14 +1776,6 @@ input::placeholder { color: #99a6a2; }
   margin-bottom: .65rem;
   min-width: 0;
 }
-.karrot-detail__top-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: .55rem;
-  min-width: 0;
-  flex-wrap: wrap;
-}
 .karrot-detail__status { color: #64748B; font-size: .78rem; font-weight: 650; }
 .karrot-detail__media .marketplace-card__media,
 .karrot-detail__media .marketplace-carousel {
@@ -1826,17 +1818,15 @@ input::placeholder { color: #99a6a2; }
   position: sticky;
   bottom: 0;
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: .65rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .55rem;
   align-items: center;
   margin-top: 1rem;
   padding-top: .85rem;
   background: #fff;
   border-top: 1px solid #F1F5F9;
   min-width: 0;
-}
-.karrot-detail__bar:has(.karrot-detail__buy) {
-  grid-template-columns: auto 1fr 1fr;
+  box-sizing: border-box;
 }
 .karrot-detail__bar--own {
   grid-template-columns: auto minmax(0, 1fr);
@@ -1846,40 +1836,107 @@ input::placeholder { color: #99a6a2; }
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.karrot-detail__bar .marketplace-share {
+.karrot-detail__cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  align-items: stretch;
   min-width: 0;
+  width: 100%;
+}
+.karrot-detail__bar .marketplace-share {
+  position: relative;
+  display: grid;
+  flex: 1 1 4.75rem;
+  min-width: 0;
+  max-width: 100%;
 }
 .karrot-detail__bar .marketplace-share__trigger {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: .55rem .7rem;
+  border: 1px solid #E2E8F0;
+  border-radius: .85rem;
+  background: #F8FAFC;
+  color: #0F172A;
+  cursor: pointer;
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 800;
   white-space: nowrap;
+  box-sizing: border-box;
+}
+.karrot-detail__bar .marketplace-share__sheet {
+  right: 0;
+  left: auto;
+  bottom: calc(100% + .4rem);
+  top: auto;
+  width: min(16.5rem, calc(100vw - 1.5rem));
 }
 .karrot-detail__heart {
+  flex: 0 0 auto;
   width: auto;
   min-width: 2.75rem;
   height: 2.75rem;
 }
 .karrot-detail__chat {
+  flex: 1 1 5.25rem;
+  min-width: 0;
   min-height: 2.75rem;
+  padding: .55rem .7rem;
   border: 0;
   border-radius: .85rem;
   background: #FF6F0F;
   color: #fff;
   cursor: pointer;
   font: inherit;
+  font-size: .88rem;
   font-weight: 800;
+  white-space: nowrap;
   box-shadow: 0 10px 22px rgba(255, 111, 15, .28);
+  box-sizing: border-box;
 }
 .karrot-detail__chat:hover:not(:disabled) { background: #F05700; }
 .karrot-detail__buy {
+  flex: 1 1 5.75rem;
+  min-width: 0;
   min-height: 2.75rem;
+  padding: .55rem .7rem;
   border: 1px solid #FF6F0F;
   border-radius: .85rem;
   background: #fff;
   color: #FF6F0F;
   cursor: pointer;
   font: inherit;
+  font-size: .82rem;
   font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
 }
-.karrot-detail__hint { grid-column: 1 / -1; margin: 0; }
+.karrot-detail__hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 420px) {
+  .karrot-detail__bar--buyer {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .karrot-detail__cta-row {
+    gap: .4rem;
+  }
+  .karrot-detail__chat,
+  .karrot-detail__buy,
+  .karrot-detail__bar .marketplace-share {
+    flex: 1 1 calc(50% - .4rem);
+  }
+  .karrot-detail__bar--buy .karrot-detail__chat {
+    flex: 1 1 100%;
+  }
+}
 @media (min-width: 720px) {
   .karrot-detail-overlay { align-items: center; padding: 1.25rem; }
   .karrot-detail { border-radius: 1.15rem; }
