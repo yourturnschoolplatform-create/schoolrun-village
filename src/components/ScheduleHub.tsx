@@ -73,6 +73,7 @@ export function ScheduleHub({
   const [communityPanel, setCommunityPanel] = useState<CommunityPanel>('market');
   const [discussionThreadId, setDiscussionThreadId] = useState<string | null>(null);
   const [discussionPostId, setDiscussionPostId] = useState<string | null>(null);
+  const [marketplaceListingId, setMarketplaceListingId] = useState<string | null>(null);
   const [householdOpen, setHouseholdOpen] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [pickupComposeOpen, setPickupComposeOpen] = useState(false);
@@ -226,7 +227,9 @@ export function ScheduleHub({
   }, [messagesUnread]);
 
   // Deep link from Web Push / Share:
-  // /?view=messages&openChat=<id>, /?view=community&panel=discussions&thread=<id>
+  // /?view=messages&openChat=<id>
+  // /?view=community&panel=discussions&thread=<id>
+  // /?view=community&panel=market&listing=<id>
   // Legacy ?view=calendar redirects cleanly to Today.
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -237,14 +240,17 @@ export function ScheduleHub({
     const panel = params.get('panel');
     const thread = params.get('thread');
     const post = params.get('post');
+    const listing = params.get('listing');
     const wantsMessages = path === '/messages' || nextView === 'messages';
 
     if (openChat && /^[0-9a-f-]{36}$/i.test(openChat)) {
       void openChatById(openChat);
-    } else if (nextView === 'community' || panel === 'discussions') {
+    } else if (nextView === 'community' || panel === 'discussions' || panel === 'market' || listing) {
       if (panel === 'discussions' || panel === 'market' || panel === 'pickup'
         || panel === 'trust' || panel === 'relay' || panel === 'deals') {
         setCommunityPanel(panel);
+      } else if (listing) {
+        setCommunityPanel('market');
       } else {
         setCommunityPanel('discussions');
       }
@@ -254,6 +260,10 @@ export function ScheduleHub({
       }
       if (post && /^[0-9a-f-]{36}$/i.test(post)) {
         setDiscussionPostId(post);
+      }
+      if (listing && /^[0-9a-f-]{36}$/i.test(listing)) {
+        setMarketplaceListingId(listing);
+        setCommunityPanel('market');
       }
       selectView('community');
     } else if (wantsMessages) {
@@ -271,6 +281,7 @@ export function ScheduleHub({
     params.delete('panel');
     params.delete('thread');
     params.delete('post');
+    params.delete('listing');
     const qs = params.toString();
     const next = `/${qs ? `?${qs}` : ''}${window.location.hash}`;
     window.history.replaceState({}, document.title, next || '/');
@@ -506,6 +517,7 @@ export function ScheduleHub({
           initialPanel={communityPanel}
           initialThreadId={discussionThreadId}
           initialPostId={discussionPostId}
+          initialListingId={marketplaceListingId}
           viewerSuburb={registeredSuburb || null}
           onBack={() => selectView('today')}
           onOpenChat={openChatRoom}

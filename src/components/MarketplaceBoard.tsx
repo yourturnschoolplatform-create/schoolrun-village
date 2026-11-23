@@ -41,6 +41,7 @@ export function MarketplaceBoard({
   initialTradeFilter = 'all',
   boardMode = 'all',
   viewerSuburb,
+  initialListingId = null,
 }: {
   client: SupabaseClient;
   userId: string;
@@ -51,6 +52,8 @@ export function MarketplaceBoard({
   boardMode?: 'all' | 'market' | 'relay';
   /** Optional suburb hint from school / profile (coords resolved locally). */
   viewerSuburb?: string | null;
+  /** Deep-link into a specific listing detail sheet. */
+  initialListingId?: string | null;
 }) {
   const defaultTrade: MarketplaceTradeType = boardMode === 'relay'
     ? 'free_share'
@@ -75,6 +78,9 @@ export function MarketplaceBoard({
   const [checkout, setCheckout] = useState<PaymentCheckoutRequest | null>(null);
   const [selected, setSelected] = useState<ItemListing | null>(null);
   const [favoriteBusyId, setFavoriteBusyId] = useState<string | null>(null);
+  const [pendingListingId, setPendingListingId] = useState<string | null>(
+    initialListingId && /^[0-9a-f-]{36}$/i.test(initialListingId) ? initialListingId : null,
+  );
 
   const suburbLabel = useMemo(() => {
     if (viewerPlace?.suburb) return viewerPlace.suburb;
@@ -141,6 +147,27 @@ export function MarketplaceBoard({
   }, [areaLabels, categoryFilter, client, scopeFilter, tradeFilter, viewerPlace]);
 
   useEffect(() => { void refresh(); }, [refresh]);
+
+  useEffect(() => {
+    if (!initialListingId || !/^[0-9a-f-]{36}$/i.test(initialListingId)) return;
+    setPendingListingId(initialListingId);
+    setCategoryFilter('all');
+    setTradeFilter('all');
+    setScopeFilter('nearby');
+  }, [initialListingId]);
+
+  useEffect(() => {
+    if (!pendingListingId) return;
+    const match = items.find((entry) => entry.id === pendingListingId);
+    if (match) {
+      setSelected(match);
+      setPendingListingId(null);
+      return;
+    }
+    if (items.length === 0) return;
+    showNotice('Opened Marketplace. That listing may no longer be available nearby.', 'amber');
+    setPendingListingId(null);
+  }, [items, pendingListingId]);
 
   useEffect(() => {
     const fromHint = viewerSuburb ? resolveSuburbPlace(viewerSuburb) : null;
@@ -357,6 +384,7 @@ export function MarketplaceBoard({
               canFavorite={!isOwnListing(item.author_id, userId)}
               onOpen={setSelected}
               onToggleFavorite={(listing) => void toggleFavorite(listing)}
+              onShareFeedback={(text) => showNotice(text, 'teal')}
             />
           </li>
         ))}
@@ -385,6 +413,7 @@ export function MarketplaceBoard({
               primaryLabel: buyNowLabel(listing.askAudCents),
             });
           }}
+          onShareFeedback={(text) => showNotice(text, 'teal')}
         />
       ) : null}
 

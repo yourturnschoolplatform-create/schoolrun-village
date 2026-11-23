@@ -9,6 +9,7 @@ import {
   tradeBadgeLabel,
 } from '../../shared/marketplace';
 import type { ItemListing } from '../lib/listings-api';
+import { MarketplaceShareButton } from './MarketplaceShareButton';
 
 function relativeTimeAu(iso: string): string {
   const then = new Date(iso).getTime();
@@ -44,12 +45,14 @@ export function MarketplaceItemCard({
   canFavorite = true,
   onOpen,
   onToggleFavorite,
+  onShareFeedback,
 }: {
   item: ItemListing;
   favoriteBusy?: boolean;
   canFavorite?: boolean;
   onOpen: (listing: ItemListing) => void;
   onToggleFavorite?: (listing: ItemListing) => void;
+  onShareFeedback?: (message: string) => void;
 }) {
   const cover = coverListingImage(item.listingImages);
   const areaLabel = (item.areaLabel || item.schoolSuburb || 'Local suburb').trim();
@@ -123,6 +126,18 @@ export function MarketplaceItemCard({
         </div>
       </button>
       <div className="karrot-card__interest">
+        <MarketplaceShareButton
+          listingId={item.id}
+          title={item.title}
+          listingKind={item.listing_kind}
+          displayOfferLabel={item.display_offer_label}
+          askAudCents={item.askAudCents}
+          askAudDisplay={item.askAudDisplay}
+          suburb={areaLabel}
+          compact
+          stopPropagation
+          onFeedback={onShareFeedback}
+        />
         <button
           type="button"
           className={

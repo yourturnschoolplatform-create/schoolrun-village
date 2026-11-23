@@ -14,6 +14,7 @@ import {
 } from '../../shared/payment-tracks';
 import type { ItemListing } from '../lib/listings-api';
 import { ListingImageCarousel } from './ListingImageCarousel';
+import { MarketplaceShareButton } from './MarketplaceShareButton';
 import { ParentTrustBadge } from './ParentTrustBadge';
 
 /**
@@ -29,6 +30,7 @@ export function MarketplaceItemDetail({
   onChat,
   onToggleFavorite,
   onBuyNow,
+  onShareFeedback,
 }: {
   client: SupabaseClient;
   userId: string;
@@ -39,6 +41,7 @@ export function MarketplaceItemDetail({
   onChat: (listing: ItemListing) => void;
   onToggleFavorite: (listing: ItemListing) => void;
   onBuyNow: (listing: ItemListing) => void;
+  onShareFeedback?: (message: string) => void;
 }) {
   const titleId = useId();
   const ownListing = isOwnListing(item.author_id, userId);
@@ -77,7 +80,21 @@ export function MarketplaceItemDetail({
       >
         <div className="karrot-detail__top">
           <button type="button" className="text-button" onClick={onClose}>Close</button>
-          <span className="karrot-detail__status">{statusLabelEnglish(item.status)}</span>
+          <div className="karrot-detail__top-actions">
+            <MarketplaceShareButton
+              listingId={item.id}
+              title={item.title}
+              listingKind={item.listing_kind}
+              displayOfferLabel={item.display_offer_label}
+              askAudCents={item.askAudCents}
+              askAudDisplay={item.askAudDisplay}
+              suburb={areaLabel}
+              compact
+              stopPropagation
+              onFeedback={onShareFeedback}
+            />
+            <span className="karrot-detail__status">{statusLabelEnglish(item.status)}</span>
+          </div>
         </div>
 
         <div className="karrot-detail__media">
@@ -120,12 +137,25 @@ export function MarketplaceItemDetail({
           ) : null}
         </div>
 
-        <div className="karrot-detail__bar">
+        <div className={`karrot-detail__bar${ownListing ? ' karrot-detail__bar--own' : ''}`}>
           {ownListing ? (
-            <p className="field-help">
-              This is your own listing
-              {favoriteCount > 0 ? ` · ${favoriteCount} favourites` : ''}.
-            </p>
+            <>
+              <MarketplaceShareButton
+                listingId={item.id}
+                title={item.title}
+                listingKind={item.listing_kind}
+                displayOfferLabel={item.display_offer_label}
+                askAudCents={item.askAudCents}
+                askAudDisplay={item.askAudDisplay}
+                suburb={areaLabel}
+                stopPropagation
+                onFeedback={onShareFeedback}
+              />
+              <p className="field-help karrot-detail__own-copy">
+                This is your own listing
+                {favoriteCount > 0 ? ` · ${favoriteCount} favourites` : ''}.
+              </p>
+            </>
           ) : (
             <>
               <button

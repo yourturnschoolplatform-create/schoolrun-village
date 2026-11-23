@@ -37,6 +37,7 @@ export function CommunityHub({
   initialPanel = 'market',
   initialThreadId = null,
   initialPostId = null,
+  initialListingId = null,
   viewerSuburb = null,
 }: {
   client: SupabaseClient;
@@ -47,6 +48,8 @@ export function CommunityHub({
   /** Deep-link into a discussion thread (from Share URLs). */
   initialThreadId?: string | null;
   initialPostId?: string | null;
+  /** Deep-link into a marketplace listing detail sheet. */
+  initialListingId?: string | null;
   viewerSuburb?: string | null;
 }) {
   const [panel, setPanel] = useState<CommunityPanel>(initialPanel);
@@ -74,6 +77,12 @@ export function CommunityHub({
       setSelectedThreadId(initialThreadId);
     }
   }, [initialThreadId]);
+
+  useEffect(() => {
+    if (initialListingId && /^[0-9a-f-]{36}$/i.test(initialListingId)) {
+      setPanel('market');
+    }
+  }, [initialListingId]);
 
   useEffect(() => {
     if (!shareNotice) return;
@@ -289,6 +298,7 @@ export function CommunityHub({
           onOpenChat={onOpenChat}
           boardMode="market"
           viewerSuburb={viewerSuburb}
+          initialListingId={initialListingId}
         />
       ) : null}
 
