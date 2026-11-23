@@ -763,6 +763,8 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(push).toMatch(/function public\.delete_push_subscription/i);
     expect(push).toMatch(/function public\.list_push_targets_for_chat_peer/i);
     expect(push).toMatch(/function public\.list_push_targets_for_pickup_peer/i);
+    expect(push).toMatch(/coalesce\(excluded\.user_agent, sub\.user_agent\)/i);
+    expect(push).not.toMatch(/coalesce\(excluded\.user_agent, public\.push_subscriptions\.user_agent\)/i);
     expect(push).toMatch(/alter publication supabase_realtime add table public\.chat_messages/i);
     expect(push).toMatch(/alter publication supabase_realtime add table public\.instant_pickup_requests/i);
     expect(push).toMatch(/notify pgrst, 'reload schema'/i);
@@ -770,6 +772,19 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(push).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
+  });
+
+  it('fixes upsert_push_subscription aliased ON CONFLICT 42P01', async () => {
+    const fix = (await readFile(resolve('db/migrations/0083_fix_upsert_push_subscription.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/create function public\.upsert_push_subscription/i);
+    expect(fix).toMatch(/insert into public\.push_subscriptions as sub/i);
+    expect(fix).toMatch(/coalesce\(excluded\.user_agent, sub\.user_agent\)/i);
+    expect(fix).not.toMatch(/coalesce\(excluded\.user_agent,\s*public\.push_subscriptions\.user_agent\)/i);
+    expect(fix).toMatch(/grant execute on function public\.upsert_push_subscription\(text, text, text, text\)/i);
+    expect(fix).toMatch(/to authenticated/i);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
   });
 
   it('reasserts create_item_listing ask cents coercion for Sell listings', async () => {

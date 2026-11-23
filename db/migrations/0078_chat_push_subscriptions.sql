@@ -75,7 +75,8 @@ begin
     set
       p256dh = excluded.p256dh,
       auth = excluded.auth,
-      user_agent = coalesce(excluded.user_agent, public.push_subscriptions.user_agent),
+      -- Must use insert alias `sub` (not public.push_subscriptions) — else 42P01.
+      user_agent = coalesce(excluded.user_agent, sub.user_agent),
       updated_at = pg_catalog.now()
   returning sub.id into row_id;
 

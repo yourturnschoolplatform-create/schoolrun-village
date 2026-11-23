@@ -16,6 +16,7 @@ describe('Karrot-style chat push / realtime alerts', () => {
     const router = await readFile(resolve('server/push-router.ts'), 'utf8');
     const edge = await readFile(resolve('supabase/functions/send-chat-push/index.ts'), 'utf8');
     const sql = await readFile(resolve('db/migrations/0078_chat_push_subscriptions.sql'), 'utf8');
+    const sqlFix = await readFile(resolve('db/migrations/0083_fix_upsert_push_subscription.sql'), 'utf8');
 
     expect(api).toContain("rpc('upsert_push_subscription'");
     expect(api).toContain('VITE_VAPID_PUBLIC_KEY');
@@ -94,6 +95,10 @@ describe('Karrot-style chat push / realtime alerts', () => {
     expect(sql).toMatch(/\bauth\b/i);
     expect(sql).toMatch(/user_agent/i);
     expect(sql).toMatch(/updated_at/i);
+    expect(sql).toMatch(/coalesce\(excluded\.user_agent, sub\.user_agent\)/);
+    expect(sqlFix).toMatch(/upsert_push_subscription/);
+    expect(sqlFix).toMatch(/coalesce\(excluded\.user_agent, sub\.user_agent\)/);
+    expect(sqlFix).toMatch(/notify pgrst, 'reload schema'/);
     expect(sql).not.toMatch(
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
