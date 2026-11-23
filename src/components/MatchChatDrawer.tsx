@@ -164,6 +164,7 @@ export function MatchChatDrawer({
     try {
       const sent = await chatApi.send(client, room.id, body, {
         context: roomContextLabel(room) || 'Instant Pickup',
+        listingId: room.schedule.listingId ?? null,
       });
       setMessages((current) => current.map((message) => (
         message.id === optimisticId ? sent : message
@@ -202,6 +203,7 @@ export function MatchChatDrawer({
       const card = encodeHouseholdCodeCard(created.code);
       const sent = await chatApi.send(client, room.id, card, {
         context: roomContextLabel(room) || 'Instant Pickup',
+        listingId: room.schedule.listingId ?? null,
       });
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       onToast?.('Confirmation code sent in chat.');

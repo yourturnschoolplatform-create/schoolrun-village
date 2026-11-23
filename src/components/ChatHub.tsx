@@ -273,6 +273,7 @@ export function ChatRoomView({
     try {
       const sent = await chatApi.send(client, room.id, body, {
         context: roomContextLabel(room),
+        listingId: room.schedule.listingId ?? null,
       });
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       if (options?.clearDraft !== false) setDraft('');
@@ -321,6 +322,7 @@ export function ChatRoomView({
       const card = encodeHouseholdCodeCard(created.code);
       const sent = await chatApi.send(client, room.id, card, {
         context: roomContextLabel(room),
+        listingId: room.schedule.listingId ?? null,
       });
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       window.requestAnimationFrame(() => scrollToLatest('smooth'));

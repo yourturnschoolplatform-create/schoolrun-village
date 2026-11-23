@@ -125,13 +125,20 @@ export function createPushRouter(): Router {
       const context = typeof request.body?.context === 'string'
         ? request.body.context.trim().slice(0, 80)
         : null;
+      const listingIdRaw = request.body?.listingId;
+      const listingId = typeof listingIdRaw === 'string'
+        && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(listingIdRaw)
+        ? listingIdRaw
+        : null;
       const { sent, gone } = await sendToTargets(targets, {
         title,
         body: preview,
         roomId,
+        listingId,
+        matchId: null,
         kind: 'chat',
         context,
-        url: `/?view=messages&openChat=${roomId}`,
+        url: `/?view=messages&openChat=${roomId}&room=${roomId}`,
       });
       if (gone.length > 0) {
         try {
@@ -166,11 +173,13 @@ export function createPushRouter(): Router {
         title: 'Pickup match',
         body: 'Your instant pickup was matched. Open chat when ready.',
         roomId: openRoom,
+        listingId: null,
+        matchId: requestId,
         requestId,
         kind: 'match',
         context: 'Instant Pickup',
         url: openRoom
-          ? `/?view=messages&openChat=${openRoom}&chatKind=match`
+          ? `/?view=messages&openChat=${openRoom}&room=${openRoom}&chatKind=match`
           : '/?view=messages',
       });
       if (gone.length > 0) {

@@ -1155,16 +1155,23 @@ input::placeholder { color: #99a6a2; }
   .schedule-tab__label--short { display: inline; }
 }
 .inbox-toast-layer {
-  position: sticky;
-  top: calc(.35rem + env(safe-area-inset-top, 0px));
-  z-index: 55;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 50;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: .35rem;
   width: min(100%, 26rem);
-  margin: .45rem auto 0;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top, 0px) .75rem .35rem;
+  pointer-events: none;
   animation: inbox-toast-in .28s ease;
+}
+.inbox-toast-layer > * {
+  pointer-events: auto;
 }
 .inbox-toast {
   display: grid;

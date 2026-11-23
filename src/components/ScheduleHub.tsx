@@ -13,6 +13,7 @@ import {
   subscribeChatInboxAlerts,
   type InboxToast,
 } from '../lib/chat-inbox-alerts';
+import { armInboxAlertAudio, cueInboxAlert } from '../lib/inbox-alert-cue';
 import { ChatHub } from './ChatHub';
 import { ListingChatOverlay } from './ListingChatOverlay';
 import { CommunityHub } from './CommunityHub';
@@ -200,14 +201,17 @@ export function ScheduleHub({
     viewingRoomIdRef.current = viewingRoomId;
   }, [viewingRoomId]);
 
+  useEffect(() => armInboxAlertAudio(), []);
+
   useEffect(() => {
     const stop = subscribeChatInboxAlerts(client, userId, {
       onUnreadTotal: setMessagesUnread,
       onToast: (toast) => {
         setInboxToast(toast);
+        cueInboxAlert();
         window.setTimeout(() => {
           setInboxToast((current) => (current?.id === toast.id ? null : current));
-        }, 5600);
+        }, 5000);
       },
       getActiveRoomId: () => viewingRoomIdRef.current || matchOverlayRoomIdRef.current,
     });
@@ -224,7 +228,7 @@ export function ScheduleHub({
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const path = window.location.pathname.replace(/\/+$/, '') || '/';
-    const openChat = params.get('openChat');
+    const openChat = params.get('openChat') || params.get('room');
     const nextView = params.get('view');
     const wantsMessages = path === '/messages' || nextView === 'messages';
 
@@ -239,7 +243,9 @@ export function ScheduleHub({
     }
 
     params.delete('openChat');
+    params.delete('room');
     params.delete('view');
+    params.delete('chatKind');
     const qs = params.toString();
     const next = `/${qs ? `?${qs}` : ''}${window.location.hash}`;
     window.history.replaceState({}, document.title, next || '/');
@@ -272,7 +278,7 @@ export function ScheduleHub({
       }
       try {
         const target = new URL(data.url, window.location.origin);
-        const roomId = target.searchParams.get('openChat');
+        const roomId = target.searchParams.get('openChat') || target.searchParams.get('room');
         if (roomId && /^[0-9a-f-]{36}$/i.test(roomId)) {
           setInboxToast(null);
           void openChatById(roomId, { forceMessages: true });

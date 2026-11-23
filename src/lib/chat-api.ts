@@ -153,7 +153,11 @@ export const chatApi = {
     client: SupabaseClient,
     roomId: string,
     body: string,
-    options?: { title?: string | null; context?: string | null },
+    options?: {
+      title?: string | null;
+      context?: string | null;
+      listingId?: string | null;
+    },
   ) => {
     const sent = await rpc<ChatMessage>(client, 'send_chat_message', {
       p_room_id: roomId,

@@ -45,6 +45,18 @@ describe('Karrot-style chat push / realtime alerts', () => {
     expect(sw).toContain('chatDeepLink');
     expect(sw).toContain("type: 'open-chat'");
     expect(sw).toContain('roomId');
+    expect(sw).toContain('silent: false');
+    expect(sw).toContain('renotify: true');
+    expect(sw).toContain('vibrate: [200, 100, 200]');
+    expect(sw).toContain('listingId');
+    expect(sw).toContain('matchId');
+    expect(edge).toContain('roomId');
+    expect(edge).toContain('senderName');
+    expect(edge).toContain('listingId');
+    expect(edge).toContain('matchId');
+    expect(schedule).toContain('cueInboxAlert');
+    expect(schedule).toContain('armInboxAlertAudio');
+    expect(api).toContain('persistBrowserSubscription');
     expect(hub).toContain('PushNotifyToggle');
     expect(hub).toContain('One-time match code');
     expect(hub).toContain('chatApi.send');

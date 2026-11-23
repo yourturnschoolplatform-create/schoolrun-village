@@ -1,6 +1,6 @@
 /* YourTurn PWA: static shell cache + Web Push for chat/match alerts.
    Never cache APIs, auth, or Supabase data. */
-const CACHE_NAME = 'yourturn-shell-v3';
+const CACHE_NAME = 'yourturn-shell-v4';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/icons/icon.svg', '/icons/maskable.svg'];
 
 self.addEventListener('install', (event) => {
@@ -52,12 +52,13 @@ function isUuid(value) {
     && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-/** Build SPA deep-link into a specific 1:1 room (Karrot-style). */
+/** Build SPA deep-link into a specific 1:1 room. */
 function chatDeepLink(roomId, kind) {
   if (isUuid(roomId)) {
     const params = new URLSearchParams({
       view: 'messages',
       openChat: roomId,
+      room: roomId,
     });
     if (kind === 'match' || kind === 'marketplace' || kind === 'instant_pickup') {
       params.set('chatKind', kind);
@@ -72,6 +73,8 @@ function parsePushPayload(event) {
     title: 'SchoolRun Village',
     body: 'You have a new message.',
     roomId: null,
+    listingId: null,
+    matchId: null,
     kind: 'chat',
     context: null,
     url: '/?view=messages',
@@ -79,7 +82,11 @@ function parsePushPayload(event) {
   if (!event.data) return fallback;
   try {
     const parsed = event.data.json();
-    const roomId = isUuid(parsed.roomId) ? parsed.roomId : null;
+    const roomId = isUuid(parsed.roomId) ? parsed.roomId
+      : (isUuid(parsed.room) ? parsed.room : null);
+    const listingId = isUuid(parsed.listingId) ? parsed.listingId : null;
+    const matchId = isUuid(parsed.matchId) ? parsed.matchId
+      : (isUuid(parsed.requestId) ? parsed.requestId : null);
     const kind = typeof parsed.kind === 'string' ? parsed.kind : 'chat';
     const context = typeof parsed.context === 'string' ? parsed.context.slice(0, 80) : null;
     const title = typeof parsed.title === 'string' && parsed.title.trim()
@@ -92,7 +99,7 @@ function parsePushPayload(event) {
     const url = typeof parsed.url === 'string' && parsed.url.trim()
       ? parsed.url.trim()
       : chatDeepLink(roomId, kind);
-    return { title, body, roomId, kind, context, url };
+    return { title, body, roomId, listingId, matchId, kind, context, url };
   } catch {
     try {
       const text = event.data?.text();
@@ -113,16 +120,20 @@ self.addEventListener('push', (event) => {
       body: data.body,
       icon: '/icons/icon.svg',
       badge: '/icons/icon.svg',
+      tag: data.roomId ? `chat-${data.roomId}` : 'chat-msg',
+      renotify: true,
+      silent: false,
+      vibrate: [200, 100, 200],
+      requireInteraction: false,
       data: {
         url: targetUrl,
         roomId: data.roomId,
+        listingId: data.listingId,
+        matchId: data.matchId,
         kind: data.kind,
         context: data.context,
         openChat: data.roomId,
       },
-      tag: data.roomId ? `chat-${data.roomId}` : `notify-${data.kind}-${Date.now()}`,
-      renotify: true,
-      requireInteraction: false,
     }),
   );
 });
@@ -133,6 +144,8 @@ self.addEventListener('notificationclick', (event) => {
   const roomId = isUuid(payload.roomId) ? payload.roomId
     : (isUuid(payload.openChat) ? payload.openChat : null);
   const kind = typeof payload.kind === 'string' ? payload.kind : 'chat';
+  const listingId = isUuid(payload.listingId) ? payload.listingId : null;
+  const matchId = isUuid(payload.matchId) ? payload.matchId : null;
   const target = roomId
     ? chatDeepLink(roomId, kind)
     : (typeof payload.url === 'string' && payload.url.trim() ? payload.url.trim() : '/?view=messages');
@@ -147,6 +160,8 @@ self.addEventListener('notificationclick', (event) => {
         type: 'open-chat',
         url: target,
         roomId,
+        listingId,
+        matchId,
         kind,
         openChat: roomId,
       });

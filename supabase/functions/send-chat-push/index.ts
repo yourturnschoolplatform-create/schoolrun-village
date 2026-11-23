@@ -37,6 +37,8 @@ type NotifyBody = {
   kind?: unknown;
   roomId?: unknown;
   requestId?: unknown;
+  listingId?: unknown;
+  matchId?: unknown;
   preview?: unknown;
   title?: unknown;
   body?: unknown;
@@ -45,7 +47,7 @@ type NotifyBody = {
 
 function chatDeepLink(roomId: string | null, kind: string): string {
   if (roomId && isUuid(roomId)) {
-    return `/?view=messages&openChat=${roomId}&chatKind=${encodeURIComponent(kind)}`;
+    return `/?view=messages&openChat=${roomId}&room=${roomId}&chatKind=${encodeURIComponent(kind)}`;
   }
   return "/?view=messages";
 }
@@ -175,10 +177,14 @@ Deno.serve(async (request) => {
     const title = typeof body.title === "string" && body.title.trim()
       ? body.title.trim().slice(0, 80)
       : (senderName || "New message");
+    const listingId = isUuid(body.listingId) ? body.listingId : null;
     payload = {
       title,
       body: preview,
       roomId,
+      listingId,
+      matchId: null,
+      senderName: senderName || null,
       kind: "chat",
       context: context || null,
       url: chatDeepLink(roomId, "chat"),
@@ -198,13 +204,17 @@ Deno.serve(async (request) => {
     targets = asTargets(data);
     const openRoom = roomId
       || (typeof bag.chatRoomId === "string" && isUuid(bag.chatRoomId) ? bag.chatRoomId : null);
+    const matchId = isUuid(body.matchId) ? body.matchId : requestId;
     payload = {
       title: typeof body.title === "string" && body.title.trim()
         ? body.title.trim().slice(0, 80)
         : "Pickup match",
       body: safePreview(body.body ?? body.preview, "Your instant pickup was matched. Open chat when ready."),
       roomId: openRoom,
+      listingId: null,
+      matchId,
       requestId,
+      senderName: senderName || null,
       kind: "match",
       context: context || "Instant Pickup",
       url: chatDeepLink(openRoom, "match"),

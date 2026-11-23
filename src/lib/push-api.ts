@@ -100,43 +100,14 @@ export const pushApi = {
   enable: async (client: SupabaseClient, vapidPublicKey?: string | null): Promise<boolean> => {
     if (!pushSupported()) return false;
     const key = (await resolveVapidPublicKey(vapidPublicKey))?.trim() ?? '';
-    if (!key) return false;
+    if (!key) {
+      console.error('push enable: VAPID public key missing');
+      return false;
+    }
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return false;
 
-    const registration = await activeRegistration();
-    if (!registration) return false;
-
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key),
-      });
-    }
-
-    const json = subscription.toJSON();
-    const endpoint = json.endpoint?.trim() ?? '';
-    const p256dh = json.keys?.p256dh?.trim() ?? '';
-    const auth = json.keys?.auth?.trim() ?? '';
-    if (!endpoint || !p256dh || !auth) return false;
-
-    const { error } = await client.rpc('upsert_push_subscription', {
-      p_endpoint: endpoint,
-      p_p256dh: p256dh,
-      p_auth: auth,
-      p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 512) : null,
-    });
-    if (error) {
-      console.error('upsert_push_subscription', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-      });
-      return false;
-    }
-    return true;
+    return pushApi.persistBrowserSubscription(client, key);
   },
 
   disable: async (client: SupabaseClient): Promise<void> => {
@@ -160,6 +131,63 @@ export const pushApi = {
   },
 
   /**
+   * After Notification.permission === 'granted', create/reuse pushManager.subscribe
+   * and upsert into push_subscriptions. Shared by enable() + syncSubscription().
+   */
+  persistBrowserSubscription: async (
+    client: SupabaseClient,
+    vapidPublicKey: string,
+  ): Promise<boolean> => {
+    try {
+      const registration = await activeRegistration();
+      if (!registration) {
+        console.error('push subscribe: service worker registration unavailable');
+        return false;
+      }
+
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        });
+      }
+
+      const json = subscription.toJSON();
+      const endpoint = json.endpoint?.trim() ?? '';
+      const p256dh = json.keys?.p256dh?.trim() ?? '';
+      const auth = json.keys?.auth?.trim() ?? '';
+      if (!endpoint || !p256dh || !auth) {
+        console.error('push subscribe: incomplete PushSubscription keys');
+        return false;
+      }
+
+      const { error } = await client.rpc('upsert_push_subscription', {
+        p_endpoint: endpoint,
+        p_p256dh: p256dh,
+        p_auth: auth,
+        p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 512) : null,
+      });
+      if (error) {
+        console.error('upsert_push_subscription', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error(
+        'push subscribe failed',
+        error instanceof Error ? error.message : 'unknown',
+      );
+      return false;
+    }
+  },
+
+  /**
    * When permission is already granted, ensure the browser subscription exists
    * and is upserted into push_subscriptions (login / chat entry sync).
    * Does not call Notification.requestPermission (no gesture required).
@@ -171,56 +199,27 @@ export const pushApi = {
     if (!pushSupported()) return false;
     if (Notification.permission !== 'granted') return false;
     const key = (await resolveVapidPublicKey(vapidPublicKey))?.trim() ?? '';
-    if (!key) return false;
-    const registration = await activeRegistration();
-    if (!registration) return false;
-
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription) {
-      try {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(key),
-        });
-      } catch {
-        return false;
-      }
-    }
-
-    const json = subscription.toJSON();
-    const endpoint = json.endpoint?.trim() ?? '';
-    const p256dh = json.keys?.p256dh?.trim() ?? '';
-    const auth = json.keys?.auth?.trim() ?? '';
-    if (!endpoint || !p256dh || !auth) return false;
-
-    const { error } = await client.rpc('upsert_push_subscription', {
-      p_endpoint: endpoint,
-      p_p256dh: p256dh,
-      p_auth: auth,
-      p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 512) : null,
-    });
-    if (error) {
-      console.error('upsert_push_subscription', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-      });
+    if (!key) {
+      console.error('push sync: VAPID public key missing');
       return false;
     }
-    return true;
+    return pushApi.persistBrowserSubscription(client, key);
   },
 
   /**
    * POST /functions/v1/send-chat-push
-   * Body: { kind: "chat", roomId, preview, title?, context? }
+   * Body: { kind: "chat", roomId, preview, title?, context?, listingId? }
    * Fire-and-forget — never throws into chat UX.
    */
   notifyChatPeer: async (
     accessToken: string,
     roomId: string,
     preview: string,
-    options?: { title?: string | null; context?: string | null },
+    options?: {
+      title?: string | null;
+      context?: string | null;
+      listingId?: string | null;
+    },
   ): Promise<void> => {
     const body = {
       kind: 'chat' as const,
@@ -228,6 +227,7 @@ export const pushApi = {
       preview: sanitizeChatPreview(preview),
       title: options?.title?.trim()?.slice(0, 80) || undefined,
       context: options?.context?.trim()?.slice(0, 80) || undefined,
+      listingId: options?.listingId || undefined,
     };
     const ok = await postSendChatPush(accessToken, body);
     if (ok) return;
@@ -236,12 +236,13 @@ export const pushApi = {
       preview: body.preview,
       title: body.title,
       context: body.context,
+      listingId: body.listingId,
     });
   },
 
   /**
    * POST /functions/v1/send-chat-push
-   * Body: { kind: "match", requestId, roomId? }
+   * Body: { kind: "match", requestId, roomId?, matchId? }
    */
   notifyMatchPeer: async (
     accessToken: string,
@@ -252,6 +253,7 @@ export const pushApi = {
       kind: 'match' as const,
       requestId,
       roomId,
+      matchId: requestId,
       context: 'Instant Pickup',
     };
     const ok = await postSendChatPush(accessToken, body);
@@ -259,6 +261,7 @@ export const pushApi = {
     await postExpressFallback('/api/push/notify-match', accessToken, {
       requestId,
       roomId,
+      matchId: requestId,
       context: 'Instant Pickup',
     });
   },
@@ -268,7 +271,11 @@ export const pushApi = {
     client: SupabaseClient,
     roomId: string,
     preview: string,
-    options?: { title?: string | null; context?: string | null },
+    options?: {
+      title?: string | null;
+      context?: string | null;
+      listingId?: string | null;
+    },
   ): Promise<void> => {
     const token = await readAccessToken(client);
     if (!token) return;
