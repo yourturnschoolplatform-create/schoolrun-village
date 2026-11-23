@@ -1045,7 +1045,7 @@ input::placeholder { color: #99a6a2; }
 .schedule-nav::-webkit-scrollbar { display: none; }
 .schedule-tabs {
   display: grid !important;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   grid-auto-flow: row;
   gap: .3rem;
   width: 100%;
@@ -1139,10 +1139,10 @@ input::placeholder { color: #99a6a2; }
     font-size: .5rem;
   }
 }
-/* iPhone ~393–430px: keep all 5 tabs inside viewport — no Comm… clip */
+/* iPhone ~393–430px: keep all 4 tabs inside viewport */
 @media (max-width: 430px) {
   .schedule-tabs {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: .1rem;
     padding: .22rem;
   }

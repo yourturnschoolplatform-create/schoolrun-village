@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('Schedule dashboard navigation', () => {
-  it('locks five tabs, AppHeader location chip, ChatHub and InstantPickupBoard', async () => {
+  it('locks four tabs (no Calendar), AppHeader location chip, ChatHub and InstantPickupBoard', async () => {
     const nav = await readFile(resolve('src/components/ScheduleNav.tsx'), 'utf8');
     const hub = await readFile(resolve('src/components/ScheduleHub.tsx'), 'utf8');
     const app = await readFile(resolve('src/App.tsx'), 'utf8');
@@ -12,10 +12,11 @@ describe('Schedule dashboard navigation', () => {
     const quick = await readFile(resolve('src/components/QuickActions.tsx'), 'utf8');
 
     expect(nav).toContain("id: 'today'");
-    expect(nav).toContain("id: 'calendar'");
+    expect(nav).not.toContain("id: 'calendar'");
     expect(nav).toContain("id: 'matches'");
     expect(nav).toContain("id: 'messages'");
     expect(nav).toContain("id: 'community'");
+    expect(nav).toContain('normalizeScheduleNavView');
     expect(nav).toContain('data-schedule-tab={tab.id}');
     expect(nav).toContain('Messages');
     expect(nav).toContain('Community');
@@ -33,10 +34,14 @@ describe('Schedule dashboard navigation', () => {
     expect(hub).toContain('PushEnableBanner');
     expect(hub).toContain('subscribeChatInboxAlerts');
     expect(hub).toContain('onActiveMatchRoomChange');
+    expect(hub).toContain('normalizeScheduleNavView');
+    expect(hub).not.toContain('Plan the next four weeks');
+    expect(hub).not.toContain('Set your availability');
+    expect(hub).not.toContain('Your weekly setup');
     expect(nav.indexOf("id: 'matches'")).toBeLessThan(nav.indexOf("id: 'messages'"));
     expect(nav.indexOf("id: 'messages'")).toBeLessThan(nav.indexOf("id: 'community'"));
 
-    expect(css).toContain('grid-template-columns: repeat(5, minmax(0, 1fr)) !important');
+    expect(css).toContain('grid-template-columns: repeat(4, minmax(0, 1fr)) !important');
     expect(css).toContain('.schedule-tab[data-schedule-tab="messages"]');
     expect(css).toContain('#F8FAFC');
     expect(css).toContain('#FF6B6B');
@@ -102,20 +107,11 @@ describe('Schedule dashboard navigation', () => {
     expect(hub).toContain('home-hero-cta');
     expect(hub).toContain('Ask for a ride');
     expect(hub).toContain('Offer a seat');
-    expect(hub).toContain("view === 'calendar'");
     expect(hub).toContain('📋 Copy');
     expect(hub).toContain("focus === 'deals'");
     expect(hub).toContain('hot-deals-title');
     expect(hub).toContain('initialPanel={communityPanel}');
-    expect(hub).toContain('segmented-toggle');
-    expect(hub).toContain('I can help');
-    expect(hub).toContain('Drop-off (Morning)');
-    expect(hub).toContain('Pickup (Afternoon)');
-    expect(hub).toContain('day-chip');
-    expect(hub).toContain('time-preset');
-    expect(hub).toContain('suburb-autofill');
     expect(hub).toContain('Share Private Confirmation Code');
-    expect(hub).toContain('status-tag--active');
     expect(css).toContain('.segmented-toggle');
     expect(css).toContain('.day-chip--active');
     expect(css).toContain('.status-tag--active');
@@ -148,8 +144,8 @@ describe('Schedule dashboard navigation', () => {
     expect(board).toContain('Free Handover');
     expect(board).toContain('Trust Score Applied');
     expect(board).toContain('segmented-toggle');
-    expect(board).toContain('note-chip');
     expect(board).toContain('suburb-autofill');
+    expect(board).toContain('note-chip');
     expect(board).toContain('instant-compose__cta');
     expect(board).toContain('instant-sheet');
     expect(board).toContain('composeStep');

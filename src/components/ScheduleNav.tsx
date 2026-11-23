@@ -1,18 +1,25 @@
-export type ScheduleNavView = 'today' | 'calendar' | 'matches' | 'messages' | 'community';
+export type ScheduleNavView = 'today' | 'matches' | 'messages' | 'community';
 
 /** Fixed primary dashboard destinations — order is part of the product contract. */
 export const SCHEDULE_NAV_TABS = [
   { id: 'today', label: 'Today', shortLabel: 'Today' },
-  { id: 'calendar', label: 'Calendar', shortLabel: 'Cal' },
   { id: 'matches', label: 'Matches', shortLabel: 'Match' },
   { id: 'messages', label: 'Messages', shortLabel: 'Chat' },
   { id: 'community', label: 'Community', shortLabel: 'Hub' },
 ] as const satisfies ReadonlyArray<{ id: ScheduleNavView; label: string; shortLabel: string }>;
 
+/** Map legacy/deep-link view values (including removed Calendar) onto a live tab. */
+export function normalizeScheduleNavView(raw: string | null | undefined): ScheduleNavView {
+  if (raw === 'matches' || raw === 'messages' || raw === 'community' || raw === 'today') {
+    return raw;
+  }
+  // Removed Calendar tab (and anything unknown) → Today.
+  return 'today';
+}
+
 /**
  * Primary school-run dashboard tabs.
- * Always renders all five destinations in a single visible row.
- * On narrow phones, short labels keep Community fully visible (no Comm… clip).
+ * Always renders all four destinations in a single visible row.
  */
 export function ScheduleNav({
   view,
@@ -37,7 +44,7 @@ export function ScheduleNav({
       <div
         className="schedule-tabs min-w-0 max-w-full w-full"
         role="tablist"
-        aria-label="Today, Calendar, Matches, Messages, Community"
+        aria-label="Today, Matches, Messages, Community"
         data-tab-count={SCHEDULE_NAV_TABS.length}
       >
         {SCHEDULE_NAV_TABS.map((tab) => {
