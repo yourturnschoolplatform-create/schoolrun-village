@@ -14,6 +14,7 @@ import {
   type InboxToast,
 } from '../lib/chat-inbox-alerts';
 import { ChatHub } from './ChatHub';
+import { ListingChatOverlay } from './ListingChatOverlay';
 import { CommunityHub } from './CommunityHub';
 import { InstantPickupBoard } from './InstantPickupBoard';
 import { MatchHub } from './MatchHub';
@@ -92,6 +93,7 @@ export function ScheduleHub({
 }) {
   const [view, setView] = useState<ViewMode>('today');
   const [activeChatRoom, setActiveChatRoom] = useState<ChatRoom | null>(null);
+  const [listingChatRoom, setListingChatRoom] = useState<ChatRoom | null>(null);
   const [viewingRoomId, setViewingRoomId] = useState<string | null>(null);
   const [messagesUnread, setMessagesUnread] = useState(0);
   const [inboxToast, setInboxToast] = useState<InboxToast | null>(null);
@@ -125,6 +127,7 @@ export function ScheduleHub({
   function selectView(next: ViewMode) {
     setView(next);
     viewRef.current = next;
+    setListingChatRoom(null);
     if (next !== 'messages') {
       setActiveChatRoom(null);
       setViewingRoomId(null);
@@ -132,13 +135,34 @@ export function ScheduleHub({
     }
   }
 
-  function openChatRoom(room: ChatRoom) {
-    setActiveChatRoom(room);
+  function openChatRoom(room: ChatRoom, options?: { forceMessages?: boolean }) {
+    setInboxToast(null);
     setViewingRoomId(room.id);
     viewingRoomIdRef.current = room.id;
+
+    // Marketplace Chat 1:1 — open as Karrot-style overlay (keep Market context).
+    if (room.schedule.pinKind === 'marketplace' && !options?.forceMessages) {
+      setListingChatRoom(room);
+      return;
+    }
+
+    setListingChatRoom(null);
+    setActiveChatRoom(room);
     setView('messages');
     viewRef.current = 'messages';
-    setInboxToast(null);
+  }
+
+  function closeListingChat() {
+    setListingChatRoom(null);
+    setViewingRoomId(null);
+    viewingRoomIdRef.current = null;
+  }
+
+  function openListingChatInMessages() {
+    if (!listingChatRoom) return;
+    const room = listingChatRoom;
+    setListingChatRoom(null);
+    openChatRoom(room, { forceMessages: true });
   }
 
   async function openChatById(roomId: string) {
@@ -228,7 +252,7 @@ export function ScheduleHub({
         }, 5600);
       },
       getActiveRoomId: () => viewingRoomIdRef.current,
-      isMessagesView: () => viewRef.current === 'messages',
+      isMessagesView: () => viewRef.current === 'messages' || Boolean(viewingRoomIdRef.current),
     });
     return stop;
   }, [client, userId]);
@@ -880,6 +904,16 @@ export function ScheduleHub({
             </div>
           </section>
         </>
+      ) : null}
+
+      {listingChatRoom ? (
+        <ListingChatOverlay
+          client={client}
+          userId={userId}
+          room={listingChatRoom}
+          onClose={closeListingChat}
+          onOpenInMessages={openListingChatInMessages}
+        />
       ) : null}
     </section>
   );

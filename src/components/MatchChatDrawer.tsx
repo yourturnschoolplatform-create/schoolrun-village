@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { encodeHouseholdCodeCard, parseHouseholdCodeCard } from '../../shared/household-code-message';
 import { chatApi, type ChatMessage, type ChatRoom } from '../lib/chat-api';
@@ -30,6 +37,11 @@ export function MatchChatDrawer({
   const [error, setError] = useState<string | null>(null);
   const [confirmedCodes, setConfirmedCodes] = useState<Record<string, true>>({});
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const scrollToLatest = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    bottomRef.current?.scrollIntoView({ behavior, block: 'end' });
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -45,8 +57,8 @@ export function MatchChatDrawer({
   useEffect(() => { void load(); }, [load]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length]);
+    scrollToLatest(messages.length <= 1 ? 'auto' : 'smooth');
+  }, [messages.length, room.id, scrollToLatest]);
 
   useEffect(() => {
     const channel = chatApi.subscribeMessages(client, room.id, (row) => {
@@ -69,8 +81,8 @@ export function MatchChatDrawer({
     return () => { void client.removeChannel(channel); };
   }, [client, room.id, userId]);
 
-  async function send(event: FormEvent) {
-    event.preventDefault();
+  async function send(event?: FormEvent) {
+    event?.preventDefault();
     const body = draft.trim();
     if (!body || busy) return;
     setBusy(true);
@@ -92,6 +104,10 @@ export function MatchChatDrawer({
       setMessages((current) => current.map((message) => (
         message.id === optimisticId ? sent : message
       )));
+      window.requestAnimationFrame(() => {
+        scrollToLatest('smooth');
+        textareaRef.current?.focus();
+      });
     } catch (err) {
       console.error('Failed to send chat message:', err);
       setMessages((current) => current.filter((message) => message.id !== optimisticId));
@@ -100,6 +116,12 @@ export function MatchChatDrawer({
     } finally {
       setBusy(false);
     }
+  }
+
+  function onComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    void send();
   }
 
   async function sendConfirmationCode() {
@@ -112,6 +134,7 @@ export function MatchChatDrawer({
       const sent = await chatApi.send(client, room.id, card);
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       onToast?.('Confirmation code sent in chat.');
+      window.requestAnimationFrame(() => scrollToLatest('smooth'));
     } catch {
       setError('A confirmation code could not be created or sent right now.');
     } finally {
@@ -134,23 +157,28 @@ export function MatchChatDrawer({
     }
   }
 
+  const canSend = Boolean(draft.trim()) && !busy;
+
   return (
     <div className="match-chat-overlay" role="presentation" onClick={onClose}>
       <section
-        className="match-chat-drawer"
+        className="match-chat-drawer match-chat-drawer--karrot"
         role="dialog"
         aria-modal="true"
         aria-labelledby="match-chat-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="match-chat-drawer__head">
-          <div>
+        <header className="match-chat-drawer__top">
+          <button type="button" className="chat-room__back" onClick={onClose} aria-label="Close chat">
+            <span aria-hidden="true">←</span>
+          </button>
+          <div className="chat-room__identity">
             <p className="eyebrow">Private match chat</p>
             <h2 id="match-chat-title">{room.peerDisplayName}</h2>
-            <p className="section-copy">Share a one-time household confirmation code to lock the match.</p>
+            <p>Share a one-time household confirmation code to lock the match.</p>
           </div>
-          <button type="button" className="text-button" onClick={onClose}>Close</button>
-        </div>
+          <button type="button" className="chat-room__list-link" onClick={onClose}>Close</button>
+        </header>
 
         <button
           type="button"
@@ -158,12 +186,12 @@ export function MatchChatDrawer({
           disabled={busy}
           onClick={() => void sendConfirmationCode()}
         >
-          📩 Send My Confirmation Code
+          Send my confirmation code
         </button>
 
-        <div className="chat-transcript match-chat-drawer__transcript" role="log" aria-live="polite">
+        <div className="chat-transcript chat-transcript--karrot match-chat-drawer__transcript" role="log" aria-live="polite">
           {messages.length === 0 ? (
-            <p className="section-copy">No messages yet. Send your confirmation code or say hello.</p>
+            <p className="chat-transcript__empty">No messages yet. Send your confirmation code or say hello.</p>
           ) : null}
           {messages.map((message) => {
             const code = parseHouseholdCodeCard(message.body);
@@ -189,7 +217,7 @@ export function MatchChatDrawer({
                       disabled={busy || accepted}
                       onClick={() => void confirmCode(code, message.id)}
                     >
-                      {accepted ? '✅ Match confirmed' : 'Confirm & Accept Match'}
+                      {accepted ? 'Match confirmed' : 'Confirm & Accept Match'}
                     </button>
                   ) : null}
                   <footer>
@@ -206,28 +234,39 @@ export function MatchChatDrawer({
                 <p>{message.body}</p>
                 <footer>
                   <time dateTime={message.createdAt}>{formatClock(message.createdAt)}</time>
+                  {message.mine && (
+                    <span className="chat-receipt" aria-label={message.readByPeer ? 'Read' : 'Sent'}>
+                      {message.readByPeer ? 'Read' : 'Sent'}
+                    </span>
+                  )}
                 </footer>
               </div>
             );
           })}
-          <div ref={bottomRef} />
+          <div ref={bottomRef} className="chat-transcript__anchor" />
         </div>
 
-        {error ? <p className="notice notice--red" role="alert">{error}</p> : null}
+        {error ? <p className="notice notice--red chat-room__error" role="alert">{error}</p> : null}
 
-        <form className="chat-composer" onSubmit={(event) => void send(event)}>
+        <form className="chat-composer chat-composer--dock" onSubmit={(event) => void send(event)}>
           <label className="visually-hidden" htmlFor={`match-chat-draft-${room.id}`}>Message</label>
           <textarea
+            ref={textareaRef}
             id={`match-chat-draft-${room.id}`}
-            rows={2}
+            rows={1}
             maxLength={2000}
             value={draft}
             disabled={busy}
-            placeholder="Write a short, phone-free message…"
+            placeholder="Message… (Enter to send)"
             onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={onComposerKeyDown}
           />
-          <button className="primary-button" type="submit" disabled={busy || !draft.trim()}>
-            {busy ? 'Sending…' : 'Send'}
+          <button
+            className={canSend ? 'chat-composer__send chat-composer__send--active' : 'chat-composer__send'}
+            type="submit"
+            disabled={!canSend}
+          >
+            {busy ? '…' : 'Send'}
           </button>
         </form>
       </section>

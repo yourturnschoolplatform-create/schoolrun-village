@@ -21,8 +21,18 @@ describe('Day 11 direct chat boundary', () => {
     expect(hub).toContain('SchedulePin');
     expect(hub).toContain('MarketplaceListingPin');
     expect(hub).toContain('ThreadSummaryPin');
+    expect(hub).toContain('ChatRoomView');
+    expect(hub).toContain('chat-room--karrot');
+    expect(hub).toContain('Enter to send');
     expect(hub).toContain('chatApi.subscribeMessages');
     expect(hub).toContain('readByPeer');
+    const overlay = await readFile(resolve('src/components/ListingChatOverlay.tsx'), 'utf8');
+    expect(overlay).toContain('ListingChatOverlay');
+    expect(overlay).toContain('ChatRoomView');
+    expect(overlay).toContain('Back to messages');
+    const schedule = await readFile(resolve('src/components/ScheduleHub.tsx'), 'utf8');
+    expect(schedule).toContain('ListingChatOverlay');
+    expect(schedule).toContain("pinKind === 'marketplace'");
     const community = await readFile(resolve('src/components/CommunityHub.tsx'), 'utf8');
     expect(community).toContain('openThreadChat');
     expect(community).toContain('Chat with author');

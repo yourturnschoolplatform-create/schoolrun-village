@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { parseHouseholdCodeCard } from '../../shared/household-code-message';
 import { chatApi, type ChatMessage, type ChatRoom } from '../lib/chat-api';
@@ -18,6 +25,16 @@ function marketplaceAskLabel(room: ChatRoom): string {
   return 'Free Share';
 }
 
+function peerContextLine(room: ChatRoom): string {
+  const schedule = room.schedule;
+  const bits: string[] = [];
+  if (schedule.areaLabel?.trim()) bits.push(schedule.areaLabel.trim());
+  if (schedule.pinKind === 'marketplace') bits.push('School pickup');
+  else if (schedule.pinKind === 'discussion') bits.push('School thread');
+  else if (schedule.weekdayLabel) bits.push(schedule.weekdayLabel);
+  return bits.join(' · ') || 'SchoolRun Village';
+}
+
 function MarketplaceListingPin({ room }: { room: ChatRoom }) {
   const schedule = room.schedule;
   const title = schedule.listingTitle || schedule.weekdayLabel || 'Marketplace listing';
@@ -35,13 +52,12 @@ function MarketplaceListingPin({ room }: { room: ChatRoom }) {
           )}
         </div>
         <div className="chat-pin__copy">
-          <p className="eyebrow">Marketplace chat</p>
+          <p className="eyebrow">Listing</p>
           <strong>{title}</strong>
           <p className="chat-pin__ask">{ask}</p>
           <small>
-            {room.peerDisplayName}
-            {schedule.areaLabel ? ` · ${schedule.areaLabel}` : ''}
-            {' · School pickup'}
+            {schedule.areaLabel ? `${schedule.areaLabel} · ` : ''}
+            School pickup
           </small>
         </div>
       </div>
@@ -60,12 +76,11 @@ function ThreadSummaryPin({ room }: { room: ChatRoom }) {
           <span className="chat-pin__placeholder">Thread</span>
         </div>
         <div className="chat-pin__copy">
-          <p className="eyebrow">Discussion chat</p>
+          <p className="eyebrow">Discussion</p>
           <strong>{title}</strong>
           <small>
-            {room.peerDisplayName}
-            {schedule.areaLabel ? ` · ${schedule.areaLabel}` : ''}
-            {' · School thread'}
+            {schedule.areaLabel ? `${schedule.areaLabel} · ` : ''}
+            School thread
           </small>
         </div>
       </div>
@@ -103,16 +118,23 @@ function SchedulePin({ room }: { room: ChatRoom }) {
   );
 }
 
-function ChatRoomView({
+export function ChatRoomView({
   client,
   userId,
   room,
   onBack,
+  onBackToList,
+  backLabel = 'Back',
+  listLabel = 'Back to messages',
 }: {
   client: SupabaseClient;
   userId: string;
   room: ChatRoom;
   onBack: () => void;
+  /** Optional second action (e.g. jump to Messages inbox). Defaults to onBack. */
+  onBackToList?: () => void;
+  backLabel?: string;
+  listLabel?: string;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
@@ -120,6 +142,14 @@ function ChatRoomView({
   const [error, setError] = useState<string | null>(null);
   const [confirmedCodes, setConfirmedCodes] = useState<Record<string, true>>({});
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const scrollToLatest = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const node = bottomRef.current;
+    if (!node) return;
+    node.scrollIntoView({ behavior, block: 'end' });
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -135,8 +165,9 @@ function ChatRoomView({
   useEffect(() => { void load(); }, [load]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length]);
+    // Instant jump on first paint / room change; smooth for later updates.
+    scrollToLatest(messages.length <= 1 ? 'auto' : 'smooth');
+  }, [messages.length, room.id, scrollToLatest]);
 
   useEffect(() => {
     const channel = chatApi.subscribeMessages(client, room.id, (row) => {
@@ -159,8 +190,8 @@ function ChatRoomView({
     return () => { void client.removeChannel(channel); };
   }, [client, room.id, userId]);
 
-  async function send(event: FormEvent) {
-    event.preventDefault();
+  async function send(event?: FormEvent) {
+    event?.preventDefault();
     const body = draft.trim();
     if (!body || busy) return;
     setBusy(true);
@@ -169,11 +200,21 @@ function ChatRoomView({
       const sent = await chatApi.send(client, room.id, body);
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       setDraft('');
+      window.requestAnimationFrame(() => {
+        scrollToLatest('smooth');
+        textareaRef.current?.focus();
+      });
     } catch {
       setError('That message could not be sent. Keep it phone-free and try again.');
     } finally {
       setBusy(false);
     }
+  }
+
+  function onComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    void send();
   }
 
   async function confirmCode(code: string, messageId: string) {
@@ -196,13 +237,44 @@ function ChatRoomView({
       ? 'No messages yet. Continue this school discussion privately.'
       : 'No messages yet. Say hello about this school run.';
 
+  const canSend = Boolean(draft.trim()) && !busy;
+  const goToList = onBackToList ?? onBack;
+
   return (
-    <section className="chat-room" aria-labelledby="chat-room-title">
-      <button className="text-button" type="button" onClick={onBack}>Back to messages</button>
-      <SchedulePin room={room} />
-      <h2 id="chat-room-title" className="visually-hidden">Chat with {room.peerDisplayName}</h2>
-      <div className="chat-transcript" role="log" aria-live="polite">
-        {messages.length === 0 && <p className="section-copy">{emptyCopy}</p>}
+    <section
+      className="chat-room chat-room--karrot"
+      aria-labelledby="chat-room-title"
+      data-pin={room.schedule.pinKind || 'schedule'}
+    >
+      <header className="chat-room__top">
+        <button
+          type="button"
+          className="chat-room__back"
+          onClick={onBack}
+          aria-label={backLabel}
+        >
+          <span aria-hidden="true">←</span>
+        </button>
+        <div className="chat-room__identity">
+          <h2 id="chat-room-title">{room.peerDisplayName}</h2>
+          <p>{peerContextLine(room)}</p>
+        </div>
+        <button type="button" className="chat-room__list-link" onClick={goToList}>
+          {listLabel}
+        </button>
+      </header>
+
+      <div className="chat-room__pin-sticky">
+        <SchedulePin room={room} />
+      </div>
+
+      <div
+        ref={transcriptRef}
+        className="chat-transcript chat-transcript--karrot"
+        role="log"
+        aria-live="polite"
+      >
+        {messages.length === 0 && <p className="chat-transcript__empty">{emptyCopy}</p>}
         {messages.map((message) => {
           const code = parseHouseholdCodeCard(message.body);
           if (code) {
@@ -222,7 +294,7 @@ function ChatRoomView({
                     disabled={busy || accepted}
                     onClick={() => void confirmCode(code, message.id)}
                   >
-                    {accepted ? '✅ Match confirmed' : 'Confirm & Accept Match'}
+                    {accepted ? 'Match confirmed' : 'Confirm & Accept Match'}
                   </button>
                 ) : (
                   <p className="field-help">Waiting for your match to confirm.</p>
@@ -250,22 +322,30 @@ function ChatRoomView({
             </div>
           );
         })}
-        <div ref={bottomRef} />
+        <div ref={bottomRef} className="chat-transcript__anchor" />
       </div>
-      {error && <p className="notice notice--red" role="alert">{error}</p>}
-      <form className="chat-composer" onSubmit={(event) => void send(event)}>
+
+      {error && <p className="notice notice--red chat-room__error" role="alert">{error}</p>}
+
+      <form className="chat-composer chat-composer--dock" onSubmit={(event) => void send(event)}>
         <label className="visually-hidden" htmlFor={`chat-draft-${room.id}`}>Message</label>
         <textarea
+          ref={textareaRef}
           id={`chat-draft-${room.id}`}
-          rows={2}
+          rows={1}
           maxLength={2000}
           value={draft}
           disabled={busy}
-          placeholder="Write a short, phone-free message…"
+          placeholder="Message… (Enter to send)"
           onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={onComposerKeyDown}
         />
-        <button className="primary-button" type="submit" disabled={busy || !draft.trim()}>
-          {busy ? 'Sending…' : 'Send'}
+        <button
+          className={canSend ? 'chat-composer__send chat-composer__send--active' : 'chat-composer__send'}
+          type="submit"
+          disabled={!canSend}
+        >
+          {busy ? '…' : 'Send'}
         </button>
       </form>
     </section>
@@ -323,6 +403,8 @@ export function ChatHub({
         client={client}
         userId={userId}
         room={active}
+        backLabel="Back"
+        listLabel="Back to messages"
         onBack={() => { setActive(null); void refresh(); }}
       />
     );
