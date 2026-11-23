@@ -15,6 +15,7 @@ import { AU_ALL_SCHOOLS } from '../data/auAllSchools';
 import { nonPaymentNoticeForTrade, PICKUP_NO_SHOW_POLICY_COPY } from '../../shared/payment-tracks';
 import type { ChatRoom } from '../lib/chat-api';
 import { instantPickupApi, type InstantPickupRequest } from '../lib/instant-pickup-api';
+import { pushApi } from '../lib/push-api';
 import { getSchoolsInSuburb } from '../utils/auLocationService';
 import { MatchChatDrawer } from './MatchChatDrawer';
 import { ParentTrustBadge } from './ParentTrustBadge';
@@ -335,6 +336,8 @@ export function InstantPickupBoard({
       setSelectedMatch(null);
       setToast('Private match chat opened. You can send your confirmation code.');
       setMessage('Match requested. Share your household confirmation code in chat when ready.');
+      const token = sessionData.session.access_token;
+      if (token) void pushApi.notifyMatchPeer(token, id, room.id);
       if (!uid) onOpenChat(room);
       await refresh();
     } catch (err) {

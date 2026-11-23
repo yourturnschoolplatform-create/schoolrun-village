@@ -146,8 +146,8 @@ export function MarketplaceItemCreateForm({
       return;
     }
     const askAudCents = trade === 'sale' ? audDollarsToCents(askDollars) : null;
-    if (trade === 'sale' && askAudCents == null) {
-      onNotice('Add an AUD ask for Sell listings (for example 50).', 'amber');
+    if (trade === 'sale' && (askAudCents == null || askAudCents < 100)) {
+      onNotice('Add a valid AUD ask of at least $1 (for example 50 or 50.00).', 'amber');
       return;
     }
     setBusy(true);

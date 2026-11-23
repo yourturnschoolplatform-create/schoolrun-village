@@ -1,16 +1,19 @@
 import type { Request, Response } from 'express';
 import { readPublicRuntimeConfig } from '../config.js';
+import { readPublicVapidKey } from '../push-router.js';
 
 export type PublicConfigResponse = {
   appName: string;
   supabase: { url: string; anonKey: string } | null;
   configured: boolean;
+  vapidPublicKey: string | null;
 };
 
 export const PUBLIC_CONFIG_FALLBACK: PublicConfigResponse = {
   appName: 'SchoolRun Village',
   supabase: null,
   configured: false,
+  vapidPublicKey: null,
 };
 
 function noStore(response: Response): void {
@@ -32,10 +35,17 @@ export function buildPublicConfigPayload(): PublicConfigResponse {
   try {
     const config = readPublicRuntimeConfig();
     const supabase = config.supabase ?? null;
+    let vapidPublicKey: string | null = null;
+    try {
+      vapidPublicKey = readPublicVapidKey();
+    } catch {
+      vapidPublicKey = null;
+    }
     return {
       appName: config.appName?.trim() || PUBLIC_CONFIG_FALLBACK.appName,
       supabase,
       configured: Boolean(supabase?.url && supabase?.anonKey),
+      vapidPublicKey,
     };
   } catch {
     return { ...PUBLIC_CONFIG_FALLBACK };

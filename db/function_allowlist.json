@@ -877,6 +877,34 @@
       "searchPath": "pg_catalog"
     },
     {
+      "name": "upsert_push_subscription",
+      "reason": "caller stores own Web Push endpoint for chat and match alerts",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "caller profile only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "delete_push_subscription",
+      "reason": "caller removes own Web Push endpoint",
+      "callerDerivation": "auth.uid()",
+      "schoolScope": "caller profile only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_push_targets_for_chat_peer",
+      "reason": "authenticated chat participant lists peer push endpoints to notify",
+      "callerDerivation": "auth.uid() must be room participant",
+      "schoolScope": "room school; returns other participant only",
+      "searchPath": "pg_catalog"
+    },
+    {
+      "name": "list_push_targets_for_pickup_peer",
+      "reason": "matched pickup party lists peer push endpoints to notify",
+      "callerDerivation": "auth.uid() must be requester or matched user",
+      "schoolScope": "request school; returns other party only",
+      "searchPath": "pg_catalog"
+    },
+    {
       "name": "complete_parent_signup",
       "reason": "parent dual-signup profile suburb school and optional invitation code; status PENDING_VERIFICATION",
       "callerDerivation": "auth.uid()",

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { parseHouseholdCodeCard } from '../../shared/household-code-message';
 import { chatApi, type ChatMessage, type ChatRoom } from '../lib/chat-api';
+import { pushApi } from '../lib/push-api';
 import { scheduleApi } from '../lib/schedule-api';
+import { PushNotifyToggle } from './PushNotifyToggle';
 
 function formatClock(value: string): string {
   return new Date(value).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
@@ -168,6 +170,9 @@ function ChatRoomView({
       const sent = await chatApi.send(client, room.id, body);
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       setDraft('');
+      const { data: sessionData } = await client.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (token) void pushApi.notifyChatPeer(token, room.id, body);
     } catch {
       setError('That message could not be sent. Keep it phone-free and try again.');
     } finally {
@@ -279,11 +284,15 @@ export function ChatHub({
   userId,
   initialRoom = null,
   onBack,
+  onActiveRoomChange,
+  onUnreadChange,
 }: {
   client: SupabaseClient;
   userId: string;
   initialRoom?: ChatRoom | null;
   onBack?: () => void;
+  onActiveRoomChange?: (roomId: string | null) => void;
+  onUnreadChange?: (total: number) => void;
 }) {
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [active, setActive] = useState<ChatRoom | null>(initialRoom);
@@ -292,19 +301,25 @@ export function ChatHub({
 
   const refresh = useCallback(async () => {
     try {
-      setRooms(await chatApi.listRooms(client));
+      const next = await chatApi.listRooms(client);
+      setRooms(next);
+      onUnreadChange?.(next.reduce((sum, room) => sum + (room.unreadCount || 0), 0));
       setMessage(null);
     } catch {
       setMessage('Your messages could not be loaded.');
     } finally {
       setLoading(false);
     }
-  }, [client]);
+  }, [client, onUnreadChange]);
 
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => {
     if (initialRoom) setActive(initialRoom);
   }, [initialRoom]);
+
+  useEffect(() => {
+    onActiveRoomChange?.(active?.id ?? null);
+  }, [active?.id, onActiveRoomChange]);
 
   if (active) {
     return (
@@ -326,6 +341,7 @@ export function ChatHub({
           Private 1:1 chats stay pinned to a weekday, time and suburb. No phones, photos or full names.
         </p>
       </div>
+      <PushNotifyToggle client={client} />
       {onBack && <button className="text-button" type="button" onClick={onBack}>Back</button>}
       {message && <p className="notice notice--amber" role="status">{message}</p>}
       {loading && <p className="section-copy">Loading your chats…</p>}

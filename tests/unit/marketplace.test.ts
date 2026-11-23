@@ -47,7 +47,14 @@ describe('marketplace trade and category helpers', () => {
     expect(offerLabelForTrade('sale')).toBe('SALE');
     expect(tradeBadgeLabel('SALE', 'sale')).toBe('SALE');
     expect(audDollarsToCents('50')).toBe(5000);
+    expect(audDollarsToCents('50.00')).toBe(5000);
+    expect(audDollarsToCents('$50')).toBe(5000);
+    expect(audDollarsToCents('$50.00')).toBe(5000);
+    expect(audDollarsToCents('AUD 50')).toBe(5000);
+    expect(audDollarsToCents('50 AUD')).toBe(5000);
     expect(audDollarsToCents('$12.50')).toBe(1250);
+    expect(audDollarsToCents('0.50')).toBeNull();
+    expect(audDollarsToCents('abc')).toBeNull();
     expect(formatAudCents(5000)).toBe('$50 AUD');
     expect(formatAudCents(1250)).toBe('$12.50 AUD');
   });

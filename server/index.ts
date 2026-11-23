@@ -7,6 +7,7 @@ import { createMatchesRouter, MatchInputError } from './matches-router.js';
 import { createContactsRouter } from './contacts-router.js';
 import { createHandoverRouter } from './handover-router.js';
 import { createNotificationsRouter } from './notifications-router.js';
+import { createPushRouter } from './push-router.js';
 import { createAdminRouter } from './admin-router.js';
 import { createPartnerRouter } from './partner-router.js';
 import { databaseErrorCode, logSafeServerError } from './safe-error-log.js';
@@ -110,6 +111,7 @@ export async function createApp(options?: { serveClient?: boolean }) {
           appName: 'SchoolRun Village',
           supabase: null,
           configured: false,
+          vapidPublicKey: null,
         });
       }
     }
@@ -132,6 +134,7 @@ export async function createApp(options?: { serveClient?: boolean }) {
   app.use('/api/contacts', createContactsRouter());
   app.use('/api/handover', createHandoverRouter());
   app.use('/api/notifications', createNotificationsRouter());
+  app.use('/api/push', createPushRouter());
   app.use('/api/admin', createAdminRouter());
   app.use('/api/partner', createPartnerRouter());
 

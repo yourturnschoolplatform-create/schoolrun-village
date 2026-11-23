@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   directionLabelEnglish,
@@ -7,7 +7,12 @@ import {
 } from '../../shared/au-location';
 import { addDays, dateInPeriod, isSuburbAreaLabel, shortWeekday, type SchoolRunDirection, type ScheduleIntent } from '../../shared/schedules';
 import { scheduleApi, type ScheduleOverview, type SchedulePattern, type SchedulePatternInput } from '../lib/schedule-api';
-import type { ChatRoom } from '../lib/chat-api';
+import { chatApi, type ChatRoom } from '../lib/chat-api';
+import {
+  applyUnreadDocumentTitle,
+  subscribeChatInboxAlerts,
+  type InboxToast,
+} from '../lib/chat-inbox-alerts';
 import { ChatHub } from './ChatHub';
 import { CommunityHub } from './CommunityHub';
 import { InstantPickupBoard } from './InstantPickupBoard';
@@ -87,6 +92,11 @@ export function ScheduleHub({
 }) {
   const [view, setView] = useState<ViewMode>('today');
   const [activeChatRoom, setActiveChatRoom] = useState<ChatRoom | null>(null);
+  const [viewingRoomId, setViewingRoomId] = useState<string | null>(null);
+  const [messagesUnread, setMessagesUnread] = useState(0);
+  const [inboxToast, setInboxToast] = useState<InboxToast | null>(null);
+  const viewRef = useRef<ViewMode>('today');
+  const viewingRoomIdRef = useRef<string | null>(null);
   const [overview, setOverview] = useState<ScheduleOverview | null>(null);
   const [form, setForm] = useState<PatternForm>(() => initialForm());
   const [editing, setEditing] = useState<SchedulePattern | null>(null);
@@ -114,12 +124,35 @@ export function ScheduleHub({
 
   function selectView(next: ViewMode) {
     setView(next);
-    if (next !== 'messages') setActiveChatRoom(null);
+    viewRef.current = next;
+    if (next !== 'messages') {
+      setActiveChatRoom(null);
+      setViewingRoomId(null);
+      viewingRoomIdRef.current = null;
+    }
   }
 
   function openChatRoom(room: ChatRoom) {
     setActiveChatRoom(room);
+    setViewingRoomId(room.id);
+    viewingRoomIdRef.current = room.id;
     setView('messages');
+    viewRef.current = 'messages';
+    setInboxToast(null);
+  }
+
+  async function openChatById(roomId: string) {
+    try {
+      const rooms = await chatApi.listRooms(client);
+      const match = rooms.find((room) => room.id === roomId);
+      if (match) {
+        openChatRoom(match);
+        return;
+      }
+    } catch {
+      /* fall through */
+    }
+    selectView('messages');
   }
 
   function selectQuickAction(next: ViewMode, focus?: QuickActionFocus) {
@@ -176,6 +209,82 @@ export function ScheduleHub({
   }, [client]);
 
   useEffect(() => { void refresh(); }, [refresh]);
+
+  useEffect(() => {
+    viewRef.current = view;
+  }, [view]);
+
+  useEffect(() => {
+    viewingRoomIdRef.current = viewingRoomId;
+  }, [viewingRoomId]);
+
+  useEffect(() => {
+    const stop = subscribeChatInboxAlerts(client, userId, {
+      onUnreadTotal: setMessagesUnread,
+      onToast: (toast) => {
+        setInboxToast(toast);
+        window.setTimeout(() => {
+          setInboxToast((current) => (current?.id === toast.id ? null : current));
+        }, 5600);
+      },
+      getActiveRoomId: () => viewingRoomIdRef.current,
+      isMessagesView: () => viewRef.current === 'messages',
+    });
+    return stop;
+  }, [client, userId]);
+
+  useEffect(() => {
+    applyUnreadDocumentTitle(messagesUnread);
+  }, [messagesUnread]);
+
+  // Deep link from Web Push: /messages, /messages?openChat=<id>, /?view=messages, /?openChat=<id>
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
+    const openChat = params.get('openChat');
+    const nextView = params.get('view');
+    const wantsMessages = path === '/messages' || nextView === 'messages';
+
+    if (openChat && /^[0-9a-f-]{36}$/i.test(openChat)) {
+      void openChatById(openChat);
+    } else if (wantsMessages) {
+      selectView('messages');
+    } else {
+      return;
+    }
+
+    params.delete('openChat');
+    params.delete('view');
+    const qs = params.toString();
+    const next = `/${qs ? `?${qs}` : ''}${window.location.hash}`;
+    window.history.replaceState({}, document.title, next || '/');
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- boot deep-link once
+  }, [client]);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: string; url?: string } | null;
+      if (!data || data.type !== 'open-chat' || typeof data.url !== 'string') return;
+      try {
+        const target = new URL(data.url, window.location.origin);
+        const roomId = target.searchParams.get('openChat');
+        const path = target.pathname.replace(/\/+$/, '') || '/';
+        if (roomId) void openChatById(roomId);
+        else if (path === '/messages' || target.searchParams.get('view') === 'messages') {
+          selectView('messages');
+        } else {
+          selectView('messages');
+        }
+      } catch {
+        selectView('messages');
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client]);
 
   function applyTimePreset(preset: typeof TIME_PRESETS[number] | 'custom') {
     if (preset === 'custom') {
@@ -329,12 +438,31 @@ export function ScheduleHub({
     <section className="schedule-shell" aria-labelledby="schedule-title" data-schedule-hub="ready">
       <QuickActions onSelect={selectQuickAction} />
       {/* Locked 5-tab primary navigation. */}
-      <ScheduleNav view={view} onSelect={selectView} />
+      <ScheduleNav view={view} onSelect={selectView} messagesUnread={messagesUnread} />
       {(view === 'today' || view === 'calendar') && (
         <button className="text-button schedule-nav__export" type="button" onClick={() => void exportIcs()} disabled={busy}>
           Export confirmed trips (.ics)
         </button>
       )}
+
+      {inboxToast ? (
+        <button
+          type="button"
+          className="inbox-toast"
+          onClick={() => {
+            const roomId = inboxToast.roomId;
+            setInboxToast(null);
+            if (roomId) void openChatById(roomId);
+            else selectView('messages');
+          }}
+        >
+          <span className="inbox-toast__eyebrow">
+            {inboxToast.kind === 'match' ? 'Pickup match' : 'New message'}
+          </span>
+          <strong>{inboxToast.title}</strong>
+          <span>{inboxToast.body}</span>
+        </button>
+      ) : null}
 
       {view === 'today' ? (
         <div className="schedule-hero schedule-hero--home">
@@ -376,6 +504,11 @@ export function ScheduleHub({
           userId={userId}
           initialRoom={activeChatRoom}
           onBack={() => selectView('today')}
+          onActiveRoomChange={(roomId) => {
+            setViewingRoomId(roomId);
+            viewingRoomIdRef.current = roomId;
+          }}
+          onUnreadChange={setMessagesUnread}
         />
       ) : null}
       {view === 'community' ? (

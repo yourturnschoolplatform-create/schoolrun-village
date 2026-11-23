@@ -1,0 +1,54 @@
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+describe('Karrot-style chat push / realtime alerts', () => {
+  it('wires Web Push SW, inbox realtime, Messages badge, and match-code chat intact', async () => {
+    const api = await readFile(resolve('src/lib/push-api.ts'), 'utf8');
+    const inbox = await readFile(resolve('src/lib/chat-inbox-alerts.ts'), 'utf8');
+    const sw = await readFile(resolve('public/sw.js'), 'utf8');
+    const hub = await readFile(resolve('src/components/ChatHub.tsx'), 'utf8');
+    const drawer = await readFile(resolve('src/components/MatchChatDrawer.tsx'), 'utf8');
+    const router = await readFile(resolve('server/push-router.ts'), 'utf8');
+    const edge = await readFile(resolve('supabase/functions/send-chat-push/index.ts'), 'utf8');
+    const sql = await readFile(resolve('db/migrations/0078_chat_push_subscriptions.sql'), 'utf8');
+
+    expect(api).toContain("rpc('upsert_push_subscription'");
+    expect(api).toContain('VITE_VAPID_PUBLIC_KEY');
+    expect(api).toContain('Notification.requestPermission');
+    expect(api).toContain('pushManager.subscribe');
+    expect(api).toContain('send-chat-push');
+    expect(api).toContain('/api/push/notify-chat');
+    expect(api).toContain('Add to Home Screen');
+    expect(inbox).toContain("table: 'chat_messages'");
+    expect(inbox).toContain("table: 'instant_pickup_requests'");
+    expect(inbox).toContain('applyUnreadDocumentTitle');
+    expect(sw).toContain("addEventListener('push'");
+    expect(sw).toContain("addEventListener('notificationclick'");
+    expect(sw).toContain('/messages');
+    expect(sw).toContain('openChat');
+    expect(hub).toContain('PushNotifyToggle');
+    expect(hub).toContain('One-time match code');
+    expect(hub).toContain('pushApi.notifyChatPeer');
+    expect(drawer).toContain('encodeHouseholdCodeCard');
+    expect(drawer).toContain('pushApi.notifyChatPeer');
+    expect(router).toContain('list_push_targets_for_chat_peer');
+    expect(router).toContain('webpush.sendNotification');
+    expect(edge).toContain('Deno.env.get');
+    expect(edge).toContain('VAPID_PRIVATE_KEY');
+    expect(edge).toContain('VITE_VAPID_PUBLIC_KEY');
+    expect(edge).toContain('VAPID_PUBLIC_KEY');
+    expect(edge).toContain('push_subscriptions');
+    expect(edge).toMatch(/404|410/);
+    expect(sql).toMatch(/push_subscriptions/i);
+    expect(sql).toMatch(/user_id/i);
+    expect(sql).toMatch(/endpoint/i);
+    expect(sql).toMatch(/p256dh/i);
+    expect(sql).toMatch(/\bauth\b/i);
+    expect(sql).toMatch(/user_agent/i);
+    expect(sql).toMatch(/updated_at/i);
+    expect(sql).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+});

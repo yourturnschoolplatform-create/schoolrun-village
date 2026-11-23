@@ -100,23 +100,49 @@ export const listingsApi = {
   },
   create: async (client: SupabaseClient, input: CreateListingInput) => {
     const args = buildCreateItemListingArgs(input);
-    try {
-      return await rpc<ItemListing>(client, 'create_item_listing', args);
-    } catch (error) {
-      if (isMissingArgError(error) && 'p_area_label' in args) {
-        const { p_area_label: _ignored, ...legacy } = args;
-        try {
-          return await rpc<ItemListing>(client, 'create_item_listing', legacy);
-        } catch (legacyError) {
-          throw new Error(
-            friendlyListingCreateError(
-              legacyError instanceof Error ? legacyError.message : String(legacyError),
-            ),
-          );
-        }
-      }
-      throw new Error(friendlyListingCreateError(error instanceof Error ? error.message : String(error)));
+    const { data, error } = await client.rpc('create_item_listing', args);
+    if (!error) return data as ItemListing;
+
+    const detail = [error.message, error.details, error.hint].filter(Boolean).join(' — ');
+    console.error('create_item_listing', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+      args: {
+        ...args,
+        // Avoid logging full image payloads.
+        p_listing_images: Array.isArray(args.p_listing_images)
+          ? `[${(args.p_listing_images as unknown[]).length} images]`
+          : args.p_listing_images,
+      },
+    });
+
+    const missingSignature = isMissingArgError(new Error(detail))
+      || error.code === 'PGRST202'
+      || error.code === 'PGRST203';
+
+    // Pre-0073 / pre-0079 schema: retry without p_area_label when signature misses.
+    if (missingSignature && 'p_area_label' in args) {
+      const { p_area_label: _ignored, ...legacy } = args;
+      const legacyResult = await client.rpc('create_item_listing', legacy);
+      if (!legacyResult.error) return legacyResult.data as ItemListing;
+      const legacyDetail = [
+        legacyResult.error.message,
+        legacyResult.error.details,
+        legacyResult.error.hint,
+      ].filter(Boolean).join(' — ');
+      throw Object.assign(
+        new Error(friendlyListingCreateError(legacyDetail) || legacyDetail),
+        { cause: legacyResult.error },
+      );
     }
+
+    // Prefer mapped UX copy when clear; otherwise surface the real Supabase/Postgres text.
+    throw Object.assign(
+      new Error(friendlyListingCreateError(detail) || detail || 'That listing could not be posted.'),
+      { cause: error },
+    );
   },
   /**
    * create_listing_enquiry(p_listing_id, p_body) — buyer/seller derived from auth.uid()

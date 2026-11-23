@@ -37,26 +37,49 @@ export function buildCreateItemListingArgs(input: CreateListingInput): Record<st
 
   const areaLabel = input.areaLabel?.trim() ? input.areaLabel.trim().slice(0, 64) : null;
 
+  const askCents = input.askAudCents == null
+    ? null
+    : Math.round(Number(input.askAudCents));
+
   return {
     p_listing_kind: input.kind,
     p_title: input.title.trim(),
     p_description: input.description.trim(),
     p_category: input.category.trim(),
     p_display_offer_label: input.offerLabel.trim(),
-    p_ask_aud_cents: input.askAudCents ?? null,
+    // Whole AUD cents integer (e.g. 5000 for $50). Never send dollars here.
+    p_ask_aud_cents: askCents != null && Number.isFinite(askCents) ? askCents : null,
     p_listing_images: images,
     p_item_condition: condition,
     p_size_age_label: sizeAge,
+    // jsonb array — keep as a plain array for PostgREST
     p_household_env: householdEnv,
     p_area_label: areaLabel,
   };
 }
 
 export function friendlyListingCreateError(raw: string | null | undefined): string {
-  const text = (raw ?? '').toLowerCase();
+  const original = (raw ?? '').trim();
+  const text = original.toLowerCase();
   if (!text) return 'That listing could not be posted. Please try again.';
-  if (text.includes('ask') || text.includes('aud')) {
-    return 'Sell listings need a valid AUD ask (for example 50).';
+
+  // Never treat PostgREST signature misses as an AUD ask failure (messages often
+  // list p_ask_aud_cents in the "could not find function" details).
+  if (
+    text.includes('could not find the function')
+    || text.includes('pgrst202')
+    || text.includes('pgrst203')
+    || text.includes('schema cache')
+  ) {
+    return original || 'Marketplace create is updating. Run npm run db:migrate, then refresh and try again.';
+  }
+
+  if (
+    text.includes('aud ask between')
+    || text.includes('need an aud ask')
+    || text.includes('send cents')
+  ) {
+    return 'Sell listings need a valid AUD ask of at least $1 (for example 50).';
   }
   if (text.includes('image')) {
     return 'Listing images must be up to six compressed images with one cover selected.';
@@ -70,11 +93,16 @@ export function friendlyListingCreateError(raw: string | null | undefined): stri
   if (text.includes('condition')) {
     return 'Choose a condition: New, Like New, or Good.';
   }
-  if (text.includes('membership') || text.includes('verified') || text.includes('permission') || text.includes('jwt')) {
+  if (text.includes('suburb')) {
+    return 'Choose a suburb-only meetup label for neighbourhood pickup.';
+  }
+  if (text.includes('membership') || text.includes('verified') || text.includes('42501') || text.includes('jwt')) {
     return 'Marketplace posting needs a verified school membership. Finish onboarding, then try again.';
   }
-  if (text.includes('could not find the function') || text.includes('pgrst202') || text.includes('404')) {
-    return 'Marketplace create is updating. Run npm run db:migrate, then refresh and try again.';
+
+  // Prefer the real Postgres / Supabase message over a generic mask.
+  if (original.length > 0 && original.length < 280) {
+    return original;
   }
   return 'That listing could not be posted. Please check the details and try again.';
 }

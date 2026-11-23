@@ -874,7 +874,73 @@ input::placeholder { color: #99a6a2; }
   background: var(--coral);
   box-shadow: 0 8px 16px rgba(255, 107, 107, .22);
 }
-.schedule-tab[data-schedule-tab="messages"] { display: inline-flex !important; }
+.schedule-tab[data-schedule-tab="messages"] { display: inline-flex !important; position: relative; gap: .28rem; }
+.schedule-tab__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 .28rem;
+  border-radius: 999px;
+  background: #FF6B6B;
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.inbox-toast {
+  position: sticky;
+  top: .65rem;
+  z-index: 40;
+  display: grid;
+  gap: .2rem;
+  width: min(100%, 26rem);
+  margin: .5rem auto 0;
+  padding: .85rem 1rem;
+  border: 1px solid #FECACA;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #FFF7F5 0%, #FFFFFF 70%);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .12);
+  text-align: left;
+  cursor: pointer;
+  animation: inbox-toast-in .28s ease;
+}
+.inbox-toast__eyebrow {
+  color: #B91C1C;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.inbox-toast strong { color: #0F172A; font-size: .95rem; }
+.inbox-toast span:last-child { color: #475569; font-size: .86rem; }
+@keyframes inbox-toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.push-notify {
+  display: grid;
+  gap: .55rem;
+  margin: 0 0 1rem;
+  padding: .9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #F8FAFC;
+}
+.push-notify__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .85rem;
+}
+.push-notify__row strong { display: block; color: #0F172A; }
+.push-notify__hint { margin: 0; color: #64748B; }
+@media (max-width: 560px) {
+  .push-notify__row { flex-direction: column; }
+  .push-notify__row .primary-button,
+  .push-notify__row .secondary-button { width: 100%; }
+}
 @media (max-width: 420px) {
   .schedule-tabs {
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;

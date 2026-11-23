@@ -54,9 +54,19 @@ describe('listing create payload', () => {
   });
 
   it('maps RPC failures to clear parent-facing messages', () => {
-    expect(friendlyListingCreateError('sale listings need an AUD ask')).toMatch(/AUD ask/i);
+    expect(friendlyListingCreateError('sale listings need an AUD ask between $1 and $999999')).toMatch(/AUD ask/i);
     expect(friendlyListingCreateError('listing images must be up to six')).toMatch(/images/i);
-    expect(friendlyListingCreateError('Could not find the function public.create_item_listing')).toMatch(/db:migrate/i);
+    // Signature misses must not be mislabelled as an AUD ask problem.
+    const missing = friendlyListingCreateError(
+      'Could not find the function public.create_item_listing(p_ask_aud_cents) in the schema cache',
+    );
+    expect(missing).toMatch(/could not find the function|schema cache|db:migrate/i);
+    expect(missing).not.toMatch(/Sell listings need a valid AUD ask/i);
+    // Prefer the real Postgres message when it is not a known mapped case.
+    expect(friendlyListingCreateError('meetup suburb must be a suburb-only label'))
+      .toMatch(/suburb/i);
+    expect(friendlyListingCreateError('permission denied for table item_listings'))
+      .toBe('permission denied for table item_listings');
   });
 
   it('blocks own-listing contact and maps self-chat/enquire 400s', () => {

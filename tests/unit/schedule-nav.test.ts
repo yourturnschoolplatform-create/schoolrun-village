@@ -16,7 +16,12 @@ describe('Schedule dashboard navigation', () => {
     expect(nav).toContain('data-schedule-tab="matches"');
     expect(nav).toContain('data-schedule-tab="messages"');
     expect(nav).toContain('data-schedule-tab="community"');
-    expect(nav).toMatch(/>\s*Messages\s*<\/button>/);
+    expect(nav).toContain('Messages');
+    expect(nav).toContain('schedule-tab__badge');
+    expect(nav).toContain('messagesUnread');
+    expect(hub).toContain('messagesUnread={messagesUnread}');
+    expect(hub).toContain('inbox-toast');
+    expect(hub).toContain('subscribeChatInboxAlerts');
     expect(nav.indexOf('schedule-tab-matches')).toBeLessThan(nav.indexOf('schedule-tab-messages'));
     expect(nav.indexOf('schedule-tab-messages')).toBeLessThan(nav.indexOf('schedule-tab-community'));
 

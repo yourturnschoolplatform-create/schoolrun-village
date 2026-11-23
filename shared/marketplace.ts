@@ -26,14 +26,28 @@ export const MARKETPLACE_CATEGORY_FILTERS: Array<{ id: 'all' | MarketplaceCatego
   ...MARKETPLACE_CATEGORIES.map((category) => ({ id: category, label: category })),
 ];
 
-/** Whole AUD dollars → cents. Returns null when empty/invalid. */
+/**
+ * Whole AUD dollars → integer cents for create_item_listing(p_ask_aud_cents).
+ * Accepts "50", "50.00", "$50", "$50.00", "AUD 50", "50 AUD".
+ * Returns null when empty/invalid. Never returns dollars as cents by mistake.
+ */
 export function audDollarsToCents(raw: string): number | null {
-  const cleaned = raw.trim().replace(/^\$/, '').replace(/,/g, '');
+  let cleaned = raw.trim();
+  if (!cleaned) return null;
+  cleaned = cleaned
+    .replace(/aud/gi, '')
+    .replace(/\$/g, '')
+    .replace(/,/g, '')
+    .replace(/\s+/g, '')
+    .trim();
   if (!cleaned) return null;
   if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null;
   const dollars = Number(cleaned);
   if (!Number.isFinite(dollars) || dollars <= 0) return null;
-  return Math.round(dollars * 100);
+  if (dollars > 999_999) return null;
+  const cents = Math.round(dollars * 100);
+  if (!Number.isInteger(cents) || cents < 100) return null;
+  return cents;
 }
 
 /** Format stored AUD cents for cards, e.g. 5000 → "$50 AUD". */

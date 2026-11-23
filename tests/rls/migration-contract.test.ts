@@ -754,4 +754,30 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
       /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
     );
   });
+
+  it('adds Web Push subscriptions for chat and match alerts', async () => {
+    const push = (await readFile(resolve('db/migrations/0078_chat_push_subscriptions.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(push).toMatch(/create table if not exists public\.push_subscriptions/i);
+    expect(push).toMatch(/function public\.upsert_push_subscription/i);
+    expect(push).toMatch(/function public\.delete_push_subscription/i);
+    expect(push).toMatch(/function public\.list_push_targets_for_chat_peer/i);
+    expect(push).toMatch(/function public\.list_push_targets_for_pickup_peer/i);
+    expect(push).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(push).toMatch(/set local search_path = pg_catalog/i);
+    expect(push).not.toMatch(
+      /\b(amount|price|currency|money|fee|payment|phone|mobile|nickname|photo_url|latitude|longitude)\s+(text|numeric|integer|bigint|smallint|double precision|jsonb)\b/i,
+    );
+  });
+
+  it('reasserts create_item_listing ask cents coercion for Sell listings', async () => {
+    const fix = (await readFile(resolve('db/migrations/0079_fix_create_item_listing_ask_aud.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/create function public\.create_item_listing/i);
+    expect(fix).toMatch(/p_ask_aud_cents numeric/i);
+    expect(fix).toMatch(/pg_catalog\.round\(p_ask_aud_cents\)::integer/i);
+    expect(fix).toMatch(/p_area_label text default null/i);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
+  });
 });

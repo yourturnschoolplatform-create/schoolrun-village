@@ -1,0 +1,5 @@
+# Minimal Supabase CLI config for Edge Functions in this repo.
+# Project ref / DB URLs stay in local env or `supabase link`.
+
+[functions.send-chat-push]
+verify_jwt = true

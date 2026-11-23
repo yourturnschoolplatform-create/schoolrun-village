@@ -16,10 +16,17 @@ export const SCHEDULE_NAV_TABS = [
 export function ScheduleNav({
   view,
   onSelect,
+  messagesUnread = 0,
 }: {
   view: ScheduleNavView;
   onSelect: (next: ScheduleNavView) => void;
+  /** Unread chat count badge on Messages (Karrot-style). */
+  messagesUnread?: number;
 }) {
+  const badge = messagesUnread > 0
+    ? (messagesUnread > 99 ? '99+' : String(messagesUnread))
+    : null;
+
   return (
     <nav className="schedule-nav" aria-label="School run sections" data-schedule-nav="primary">
       <div
@@ -74,8 +81,12 @@ export function ScheduleNav({
           aria-selected={view === 'messages'}
           className={view === 'messages' ? 'schedule-tab schedule-tab--active' : 'schedule-tab'}
           onClick={() => onSelect('messages')}
+          aria-label={badge ? `Messages, ${badge} unread` : 'Messages'}
         >
           Messages
+          {badge ? (
+            <span className="schedule-tab__badge" aria-hidden="true">{badge}</span>
+          ) : null}
         </button>
         <button
           type="button"
