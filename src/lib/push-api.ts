@@ -80,17 +80,56 @@ async function activeRegistration(): Promise<ServiceWorkerRegistration | null> {
   }
 }
 
+/** Endpoint last successfully upserted into push_subscriptions (this tab session). */
+let lastPersistedEndpoint: string | null = null;
+
+function bufferEquals(a: ArrayBuffer, b: ArrayBuffer): boolean {
+  if (a.byteLength !== b.byteLength) return false;
+  const left = new Uint8Array(a);
+  const right = new Uint8Array(b);
+  for (let i = 0; i < left.byteLength; i += 1) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
+/** True when subscription was created with the current VAPID public key (when detectable). */
+function applicationServerKeysMatch(
+  subscription: PushSubscription,
+  vapidPublicKey: string,
+): boolean {
+  try {
+    const existing = subscription.options?.applicationServerKey;
+    if (!existing) return true;
+    const expected = urlBase64ToUint8Array(vapidPublicKey);
+    const existingBuf = existing instanceof ArrayBuffer
+      ? existing
+      : (existing as ArrayBufferView).buffer.slice(
+        (existing as ArrayBufferView).byteOffset,
+        (existing as ArrayBufferView).byteOffset + (existing as ArrayBufferView).byteLength,
+      );
+    return bufferEquals(existingBuf, expected instanceof ArrayBuffer ? expected : expected as ArrayBuffer);
+  } catch {
+    return true;
+  }
+}
+
 export const pushApi = {
   platformNote: pushPlatformNote,
   supported: pushSupported,
 
+  /**
+   * Browser permission + PushSubscription alone is not enough.
+   * `subscribed` only after a successful upsert_push_subscription for this endpoint.
+   */
   permissionState: async (): Promise<PushPermissionState> => {
     if (!pushSupported()) return 'unsupported';
     if (Notification.permission === 'denied') return 'denied';
     if (Notification.permission === 'default') return 'default';
     const registration = await activeRegistration();
     const existing = await registration?.pushManager.getSubscription();
-    return existing ? 'subscribed' : 'granted';
+    if (!existing?.endpoint) return 'granted';
+    return lastPersistedEndpoint === existing.endpoint ? 'subscribed' : 'granted';
   },
 
   /**
@@ -121,6 +160,7 @@ export const pushApi = {
         /* ignore */
       }
     }
+    lastPersistedEndpoint = null;
     if (endpoint) {
       try {
         await client.rpc('delete_push_subscription', { p_endpoint: endpoint });
@@ -133,6 +173,7 @@ export const pushApi = {
   /**
    * After Notification.permission === 'granted', create/reuse pushManager.subscribe
    * and upsert into push_subscriptions. Shared by enable() + syncSubscription().
+   * Rotates the browser subscription when the VAPID applicationServerKey changed.
    */
   persistBrowserSubscription: async (
     client: SupabaseClient,
@@ -146,6 +187,15 @@ export const pushApi = {
       }
 
       let subscription = await registration.pushManager.getSubscription();
+      if (subscription && !applicationServerKeysMatch(subscription, vapidPublicKey)) {
+        try {
+          await subscription.unsubscribe();
+        } catch {
+          /* ignore */
+        }
+        subscription = null;
+        lastPersistedEndpoint = null;
+      }
       if (!subscription) {
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
@@ -159,6 +209,7 @@ export const pushApi = {
       const auth = json.keys?.auth?.trim() ?? '';
       if (!endpoint || !p256dh || !auth) {
         console.error('push subscribe: incomplete PushSubscription keys');
+        lastPersistedEndpoint = null;
         return false;
       }
 
@@ -175,10 +226,13 @@ export const pushApi = {
           hint: error.hint,
           code: error.code,
         });
+        lastPersistedEndpoint = null;
         return false;
       }
+      lastPersistedEndpoint = endpoint;
       return true;
     } catch (error) {
+      lastPersistedEndpoint = null;
       console.error(
         'push subscribe failed',
         error instanceof Error ? error.message : 'unknown',
@@ -229,8 +283,10 @@ export const pushApi = {
       context: options?.context?.trim()?.slice(0, 80) || undefined,
       listingId: options?.listingId || undefined,
     };
-    const ok = await postSendChatPush(accessToken, body);
-    if (ok) return;
+    // Always try Edge + Express so a missing Edge deploy still notifies when
+    // the Node push router is available.
+    const edgeOk = await postSendChatPush(accessToken, body);
+    if (edgeOk) return;
     await postExpressFallback('/api/push/notify-chat', accessToken, {
       roomId,
       preview: body.preview,
@@ -277,9 +333,19 @@ export const pushApi = {
       listingId?: string | null;
     },
   ): Promise<void> => {
-    const token = await readAccessToken(client);
-    if (!token) return;
-    await pushApi.notifyChatPeer(token, roomId, preview, options);
+    try {
+      const token = await readAccessToken(client);
+      if (!token) {
+        console.warn('send-chat-push skipped: no access token');
+        return;
+      }
+      await pushApi.notifyChatPeer(token, roomId, preview, options);
+    } catch (error) {
+      console.error(
+        'notifyChatPeerFromClient',
+        error instanceof Error ? error.message : 'unknown',
+      );
+    }
   },
 
   /** Resolve session from Supabase client, then notify match peer (best-effort). */

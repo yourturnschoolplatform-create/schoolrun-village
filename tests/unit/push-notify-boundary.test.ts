@@ -38,8 +38,14 @@ describe('Karrot-style chat push / realtime alerts', () => {
     expect(inbox).toContain('applyUnreadDocumentTitle');
     expect(inbox).toContain('roomContextLabel');
     expect(inbox).toContain('getActiveRoomId');
+    expect(inbox).toContain('shouldSuppressInboxBanner');
+    expect(inbox).toContain('document.hidden');
     expect(inbox).toContain('sender_id === userId');
     expect(inbox).not.toContain('send-chat-push');
+    const sqlRealtime = await readFile(resolve('db/migrations/0084_fix_chat_realtime_alerts_rls.sql'), 'utf8');
+    expect(sqlRealtime).toMatch(/chat_messages_select/);
+    expect(sqlRealtime).toMatch(/replica identity full/i);
+    expect(sqlRealtime).toMatch(/upsert_push_subscription/);
     expect(sw).toContain("addEventListener('push'");
     expect(sw).toContain("addEventListener('notificationclick'");
     expect(sw).toContain('openChat');
@@ -58,6 +64,9 @@ describe('Karrot-style chat push / realtime alerts', () => {
     expect(schedule).toContain('cueInboxAlert');
     expect(schedule).toContain('armInboxAlertAudio');
     expect(api).toContain('persistBrowserSubscription');
+    expect(api).toContain('lastPersistedEndpoint');
+    expect(api).toContain('applicationServerKeysMatch');
+    expect(api).toContain("lastPersistedEndpoint === existing.endpoint ? 'subscribed' : 'granted'");
     expect(hub).toContain('PushNotifyToggle');
     expect(hub).toContain('One-time match code');
     expect(hub).toContain('chatApi.send');

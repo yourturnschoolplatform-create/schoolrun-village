@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   directionLabelEnglish,
@@ -398,37 +399,40 @@ export function ScheduleHub({
         </button>
       ) : null}
 
-      {inboxToast ? (
-        <div className="inbox-toast-layer" role="status" aria-live="polite">
-          <button
-            type="button"
-            className="inbox-toast"
-            onClick={() => {
-              const roomId = inboxToast.roomId;
-              setInboxToast(null);
-              if (roomId) void openChatById(roomId, { forceMessages: true });
-              else selectView('messages');
-            }}
-          >
-            <span className="inbox-toast__eyebrow">
-              {inboxToast.kind === 'match' ? 'Pickup match' : 'New message'}
-            </span>
-            <strong>{inboxToast.title}</strong>
-            {inboxToast.context ? (
-              <span className="inbox-toast__context">{inboxToast.context}</span>
-            ) : null}
-            <span className="inbox-toast__body">{inboxToast.body}</span>
-          </button>
-          <button
-            type="button"
-            className="inbox-toast__dismiss"
-            aria-label="Dismiss notification"
-            onClick={() => setInboxToast(null)}
-          >
-            ×
-          </button>
-        </div>
-      ) : null}
+      {inboxToast && typeof document !== 'undefined'
+        ? createPortal(
+          <div className="inbox-toast-layer" role="status" aria-live="polite">
+            <button
+              type="button"
+              className="inbox-toast"
+              onClick={() => {
+                const roomId = inboxToast.roomId;
+                setInboxToast(null);
+                if (roomId) void openChatById(roomId, { forceMessages: true });
+                else selectView('messages');
+              }}
+            >
+              <span className="inbox-toast__eyebrow">
+                {inboxToast.kind === 'match' ? 'Pickup match' : 'New message'}
+              </span>
+              <strong>{inboxToast.title}</strong>
+              {inboxToast.context ? (
+                <span className="inbox-toast__context">{inboxToast.context}</span>
+              ) : null}
+              <span className="inbox-toast__body">{inboxToast.body}</span>
+            </button>
+            <button
+              type="button"
+              className="inbox-toast__dismiss"
+              aria-label="Dismiss notification"
+              onClick={() => setInboxToast(null)}
+            >
+              ×
+            </button>
+          </div>,
+          document.body,
+        )
+        : null}
 
       {view === 'today' ? (
         <div className="schedule-hero schedule-hero--home min-w-0 max-w-full w-full overflow-x-hidden">

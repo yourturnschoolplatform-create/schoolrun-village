@@ -20,34 +20,42 @@ function getAudioContext(): AudioContext | null {
   }
 }
 
-/** Short two-tone chime via Web Audio (only when context is already unlocked / running). */
+function playChimeOnContext(ctx: AudioContext): void {
+  const now = ctx.currentTime;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+  gain.connect(ctx.destination);
+
+  const osc1 = ctx.createOscillator();
+  osc1.type = 'sine';
+  osc1.frequency.setValueAtTime(880, now);
+  osc1.connect(gain);
+  osc1.start(now);
+  osc1.stop(now + 0.14);
+
+  const osc2 = ctx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(1174.7, now + 0.12);
+  osc2.connect(gain);
+  osc2.start(now + 0.12);
+  osc2.stop(now + 0.28);
+}
+
+/** Short two-tone chime via Web Audio. Best-effort resume if previously unlocked. */
 export function playInboxAlertChime(): void {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
-    // Do not call resume() here — that needs a user gesture. Play only if unlocked.
-    if (ctx.state !== 'running') return;
-
-    const now = ctx.currentTime;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
-    gain.connect(ctx.destination);
-
-    const osc1 = ctx.createOscillator();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(880, now);
-    osc1.connect(gain);
-    osc1.start(now);
-    osc1.stop(now + 0.14);
-
-    const osc2 = ctx.createOscillator();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(1174.7, now + 0.12);
-    osc2.connect(gain);
-    osc2.start(now + 0.12);
-    osc2.stop(now + 0.28);
+    if (ctx.state === 'running') {
+      playChimeOnContext(ctx);
+      return;
+    }
+    // Previously unlocked contexts may be suspended after tab sleep — try resume.
+    void ctx.resume().then(() => {
+      if (ctx.state === 'running') playChimeOnContext(ctx);
+    }).catch(() => { /* autoplay blocked */ });
   } catch {
     /* unsupported / autoplay blocked */
   }

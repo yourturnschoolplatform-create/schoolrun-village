@@ -1,6 +1,6 @@
 /* YourTurn PWA: static shell cache + Web Push for chat/match alerts.
    Never cache APIs, auth, or Supabase data. */
-const CACHE_NAME = 'yourturn-shell-v4';
+const CACHE_NAME = 'yourturn-shell-v5';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/icons/icon.svg', '/icons/maskable.svg'];
 
 self.addEventListener('install', (event) => {

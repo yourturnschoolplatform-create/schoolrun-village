@@ -1159,7 +1159,8 @@ input::placeholder { color: #99a6a2; }
   top: 0;
   right: 0;
   left: 0;
-  z-index: 50;
+  /* Above marketplace / match / instant overlays (z-index 80–90). */
+  z-index: 100;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;

@@ -66,8 +66,21 @@ export function roomContextLabel(room: ChatRoom | undefined | null): string | nu
 }
 
 /**
- * Live inbox: unread badge total + Karrot-style top banner for messages / matches
- * when the parent is not already viewing that exact thread.
+ * Suppress the floating banner only when the parent is looking at that exact
+ * 1:1 room and the document is visible. Background / other tabs always alert.
+ */
+export function shouldSuppressInboxBanner(
+  roomId: string | null | undefined,
+  getActiveRoomId: () => string | null,
+): boolean {
+  if (!roomId) return false;
+  if (typeof document !== 'undefined' && document.hidden) return false;
+  return getActiveRoomId() === roomId;
+}
+
+/**
+ * Live inbox: unread badge total + top banner for messages / matches when the
+ * parent is not already viewing that exact visible thread.
  * Never toasts the sender's own inserts (filtered by sender_id === userId).
  */
 export function subscribeChatInboxAlerts(
@@ -91,6 +104,28 @@ export function subscribeChatInboxAlerts(
     }
   };
 
+  const emitChatToast = (row: {
+    id?: string;
+    room_id?: string;
+    sender_id?: string;
+    body?: string;
+  }) => {
+    if (!row?.room_id || !row.sender_id || row.sender_id === userId) return;
+    if (shouldSuppressInboxBanner(row.room_id, handlers.getActiveRoomId)) return;
+
+    const room = rooms.find((entry) => entry.id === row.room_id);
+    const peer = room?.peerDisplayName?.trim() || 'Parent';
+    const context = roomContextLabel(room);
+    handlers.onToast({
+      id: row.id || `${row.room_id}-${Date.now()}`,
+      title: peer,
+      body: sanitizePreview(row.body),
+      roomId: row.room_id,
+      kind: 'chat',
+      context,
+    });
+  };
+
   void refreshUnread();
 
   const messageChannel = client
@@ -105,30 +140,16 @@ export function subscribeChatInboxAlerts(
           sender_id?: string;
           body?: string;
         };
-        // Never notify the sender about their own message.
-        if (!row?.room_id || !row.sender_id || row.sender_id === userId) return;
-
-        void (async () => {
-          await refreshUnread();
-          if (disposed) return;
-          // Suppress banner only for the currently open 1:1 room.
-          if (handlers.getActiveRoomId() === row.room_id) return;
-
-          const room = rooms.find((entry) => entry.id === row.room_id);
-          const peer = room?.peerDisplayName?.trim() || 'Parent';
-          const context = roomContextLabel(room);
-          handlers.onToast({
-            id: row.id || `${row.room_id}-${Date.now()}`,
-            title: peer,
-            body: sanitizePreview(row.body),
-            roomId: row.room_id,
-            kind: 'chat',
-            context,
-          });
-        })();
+        // Toast immediately — do not wait on listRooms (that delayed/dropped alerts).
+        emitChatToast(row);
+        void refreshUnread();
       },
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.warn('chat-inbox realtime:', status);
+      }
+    });
   channels.push(messageChannel);
 
   const matchChannel = client
@@ -151,25 +172,29 @@ export function subscribeChatInboxAlerts(
         if (old && typeof old.status === 'string' && old.status === 'matched') return;
         if (row.requester_id !== userId && row.matched_user_id !== userId) return;
 
-        void (async () => {
-          await refreshUnread();
-          if (disposed) return;
-          const roomId = row.chat_room_id ?? null;
-          if (roomId && handlers.getActiveRoomId() === roomId) return;
+        const roomId = row.chat_room_id ?? null;
+        if (shouldSuppressInboxBanner(roomId, handlers.getActiveRoomId)) {
+          void refreshUnread();
+          return;
+        }
 
-          const area = typeof row.area_label === 'string' ? row.area_label.trim() : '';
-          handlers.onToast({
-            id: `match-${row.id}`,
-            title: 'Pickup match',
-            body: 'Your instant pickup was matched. Open chat to share your confirmation code.',
-            roomId,
-            kind: 'match',
-            context: area ? `Instant Pickup · ${area}` : 'Instant Pickup',
-          });
-        })();
+        const area = typeof row.area_label === 'string' ? row.area_label.trim() : '';
+        handlers.onToast({
+          id: `match-${row.id}`,
+          title: 'Pickup match',
+          body: 'Your instant pickup was matched. Open chat to share your confirmation code.',
+          roomId,
+          kind: 'match',
+          context: area ? `Instant Pickup · ${area}` : 'Instant Pickup',
+        });
+        void refreshUnread();
       },
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.warn('chat-match realtime:', status);
+      }
+    });
   channels.push(matchChannel);
 
   const onVisibility = () => {

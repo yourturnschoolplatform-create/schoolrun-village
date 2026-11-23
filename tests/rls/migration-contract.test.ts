@@ -787,6 +787,21 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(fix).toMatch(/set local search_path = pg_catalog/i);
   });
 
+  it('opens chat Realtime SELECT to room participants without is_member gate', async () => {
+    const fix = (await readFile(resolve('db/migrations/0084_fix_chat_realtime_alerts_rls.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/drop policy if exists chat_messages_select/i);
+    expect(fix).toMatch(/create policy chat_messages_select on public\.chat_messages/i);
+    expect(fix).toMatch(/chat_participants as participant/i);
+    expect(fix).toMatch(/create policy chat_messages_select[\s\S]*participant\.user_id = \(select auth\.uid\(\)\)/i);
+    expect(fix).not.toMatch(/create policy chat_messages_select[\s\S]*is_member\(/i);
+    expect(fix).toMatch(/replica identity full/i);
+    expect(fix).toMatch(/alter publication supabase_realtime add table public\.chat_messages/i);
+    expect(fix).toMatch(/upsert_push_subscription/i);
+    expect(fix).toMatch(/grant execute on function public\.upsert_push_subscription/i);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+  });
+
   it('reasserts create_item_listing ask cents coercion for Sell listings', async () => {
     const fix = (await readFile(resolve('db/migrations/0079_fix_create_item_listing_ask_aud.sql'), 'utf8'))
       .replace(/\r\n/g, '\n');
