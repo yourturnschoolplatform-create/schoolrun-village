@@ -36,30 +36,36 @@
   --display: "Outfit", "Plus Jakarta Sans", "Nunito", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 }
 
-* { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 html {
+  width: 100%;
   max-width: 100%;
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
 }
 html, body {
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0;
   background: var(--canvas);
+  overflow-x: hidden;
 }
 body, #root {
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
   overflow-x: hidden;
 }
 button, a, input, select { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; }
-button { font: inherit; }
+button { font: inherit; max-width: 100%; }
 
 .app-shell {
-  width: min(100%, 46rem);
-  max-width: 100%;
+  width: 100%;
+  max-width: min(100%, 46rem);
   min-width: 0;
   min-height: 100vh;
   min-height: 100dvh;
@@ -352,9 +358,9 @@ button { font: inherit; }
   .app-shell {
     padding:
       calc(.85rem + env(safe-area-inset-top, 0px))
-      max(.75rem, env(safe-area-inset-right, 0px))
+      max(.65rem, env(safe-area-inset-right, 0px))
       calc(1.75rem + env(safe-area-inset-bottom, 0px))
-      max(.75rem, env(safe-area-inset-left, 0px));
+      max(.65rem, env(safe-area-inset-left, 0px));
   }
   .topbar {
     padding: .55rem .35rem .65rem;
@@ -541,6 +547,7 @@ input::placeholder { color: #99a6a2; }
   display: grid;
   gap: 1rem;
   padding-top: .55rem;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
@@ -553,11 +560,14 @@ input::placeholder { color: #99a6a2; }
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
+  box-sizing: border-box;
 }
 .quick-action {
   display: grid;
   gap: .2rem;
   justify-items: start;
+  align-content: start;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
   min-height: 5.4rem;
@@ -570,6 +580,7 @@ input::placeholder { color: #99a6a2; }
   cursor: pointer;
   text-align: left;
   overflow: hidden;
+  box-sizing: border-box;
   transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
 .quick-action:hover {
@@ -579,15 +590,21 @@ input::placeholder { color: #99a6a2; }
 }
 .quick-action__icon { font-size: 1.15rem; line-height: 1; }
 .quick-action__label {
+  display: block;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
   font-size: .78rem;
   font-weight: 800;
   letter-spacing: -.01em;
+  line-height: 1.25;
   overflow-wrap: anywhere;
   word-break: break-word;
+  hyphens: auto;
 }
 .quick-action__hint {
+  display: block;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
   color: var(--muted);
@@ -595,6 +612,7 @@ input::placeholder { color: #99a6a2; }
   font-weight: 600;
   line-height: 1.3;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 @media (max-width: 720px) {
   .quick-actions {
@@ -607,25 +625,33 @@ input::placeholder { color: #99a6a2; }
     gap: .4rem;
   }
   .quick-action {
-    min-height: 4.85rem;
-    padding: .75rem .7rem;
+    min-height: 4.6rem;
+    padding: .7rem .6rem;
     border-radius: 14px;
   }
-  .quick-action__label { font-size: .72rem; }
-  .quick-action__hint { font-size: .6rem; }
+  .quick-action:hover { transform: none; }
+  .quick-action__label { font-size: .7rem; }
+  .quick-action__hint { font-size: .58rem; }
 }
-@media (max-width: 480px) {
+/* iPhone-width: strict 2-col containment — never bleed past 50% track */
+@media (max-width: 430px) {
   .quick-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: .35rem;
   }
   .quick-action {
-    min-height: 4.55rem;
-    padding: .7rem .65rem;
+    width: 100%;
+    min-width: 0 !important;
+    max-width: 100%;
+    min-height: 4.35rem;
+    padding: .65rem .55rem;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .05);
   }
   .quick-action[data-quick-action="deals"] {
     grid-column: 1 / -1;
   }
+  .quick-action__label { font-size: .68rem; }
+  .quick-action__hint { font-size: .55rem; }
 }
 .schedule-hero {
   padding: 1.35rem 1.4rem;
@@ -955,13 +981,13 @@ input::placeholder { color: #99a6a2; }
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
+  box-sizing: border-box;
 }
 .schedule-nav::-webkit-scrollbar { display: none; }
 .schedule-tabs {
   display: grid !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  grid-auto-flow: column !important;
-  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: row;
   gap: .3rem;
   width: 100%;
   min-width: 0;
@@ -978,26 +1004,34 @@ input::placeholder { color: #99a6a2; }
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  flex: none !important;
-  width: auto !important;
-  min-width: 0;
+  gap: .15rem;
+  width: 100% !important;
+  min-width: 0 !important;
   max-width: 100%;
   min-height: 3rem;
-  padding: .65rem .35rem;
+  padding: .55rem .2rem;
   border: 0;
   border-radius: 12px;
   color: #64748B;
   background: transparent;
   cursor: pointer;
-  font-size: clamp(.7rem, 2.2vw, .84rem);
+  font-size: clamp(.68rem, 2vw, .84rem);
   font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-sizing: border-box;
   visibility: visible !important;
   opacity: 1 !important;
-  transition: background-color .16s ease, color .16s ease, transform .16s ease;
+  transition: background-color .16s ease, color .16s ease;
 }
+.schedule-tab__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.schedule-tab__label--short { display: none; }
+.schedule-tab__label--full { display: inline; }
 .schedule-tab--active {
   color: #fff;
   background: var(--coral);
@@ -1006,47 +1040,60 @@ input::placeholder { color: #99a6a2; }
 .schedule-tab[data-schedule-tab="messages"] {
   display: inline-flex !important;
   position: relative;
-  gap: .2rem;
-  padding-inline: .2rem;
+  gap: .15rem;
+  padding-inline: .15rem;
 }
 .schedule-tab__badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  min-width: 1.15rem;
-  height: 1.15rem;
-  padding: 0 .28rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 .22rem;
   border-radius: 999px;
   background: #FF6B6B;
   color: #fff;
-  font-size: .62rem;
+  font-size: .58rem;
   font-weight: 800;
   line-height: 1;
 }
 @media (max-width: 640px) {
   .schedule-tabs {
-    gap: .15rem;
-    padding: .28rem;
+    gap: .12rem;
+    padding: .25rem;
     border-radius: 14px;
   }
   .schedule-tab {
-    min-height: 2.55rem;
-    padding: .4rem .1rem;
+    min-height: 2.45rem;
+    padding: .35rem .08rem;
     border-radius: 10px;
     font-size: .62rem;
     letter-spacing: -.02em;
   }
-  .schedule-tab[data-schedule-tab="messages"] {
-    gap: .12rem;
-    padding-inline: .08rem;
-  }
+  .schedule-tab__label--full { display: none; }
+  .schedule-tab__label--short { display: inline; }
   .schedule-tab__badge {
-    min-width: .95rem;
-    height: .95rem;
-    padding: 0 .2rem;
-    font-size: .52rem;
+    min-width: .9rem;
+    height: .9rem;
+    padding: 0 .18rem;
+    font-size: .5rem;
   }
+}
+/* iPhone ~393–430px: keep all 5 tabs inside viewport — no Comm… clip */
+@media (max-width: 430px) {
+  .schedule-tabs {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: .1rem;
+    padding: .22rem;
+  }
+  .schedule-tab {
+    min-height: 2.35rem;
+    padding: .3rem .04rem;
+    font-size: .6rem;
+  }
+  .schedule-tab__label--full { display: none; }
+  .schedule-tab__label--short { display: inline; }
 }
 .inbox-toast-layer {
   position: sticky;
@@ -1194,18 +1241,6 @@ input::placeholder { color: #99a6a2; }
   .push-notify__row { flex-direction: column; }
   .push-notify__row .primary-button,
   .push-notify__row .secondary-button { width: 100%; }
-}
-@media (max-width: 420px) {
-  .schedule-tabs {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    gap: .2rem;
-    padding: .3rem;
-  }
-  .schedule-tab {
-    min-height: 2.75rem;
-    padding: .55rem .15rem;
-    font-size: .66rem;
-  }
 }
 .schedule-nav__export { display: inline-flex; margin: 0 0 1rem; }
 .match-card__actions { display: grid; gap: .55rem; margin-top: .75rem; }

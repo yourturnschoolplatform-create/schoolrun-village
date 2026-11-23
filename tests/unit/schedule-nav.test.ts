@@ -11,22 +11,30 @@ describe('Schedule dashboard navigation', () => {
     const chip = await readFile(resolve('src/components/LocationChip.tsx'), 'utf8');
     const quick = await readFile(resolve('src/components/QuickActions.tsx'), 'utf8');
 
-    expect(nav).toContain('data-schedule-tab="today"');
-    expect(nav).toContain('data-schedule-tab="calendar"');
-    expect(nav).toContain('data-schedule-tab="matches"');
-    expect(nav).toContain('data-schedule-tab="messages"');
-    expect(nav).toContain('data-schedule-tab="community"');
+    expect(nav).toContain("id: 'today'");
+    expect(nav).toContain("id: 'calendar'");
+    expect(nav).toContain("id: 'matches'");
+    expect(nav).toContain("id: 'messages'");
+    expect(nav).toContain("id: 'community'");
+    expect(nav).toContain('data-schedule-tab={tab.id}');
     expect(nav).toContain('Messages');
+    expect(nav).toContain('Community');
+    expect(nav).toContain('schedule-tab__label--short');
+    expect(nav).toContain('shortLabel');
+    expect(nav).toContain('Hub');
     expect(nav).toContain('schedule-tab__badge');
     expect(nav).toContain('messagesUnread');
+    expect(css).toContain('repeat(2, minmax(0, 1fr))');
+    expect(css).toContain('schedule-tab__label--short');
+    expect(css).toContain('overflow-x: hidden');
     expect(hub).toContain('messagesUnread={messagesUnread}');
     expect(hub).toContain('inbox-toast');
     expect(hub).toContain('inbox-toast-layer');
     expect(hub).toContain('PushEnableBanner');
     expect(hub).toContain('subscribeChatInboxAlerts');
     expect(hub).toContain('onActiveMatchRoomChange');
-    expect(nav.indexOf('schedule-tab-matches')).toBeLessThan(nav.indexOf('schedule-tab-messages'));
-    expect(nav.indexOf('schedule-tab-messages')).toBeLessThan(nav.indexOf('schedule-tab-community'));
+    expect(nav.indexOf("id: 'matches'")).toBeLessThan(nav.indexOf("id: 'messages'"));
+    expect(nav.indexOf("id: 'messages'")).toBeLessThan(nav.indexOf("id: 'community'"));
 
     expect(css).toContain('grid-template-columns: repeat(5, minmax(0, 1fr)) !important');
     expect(css).toContain('.schedule-tab[data-schedule-tab="messages"]');
@@ -46,7 +54,9 @@ describe('Schedule dashboard navigation', () => {
     expect(css).toContain('topbar__actions');
     expect(quick).toContain('min-w-0');
     expect(quick).toContain('overflow-hidden');
-    expect(quick).toContain('p-3 sm:p-4');
+    expect(quick).toContain('max-w-full');
+    expect(quick).toContain('box-border');
+    expect(quick).toContain('w-full');
 
     const html = await readFile(resolve('index.html'), 'utf8');
     expect(html).toContain('viewport-fit=cover');

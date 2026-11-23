@@ -19,6 +19,7 @@ const ACTIONS: Array<{
 
 /**
  * One-tap shortcuts for the five core SchoolRun Village modules.
+ * Mobile: strict 2-column grid with minmax(0,1fr) so right-column cards never clip.
  */
 export function QuickActions({
   onSelect,
@@ -27,7 +28,7 @@ export function QuickActions({
 }) {
   return (
     <div
-      className="quick-actions min-w-0 overflow-hidden"
+      className="quick-actions min-w-0 max-w-full w-full overflow-hidden"
       role="navigation"
       aria-label="Quick actions"
       data-quick-actions="ready"
@@ -36,7 +37,7 @@ export function QuickActions({
         <button
           key={action.id}
           type="button"
-          className="quick-action min-w-0 overflow-hidden p-3 sm:p-4"
+          className="quick-action box-border min-w-0 max-w-full w-full overflow-hidden"
           data-quick-action={action.id}
           onClick={() => onSelect(action.view, action.focus)}
         >
