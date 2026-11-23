@@ -6,6 +6,7 @@ import {
   type AdminSafetyHold,
   type AdminSuspendedUser,
 } from '../lib/admin-api';
+import { AdminHotDealsEditor } from './AdminHotDealsEditor';
 
 /**
  * Global-admin moderation dashboard.
@@ -28,6 +29,7 @@ export function AdminModerationPanel({
   const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [adminUserId, setAdminUserId] = useState<string | null>(null);
 
   const refreshData = useCallback(async () => {
     setLoading(true);
@@ -51,6 +53,14 @@ export function AdminModerationPanel({
   useEffect(() => {
     void refreshData();
   }, [refreshData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void client.auth.getUser().then(({ data }) => {
+      if (!cancelled) setAdminUserId(data.user?.id ?? null);
+    });
+    return () => { cancelled = true; };
+  }, [client]);
 
   async function run(work: () => Promise<void>, success: string) {
     setBusy(true);
@@ -203,6 +213,10 @@ export function AdminModerationPanel({
               </ul>
             )}
           </section>
+
+          {adminUserId ? (
+            <AdminHotDealsEditor client={client} userId={adminUserId} />
+          ) : null}
 
           <section className="pattern-panel" aria-labelledby={`${id}-audit`}>
             <h2 id={`${id}-audit`}>Recent moderation audit</h2>

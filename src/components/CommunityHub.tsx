@@ -46,6 +46,7 @@ export function CommunityHub({
   initialThreadId = null,
   initialPostId = null,
   initialListingId = null,
+  initialDealId = null,
   viewerSuburb = null,
 }: {
   client: SupabaseClient;
@@ -58,6 +59,8 @@ export function CommunityHub({
   initialPostId?: string | null;
   /** Deep-link into a marketplace listing detail sheet. */
   initialListingId?: string | null;
+  /** Deep-link into a Hot Deal detail sheet. */
+  initialDealId?: string | null;
   viewerSuburb?: string | null;
 }) {
   const [panel, setPanel] = useState<CommunityPanel>(initialPanel);
@@ -92,6 +95,12 @@ export function CommunityHub({
       setPanel('market');
     }
   }, [initialListingId]);
+
+  useEffect(() => {
+    if (initialDealId && initialDealId.trim()) {
+      setPanel('deals');
+    }
+  }, [initialDealId]);
 
   useEffect(() => {
     if (!shareNotice) return;
@@ -342,7 +351,11 @@ export function CommunityHub({
       ) : null}
 
       {panel === 'deals' ? (
-        <HotDealsBoard onBecomePartner={() => setPartnerOpen(true)} />
+        <HotDealsBoard
+          client={client}
+          initialDealId={initialDealId}
+          onBecomePartner={() => setPartnerOpen(true)}
+        />
       ) : null}
 
       {panel === 'discussions' ? (

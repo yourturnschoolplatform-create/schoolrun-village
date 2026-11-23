@@ -75,6 +75,7 @@ export function ScheduleHub({
   const [discussionThreadId, setDiscussionThreadId] = useState<string | null>(null);
   const [discussionPostId, setDiscussionPostId] = useState<string | null>(null);
   const [marketplaceListingId, setMarketplaceListingId] = useState<string | null>(null);
+  const [hotDealId, setHotDealId] = useState<string | null>(null);
   const [householdOpen, setHouseholdOpen] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [pickupComposeOpen, setPickupComposeOpen] = useState(false);
@@ -259,16 +260,19 @@ export function ScheduleHub({
     const thread = params.get('thread');
     const post = params.get('post');
     const listing = params.get('listing');
+    const deal = params.get('deal');
     const wantsMessages = path === '/messages' || nextView === 'messages';
 
     if (openChat && /^[0-9a-f-]{36}$/i.test(openChat)) {
       void openChatById(openChat);
-    } else if (nextView === 'community' || panel === 'discussions' || panel === 'market' || listing) {
+    } else if (nextView === 'community' || panel === 'discussions' || panel === 'market' || panel === 'deals' || listing || deal) {
       if (panel === 'discussions' || panel === 'market' || panel === 'pickup'
         || panel === 'trust' || panel === 'relay' || panel === 'deals') {
         setCommunityPanel(panel);
       } else if (listing) {
         setCommunityPanel('market');
+      } else if (deal) {
+        setCommunityPanel('deals');
       } else {
         setCommunityPanel('discussions');
       }
@@ -282,6 +286,10 @@ export function ScheduleHub({
       if (listing && /^[0-9a-f-]{36}$/i.test(listing)) {
         setMarketplaceListingId(listing);
         setCommunityPanel('market');
+      }
+      if (deal && deal.trim()) {
+        setHotDealId(deal.trim());
+        setCommunityPanel('deals');
       }
       selectView('community');
     } else if (wantsMessages) {
@@ -300,6 +308,7 @@ export function ScheduleHub({
     params.delete('thread');
     params.delete('post');
     params.delete('listing');
+    params.delete('deal');
     const qs = params.toString();
     const next = `/${qs ? `?${qs}` : ''}${window.location.hash}`;
     window.history.replaceState({}, document.title, next || '/');
@@ -536,6 +545,7 @@ export function ScheduleHub({
           initialThreadId={discussionThreadId}
           initialPostId={discussionPostId}
           initialListingId={marketplaceListingId}
+          initialDealId={hotDealId}
           viewerSuburb={registeredSuburb || null}
           onBack={() => selectView('today')}
           onOpenChat={openChatRoom}

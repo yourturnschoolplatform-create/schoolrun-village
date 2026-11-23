@@ -4156,14 +4156,122 @@ input::placeholder { color: #99a6a2; }
 .hot-deals-promo-slide strong { color: var(--navy); }
 .hot-deals-promo-slide p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.45; }
 .hot-deals-list .hot-deal-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: .75rem;
+  min-width: 0;
+}
+.hot-deal-card__hit {
+  display: grid;
   grid-template-columns: 5.75rem minmax(0, 1fr);
   align-items: start;
   gap: .85rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  box-sizing: border-box;
 }
 .hot-deal-card__brand {
   display: grid;
   gap: .35rem;
   justify-items: center;
+  min-width: 0;
+}
+.hot-deal-card__photo {
+  display: block;
+  width: 5.75rem;
+  height: 4.2rem;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
+}
+.hot-deal-card__thumb--video {
+  background: #0F172A;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.hot-deal-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  min-width: 0;
+}
+.hot-deal-card__actions .feed-card__cta {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+.hot-deal-detail__asks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .45rem .75rem;
+  min-width: 0;
+}
+.hot-deal-detail__bar {
+  grid-template-columns: auto auto minmax(0, 1fr) !important;
+  gap: .45rem;
+}
+.hot-deal-detail__bar .marketplace-share {
+  min-width: 0;
+}
+.hot-deal-detail__bar .marketplace-share__trigger {
+  min-height: 2.75rem;
+  padding: .55rem .7rem;
+  white-space: nowrap;
+}
+.hot-deal-detail__join {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hot-deal-detail__save-label {
+  font-size: .72rem;
+  font-weight: 750;
+}
+.admin-hot-deals__list {
+  display: grid;
+  gap: .45rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+.admin-hot-deals__list li {
+  display: grid;
+  gap: .15rem;
+  min-width: 0;
+}
+.admin-hot-deals__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: .65rem;
+  min-width: 0;
+}
+.admin-hot-deals__media {
+  display: grid;
+  gap: .65rem;
+  margin: 0;
+  padding: .85rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  min-width: 0;
+}
+.admin-hot-deals__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
 }
 .hot-deal-card__mark {
   display: grid;
@@ -4311,7 +4419,13 @@ input::placeholder { color: #99a6a2; }
 @media (max-width: 720px) {
   .community-banner-slider,
   .hot-deals-promo-slider { grid-template-columns: 1fr; }
-  .hot-deals-list .hot-deal-card { grid-template-columns: 1fr; }
+  .hot-deal-card__hit { grid-template-columns: 1fr; }
+  .hot-deal-detail__bar {
+    grid-template-columns: auto auto !important;
+  }
+  .hot-deal-detail__join {
+    grid-column: 1 / -1;
+  }
 }
 
 /* Dual-track payment checkout */
