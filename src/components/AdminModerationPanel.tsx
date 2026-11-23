@@ -15,9 +15,11 @@ import { AdminHotDealsEditor } from './AdminHotDealsEditor';
  */
 export function AdminModerationPanel({
   client,
+  userId,
   onClose,
 }: {
   client: SupabaseClient;
+  userId: string;
   onClose?: () => void;
 }) {
   const id = useId();
@@ -29,7 +31,6 @@ export function AdminModerationPanel({
   const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [adminUserId, setAdminUserId] = useState<string | null>(null);
 
   const refreshData = useCallback(async () => {
     setLoading(true);
@@ -54,14 +55,6 @@ export function AdminModerationPanel({
     void refreshData();
   }, [refreshData]);
 
-  useEffect(() => {
-    let cancelled = false;
-    void client.auth.getUser().then(({ data }) => {
-      if (!cancelled) setAdminUserId(data.user?.id ?? null);
-    });
-    return () => { cancelled = true; };
-  }, [client]);
-
   async function run(work: () => Promise<void>, success: string) {
     setBusy(true);
     try {
@@ -77,11 +70,11 @@ export function AdminModerationPanel({
 
   function handleSuspend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const userId = targetUserId.trim();
+    const nextUserId = targetUserId.trim();
     const code = reasonCode.trim();
-    if (!userId || !code) return;
+    if (!nextUserId || !code) return;
     void run(async () => {
-      await adminApi.suspendUser(client, userId, code);
+      await adminApi.suspendUser(client, nextUserId, code);
       setTargetUserId('');
       setReasonCode('policy_breach');
     }, 'User suspended.');
@@ -101,10 +94,22 @@ export function AdminModerationPanel({
       </p>
 
       {statusMessage && <p className="notice notice--teal" role="status">{statusMessage}</p>}
+
+      <hr className="admin-portal-divider" aria-hidden="true" />
+      <div className="feed-section__intro admin-portal-hot-deals-intro">
+        <p className="eyebrow">Hot Deals</p>
+        <h2>Manage school Hot Deals</h2>
+        <p className="section-copy">
+          Add photos, one video, a detailed description, AUD pricing and group-buy progress for parents.
+        </p>
+      </div>
+      <AdminHotDealsEditor client={client} userId={userId} />
+
       {loading ? (
-        <p className="section-copy" role="status">Loading admin dashboard…</p>
+        <p className="section-copy" role="status">Loading moderation tools…</p>
       ) : (
         <>
+          <hr className="admin-portal-divider" aria-hidden="true" />
           <section className="pattern-panel" aria-labelledby={`${id}-suspend`}>
             <h2 id={`${id}-suspend`}>Suspend user account</h2>
             <form className="stack-form" onSubmit={handleSuspend}>
@@ -213,10 +218,6 @@ export function AdminModerationPanel({
               </ul>
             )}
           </section>
-
-          {adminUserId ? (
-            <AdminHotDealsEditor client={client} userId={adminUserId} />
-          ) : null}
 
           <section className="pattern-panel" aria-labelledby={`${id}-audit`}>
             <h2 id={`${id}-audit`}>Recent moderation audit</h2>

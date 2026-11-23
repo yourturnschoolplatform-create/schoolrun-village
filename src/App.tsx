@@ -835,13 +835,25 @@ function Onboarding({ appName, client, session, invitationToken, onSignOut, open
     );
   }
   if (showModeration) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><ModeratorPanel client={client} onClose={() => setShowModeration(false)} onRefresh={refresh} schoolId={status?.roles.find((role) => role.role === 'moderator')?.school_id ?? null} /></>;
-  if (showAdminConsole) return <><AppHeader appName={appName} signedIn onSignOut={onSignOut} /><AdminModerationPanel client={client} onClose={() => setShowAdminConsole(false)} /></>;
+  if (showAdminConsole) {
+    return (
+      <>
+        <AppHeader appName={appName} signedIn onSignOut={onSignOut} />
+        <AdminModerationPanel
+          client={client}
+          userId={session.user.id}
+          onClose={() => setShowAdminConsole(false)}
+        />
+      </>
+    );
+  }
   if (showAdminVerification) {
     return (
       <>
         <AppHeader appName={appName} signedIn onSignOut={onSignOut} />
         <AdminVerificationDashboard
           client={client}
+          userId={session.user.id}
           onBack={() => {
             setShowAdminVerification(false);
             if (window.location.pathname.startsWith('/admin')) window.history.replaceState({}, '', '/');

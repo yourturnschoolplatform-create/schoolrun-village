@@ -58,8 +58,18 @@ export function AdminHotDealsEditor({
   const [tone, setTone] = useState<'teal' | 'red'>('teal');
 
   const refresh = useCallback(async () => {
-    const next = await hotDealsApi.adminList(client);
-    setDeals(next);
+    try {
+      const next = await hotDealsApi.adminList(client);
+      setDeals(next);
+      setTone('teal');
+      setMessage(null);
+    } catch (error) {
+      setDeals([]);
+      setTone('red');
+      setMessage(error instanceof Error
+        ? error.message
+        : 'Hot Deals could not be loaded for admin. Check your admin role and try again.');
+    }
   }, [client]);
 
   useEffect(() => {

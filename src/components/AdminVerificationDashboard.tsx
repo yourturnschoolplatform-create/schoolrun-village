@@ -2,16 +2,20 @@ import { useCallback, useEffect, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PendingAccountVerification } from '../../shared/account-verification';
 import { accountVerificationApi } from '../lib/account-verification-api';
+import { AdminHotDealsEditor } from './AdminHotDealsEditor';
 
 /**
  * /admin/dashboard — list pending parent verifications and approve/reject.
+ * Also hosts the Hot Deals admin editor (admin-only entry from App /admin routes).
  */
 export function AdminVerificationDashboard({
   client,
+  userId,
   onBack,
   onToast,
 }: {
   client: SupabaseClient;
+  userId: string;
   onBack: () => void;
   onToast?: (message: string) => void;
 }) {
@@ -124,6 +128,16 @@ export function AdminVerificationDashboard({
           ))}
         </ul>
       )}
+
+      <hr className="admin-portal-divider" aria-hidden="true" />
+      <div className="feed-section__intro admin-portal-hot-deals-intro">
+        <p className="eyebrow">Hot Deals</p>
+        <h2>Manage school Hot Deals</h2>
+        <p className="section-copy">
+          Add photos, one video, a detailed description, AUD pricing and group-buy progress for parents.
+        </p>
+      </div>
+      <AdminHotDealsEditor client={client} userId={userId} />
     </section>
   );
 }

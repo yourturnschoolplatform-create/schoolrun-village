@@ -4241,6 +4241,23 @@ input::placeholder { color: #99a6a2; }
   font-size: .72rem;
   font-weight: 750;
 }
+.admin-portal-divider {
+  width: 100%;
+  max-width: 100%;
+  margin: 1.35rem 0 1rem;
+  border: 0;
+  border-top: 1px solid #E2E8F0;
+}
+.admin-portal-hot-deals-intro {
+  margin-bottom: .65rem;
+}
+.admin-portal-hot-deals-intro h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.15rem;
+  font-weight: 850;
+  letter-spacing: -.02em;
+}
 .admin-hot-deals__list {
   display: grid;
   gap: .45rem;
