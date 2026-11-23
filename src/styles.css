@@ -2626,6 +2626,8 @@ input::placeholder { color: #99a6a2; }
 .chat-pin small { display: block; margin-top: .3rem; color: var(--muted); font-size: .78rem; }
 .chat-pin--listing { padding: .85rem 1rem; background: #fff; border-color: #FFE0C2; }
 .chat-pin--thread { padding: .85rem 1rem; background: #fff; border-color: #FFD8C2; }
+.chat-pin--pickup { padding: .85rem 1rem; background: #fff; border-color: #B7E4D8; }
+.chat-pin--pickup .eyebrow { color: #0F766E; }
 .chat-pin__thumb--thread { background: #FFF7F0; border-color: #FFD8C2; }
 
 .chat-room--karrot {
@@ -2758,6 +2760,15 @@ input::placeholder { color: #99a6a2; }
 .chat-quick-offers__chip:disabled {
   opacity: .55;
   cursor: not-allowed;
+}
+.chat-quick-offers__chip--accent {
+  background: #FF6F0F;
+  border-color: #FF6F0F;
+  color: #fff;
+}
+.chat-quick-offers__chip--accent:hover:not(:disabled) {
+  background: #F05700;
+  border-color: #F05700;
 }
 .chat-quick-offers__custom {
   display: grid;

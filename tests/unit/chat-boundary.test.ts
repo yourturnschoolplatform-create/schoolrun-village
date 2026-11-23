@@ -26,6 +26,10 @@ describe('Day 11 direct chat boundary', () => {
     expect(hub).toContain('Enter to send');
     expect(hub).toContain('Quick offer');
     expect(hub).toContain('Ask availability');
+    expect(hub).toContain('InstantPickupPin');
+    expect(hub).toContain("pinKind === 'instant_pickup'");
+    expect(hub).toContain('Share match code');
+    expect(hub).toContain('On my way');
     expect(hub).toContain('chatApi.subscribeMessages');
     expect(hub).toContain('readByPeer');
     const overlay = await readFile(resolve('src/components/ListingChatOverlay.tsx'), 'utf8');

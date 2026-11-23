@@ -17,8 +17,20 @@ import type { ChatRoom } from '../lib/chat-api';
 import { instantPickupApi, type InstantPickupRequest } from '../lib/instant-pickup-api';
 import { pushApi } from '../lib/push-api';
 import { getSchoolsInSuburb } from '../utils/auLocationService';
-import { MatchChatDrawer } from './MatchChatDrawer';
+import { MatchChatDrawer, type MatchPickupSummary } from './MatchChatDrawer';
 import { ParentTrustBadge } from './ParentTrustBadge';
+
+function toMatchPickupSummary(item: InstantPickupRequest): MatchPickupSummary {
+  return {
+    intent: item.intent,
+    direction: item.direction,
+    targetDate: item.targetDate,
+    areaLabel: item.areaLabel,
+    notes: item.notes,
+    status: item.status,
+    pickupAt: item.pickupAt,
+  };
+}
 
 type AreaPickOption = {
   id: string;
@@ -104,6 +116,7 @@ export function InstantPickupBoard({
   const [message, setMessage] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [matchRoom, setMatchRoom] = useState<ChatRoom | null>(null);
+  const [matchPickupSummary, setMatchPickupSummary] = useState<MatchPickupSummary | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<InstantPickupRequest | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [composeStep, setComposeStep] = useState<1 | 2 | 3>(1);
@@ -329,9 +342,10 @@ export function InstantPickupBoard({
         await refresh();
         return;
       }
-      // Prefer in-board drawer; also route to Messages if session user id is still resolving.
+      // Open Karrot-style full-screen match chat immediately (marketplace Chat 1:1 parity).
       const uid = resolvedUserId || sessionData.session.user.id;
       if (uid) setSessionUserId(uid);
+      setMatchPickupSummary(toMatchPickupSummary(result.request));
       setMatchRoom(room);
       setSelectedMatch(null);
       setToast('Private match chat opened. You can send your confirmation code.');
@@ -394,8 +408,14 @@ export function InstantPickupBoard({
         setMessage('Chat room is not ready yet.');
         return;
       }
-      if (asDrawer) setMatchRoom(room);
-      else onOpenChat(room);
+      const fromBoard = items.find((entry) => entry.id === id);
+      const summary = fromBoard ? toMatchPickupSummary(fromBoard) : null;
+      if (asDrawer) {
+        setMatchPickupSummary(summary);
+        setMatchRoom(room);
+      } else {
+        onOpenChat(room);
+      }
       setMessage(null);
       await refresh();
     } catch (err) {
@@ -973,7 +993,17 @@ export function InstantPickupBoard({
           client={client}
           userId={resolvedUserId || sessionUserId}
           room={matchRoom}
-          onClose={() => setMatchRoom(null)}
+          pickupSummary={matchPickupSummary}
+          onClose={() => {
+            setMatchRoom(null);
+            setMatchPickupSummary(null);
+          }}
+          onOpenInMessages={() => {
+            const room = matchRoom;
+            setMatchRoom(null);
+            setMatchPickupSummary(null);
+            onOpenChat(room);
+          }}
           onToast={(text) => {
             setToast(text);
             window.setTimeout(() => setToast(null), 3200);

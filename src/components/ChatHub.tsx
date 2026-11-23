@@ -7,7 +7,15 @@ import {
   type KeyboardEvent,
 } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { parseHouseholdCodeCard } from '../../shared/household-code-message';
+import {
+  encodeHouseholdCodeCard,
+  parseHouseholdCodeCard,
+} from '../../shared/household-code-message';
+import {
+  directionLabelEnglish,
+  intentLabelEnglish,
+} from '../../shared/au-location';
+import type { SchoolRunDirection, ScheduleIntent } from '../../shared/schedules';
 import { chatApi, type ChatMessage, type ChatRoom } from '../lib/chat-api';
 import { scheduleApi } from '../lib/schedule-api';
 import { PushNotifyToggle } from './PushNotifyToggle';
@@ -31,6 +39,7 @@ function peerContextLine(room: ChatRoom): string {
   if (schedule.areaLabel?.trim()) bits.push(schedule.areaLabel.trim());
   if (schedule.pinKind === 'marketplace') bits.push('School pickup');
   else if (schedule.pinKind === 'discussion') bits.push('School thread');
+  else if (schedule.pinKind === 'instant_pickup') bits.push('Pickup match');
   else if (schedule.weekdayLabel) bits.push(schedule.weekdayLabel);
   return bits.join(' · ') || 'SchoolRun Village';
 }
@@ -106,6 +115,43 @@ function ThreadSummaryPin({ room }: { room: ChatRoom }) {
   );
 }
 
+function InstantPickupPin({ room }: { room: ChatRoom }) {
+  const schedule = room.schedule;
+  const windowLabel = schedule.windowStart && schedule.windowEnd
+    ? `${schedule.windowStart.slice(0, 5)}–${schedule.windowEnd.slice(0, 5)}`
+    : schedule.windowStart
+      ? schedule.windowStart.slice(0, 5)
+      : null;
+  const notesHint = (schedule as { notes?: string | null }).notes;
+  const seatsMatch = typeof notesHint === 'string' ? notesHint.match(/(\d+)\s*seats?/i) : null;
+  const seats = seatsMatch
+    ? `${seatsMatch[1]} seat${seatsMatch[1] === '1' ? '' : 's'}`
+    : null;
+  const spot = typeof notesHint === 'string' && /school gate|gate/i.test(notesHint)
+    ? 'School gate'
+    : (schedule.areaLabel || 'School gate');
+  return (
+    <header className="chat-pin chat-pin--pickup" aria-label="Pinned pickup match">
+      <p className="eyebrow">Instant pickup match</p>
+      <strong>
+        {intentLabelEnglish(schedule.intent as ScheduleIntent)}
+        {' · '}
+        {directionLabelEnglish(schedule.direction as SchoolRunDirection)}
+      </strong>
+      <p>
+        {schedule.weekdayLabel}
+        {windowLabel ? ` · ${windowLabel}` : ''}
+        {schedule.areaLabel ? ` · ${schedule.areaLabel}` : ''}
+      </p>
+      <small>
+        {seats ? `${seats} · ` : ''}
+        {spot}
+        {' · Matched · One-time match code in chat'}
+      </small>
+    </header>
+  );
+}
+
 function SchedulePin({ room }: { room: ChatRoom }) {
   const schedule = room.schedule;
   if (schedule.pinKind === 'marketplace') {
@@ -113,6 +159,9 @@ function SchedulePin({ room }: { room: ChatRoom }) {
   }
   if (schedule.pinKind === 'discussion') {
     return <ThreadSummaryPin room={room} />;
+  }
+  if (schedule.pinKind === 'instant_pickup') {
+    return <InstantPickupPin room={room} />;
   }
   const windowLabel = schedule.windowStart && schedule.windowEnd
     ? `${schedule.windowStart.slice(0, 5)}–${schedule.windowEnd.slice(0, 5)}`
@@ -260,6 +309,23 @@ export function ChatRoomView({
     await sendBody('Hi — is this still available for suburb pickup?', { clearDraft: false });
   }
 
+  async function sendMatchConfirmationCode() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const created = await scheduleApi.createHouseholdCode(client);
+      const card = encodeHouseholdCodeCard(created.code);
+      const sent = await chatApi.send(client, room.id, card);
+      setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
+      window.requestAnimationFrame(() => scrollToLatest('smooth'));
+    } catch {
+      setError('A confirmation code could not be created or sent right now.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function sendCustomOffer(event: FormEvent) {
     event.preventDefault();
     if (!listedCents || busy) return;
@@ -296,7 +362,9 @@ export function ChatRoomView({
     ? 'No messages yet. Ask about pickup timing for this listing.'
     : room.schedule.pinKind === 'discussion'
       ? 'No messages yet. Continue this school discussion privately.'
-      : 'No messages yet. Say hello about this school run.';
+      : room.schedule.pinKind === 'instant_pickup'
+        ? 'Match chat is open. Share your one-time match code or send a quick update.'
+        : 'No messages yet. Say hello about this school run.';
 
   const canSend = Boolean(draft.trim()) && !busy;
   const goToList = onBackToList ?? onBack;
@@ -400,6 +468,47 @@ export function ChatRoomView({
                 </button>
               </div>
             )}
+          </div>
+        ) : null}
+        {room.schedule.pinKind === 'instant_pickup' ? (
+          <div className="chat-quick-offers" aria-label="Pickup quick actions">
+            <p className="chat-quick-offers__label">Quick actions</p>
+            <div className="chat-quick-offers__chips" role="group" aria-label="Pickup coordination chips">
+              <button
+                type="button"
+                className="chat-quick-offers__chip"
+                disabled={busy}
+                onClick={() => { void sendBody('On my way — see you soon.', { clearDraft: false }); }}
+              >
+                On my way
+              </button>
+              <button
+                type="button"
+                className="chat-quick-offers__chip"
+                disabled={busy}
+                onClick={() => { void sendBody('I am at the school gate now.', { clearDraft: false }); }}
+              >
+                At the school gate
+              </button>
+              <button
+                type="button"
+                className="chat-quick-offers__chip"
+                disabled={busy}
+                onClick={() => {
+                  void sendBody('Running a few minutes late — still coming.', { clearDraft: false });
+                }}
+              >
+                Running late
+              </button>
+              <button
+                type="button"
+                className="chat-quick-offers__chip chat-quick-offers__chip--accent"
+                disabled={busy}
+                onClick={() => { void sendMatchConfirmationCode(); }}
+              >
+                Share match code
+              </button>
+            </div>
           </div>
         ) : null}
       </div>
@@ -568,11 +677,14 @@ export function ChatHub({
         {rooms.map((room) => {
           const marketplace = room.schedule.pinKind === 'marketplace';
           const discussion = room.schedule.pinKind === 'discussion';
+          const instant = room.schedule.pinKind === 'instant_pickup';
           const subtitle = marketplace
             ? `${room.schedule.listingTitle || room.schedule.weekdayLabel} · ${marketplaceAskLabel(room)}`
             : discussion
               ? `${room.schedule.threadTitle || room.schedule.weekdayLabel} · Discussion`
-              : `${room.schedule.weekdayLabel} · ${room.schedule.windowStart.slice(0, 5)} · ${room.schedule.areaLabel}`;
+              : instant
+                ? `${room.schedule.weekdayLabel} · ${room.schedule.windowStart?.slice(0, 5) || 'Pickup'} · ${room.schedule.areaLabel}`
+                : `${room.schedule.weekdayLabel} · ${room.schedule.windowStart.slice(0, 5)} · ${room.schedule.areaLabel}`;
           return (
             <li key={room.id}>
               <button type="button" className="chat-inbox__item" onClick={() => setActive(room)}>
@@ -586,7 +698,9 @@ export function ChatHub({
                       ? 'Ask about this listing'
                       : discussion
                         ? 'Continue this discussion'
-                        : 'Start the conversation')}
+                        : instant
+                          ? 'Coordinate this pickup match'
+                          : 'Start the conversation')}
                 </p>
                 {room.unreadCount > 0 && (
                   <em className="chat-inbox__unread" aria-label={`${room.unreadCount} unread`}>
