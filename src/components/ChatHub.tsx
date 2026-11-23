@@ -35,6 +35,24 @@ function peerContextLine(room: ChatRoom): string {
   return bits.join(' · ') || 'SchoolRun Village';
 }
 
+function isPricedSaleListing(room: ChatRoom): boolean {
+  const schedule = room.schedule;
+  if (schedule.pinKind !== 'marketplace') return false;
+  const offer = (schedule.offerLabel || '').trim().toUpperCase();
+  const cents = schedule.askAudCents;
+  return offer === 'SALE' && typeof cents === 'number' && Number.isFinite(cents) && cents >= 100;
+}
+
+function formatOfferAud(cents: number): string {
+  const dollars = cents / 100;
+  if (Number.isInteger(dollars)) return `$${dollars} AUD`;
+  return `$${dollars.toFixed(2)} AUD`;
+}
+
+function buildOfferMessage(listedCents: number, offerCents: number): string {
+  return `Quick offer: ${formatOfferAud(offerCents)} (listed ${formatOfferAud(listedCents)}). Happy to arrange suburb pickup.`;
+}
+
 function MarketplaceListingPin({ room }: { room: ChatRoom }) {
   const schedule = room.schedule;
   const title = schedule.listingTitle || schedule.weekdayLabel || 'Marketplace listing';
@@ -125,7 +143,8 @@ export function ChatRoomView({
   onBack,
   onBackToList,
   backLabel = 'Back',
-  listLabel = 'Back to messages',
+  listLabel = 'Chat list',
+  fullScreen = false,
 }: {
   client: SupabaseClient;
   userId: string;
@@ -135,15 +154,21 @@ export function ChatRoomView({
   onBackToList?: () => void;
   backLabel?: string;
   listLabel?: string;
+  /** True when hosted in ListingChatOverlay — fills 100dvh without nested chrome. */
+  fullScreen?: boolean;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmedCodes, setConfirmedCodes] = useState<Record<string, true>>({});
+  const [customOfferDollars, setCustomOfferDollars] = useState('');
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const listedCents = room.schedule.askAudCents ?? null;
+  const showQuickOffers = isPricedSaleListing(room) && listedCents != null;
 
   const scrollToLatest = useCallback((behavior: ScrollBehavior = 'smooth') => {
     const node = bottomRef.current;
@@ -190,16 +215,15 @@ export function ChatRoomView({
     return () => { void client.removeChannel(channel); };
   }, [client, room.id, userId]);
 
-  async function send(event?: FormEvent) {
-    event?.preventDefault();
-    const body = draft.trim();
+  async function sendBody(raw: string, options?: { clearDraft?: boolean }) {
+    const body = raw.trim();
     if (!body || busy) return;
     setBusy(true);
     setError(null);
     try {
       const sent = await chatApi.send(client, room.id, body);
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
-      setDraft('');
+      if (options?.clearDraft !== false) setDraft('');
       window.requestAnimationFrame(() => {
         scrollToLatest('smooth');
         textareaRef.current?.focus();
@@ -211,10 +235,47 @@ export function ChatRoomView({
     }
   }
 
+  async function send(event?: FormEvent) {
+    event?.preventDefault();
+    await sendBody(draft);
+  }
+
   function onComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
     event.preventDefault();
     void send();
+  }
+
+  async function sendDiscountOffer(discountDollars: number) {
+    if (!listedCents || busy) return;
+    const offerCents = listedCents - discountDollars * 100;
+    if (offerCents < 100) {
+      setError('That offer would be below $1 AUD. Try a smaller discount or a custom amount.');
+      return;
+    }
+    await sendBody(buildOfferMessage(listedCents, offerCents), { clearDraft: false });
+  }
+
+  async function sendAvailabilityAsk() {
+    await sendBody('Hi — is this still available for suburb pickup?', { clearDraft: false });
+  }
+
+  async function sendCustomOffer(event: FormEvent) {
+    event.preventDefault();
+    if (!listedCents || busy) return;
+    const cleaned = customOfferDollars.trim().replace(/[$,\s]/g, '').replace(/aud/gi, '');
+    if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) {
+      setError('Enter a valid AUD offer (for example 45 or 45.00).');
+      return;
+    }
+    const dollars = Number(cleaned);
+    const offerCents = Math.round(dollars * 100);
+    if (!Number.isFinite(offerCents) || offerCents < 100 || offerCents > 99_999_900) {
+      setError('Offer must be between $1 and $999999 AUD.');
+      return;
+    }
+    setCustomOfferDollars('');
+    await sendBody(buildOfferMessage(listedCents, offerCents), { clearDraft: false });
   }
 
   async function confirmCode(code: string, messageId: string) {
@@ -239,10 +300,17 @@ export function ChatRoomView({
 
   const canSend = Boolean(draft.trim()) && !busy;
   const goToList = onBackToList ?? onBack;
+  const discountChips = showQuickOffers && listedCents != null
+    ? [5, 10].filter((dollars) => listedCents - dollars * 100 >= 100)
+    : [];
 
   return (
     <section
-      className="chat-room chat-room--karrot"
+      className={
+        fullScreen
+          ? 'chat-room chat-room--karrot chat-room--fullscreen'
+          : 'chat-room chat-room--karrot'
+      }
       aria-labelledby="chat-room-title"
       data-pin={room.schedule.pinKind || 'schedule'}
     >
@@ -266,6 +334,74 @@ export function ChatRoomView({
 
       <div className="chat-room__pin-sticky">
         <SchedulePin room={room} />
+        {room.schedule.pinKind === 'marketplace' ? (
+          <div className="chat-quick-offers" aria-label="Quick replies">
+            {showQuickOffers ? (
+              <>
+                <p className="chat-quick-offers__label">Quick offer</p>
+                <div className="chat-quick-offers__chips" role="group" aria-label="Price offer chips">
+                  {discountChips.map((dollars) => (
+                    <button
+                      key={dollars}
+                      type="button"
+                      className="chat-quick-offers__chip"
+                      disabled={busy}
+                      onClick={() => { void sendDiscountOffer(dollars); }}
+                    >
+                      −${dollars} AUD
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="chat-quick-offers__chip"
+                    disabled={busy}
+                    onClick={() => { void sendAvailabilityAsk(); }}
+                  >
+                    Ask availability
+                  </button>
+                </div>
+                <form className="chat-quick-offers__custom" onSubmit={(event) => void sendCustomOffer(event)}>
+                  <label className="visually-hidden" htmlFor={`chat-offer-${room.id}`}>
+                    Custom AUD offer
+                  </label>
+                  <span aria-hidden="true">$</span>
+                  <input
+                    id={`chat-offer-${room.id}`}
+                    inputMode="decimal"
+                    placeholder="Custom AUD"
+                    value={customOfferDollars}
+                    disabled={busy}
+                    onChange={(event) => setCustomOfferDollars(event.target.value)}
+                  />
+                  <button type="submit" disabled={busy || !customOfferDollars.trim()}>
+                    Offer
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="chat-quick-offers__chips" role="group" aria-label="Quick replies">
+                <button
+                  type="button"
+                  className="chat-quick-offers__chip"
+                  disabled={busy}
+                  onClick={() => { void sendAvailabilityAsk(); }}
+                >
+                  Ask availability
+                </button>
+                <button
+                  type="button"
+                  className="chat-quick-offers__chip"
+                  disabled={busy}
+                  onClick={() => {
+                    void sendBody('Happy to collect from suburb meetup after school.', { clearDraft: false });
+                  }}
+                >
+                  Suburb pickup OK
+                </button>
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
       <div
@@ -404,7 +540,7 @@ export function ChatHub({
         userId={userId}
         room={active}
         backLabel="Back"
-        listLabel="Back to messages"
+        listLabel="Chat list"
         onBack={() => { setActive(null); void refresh(); }}
       />
     );

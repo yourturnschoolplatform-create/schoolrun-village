@@ -24,12 +24,16 @@ describe('Day 11 direct chat boundary', () => {
     expect(hub).toContain('ChatRoomView');
     expect(hub).toContain('chat-room--karrot');
     expect(hub).toContain('Enter to send');
+    expect(hub).toContain('Quick offer');
+    expect(hub).toContain('Ask availability');
     expect(hub).toContain('chatApi.subscribeMessages');
     expect(hub).toContain('readByPeer');
     const overlay = await readFile(resolve('src/components/ListingChatOverlay.tsx'), 'utf8');
     expect(overlay).toContain('ListingChatOverlay');
     expect(overlay).toContain('ChatRoomView');
-    expect(overlay).toContain('Back to messages');
+    expect(overlay).toContain('fullScreen');
+    expect(overlay).toContain('Chat list');
+    expect(overlay).toContain("document.body.style.overflow = 'hidden'");
     const schedule = await readFile(resolve('src/components/ScheduleHub.tsx'), 'utf8');
     expect(schedule).toContain('ListingChatOverlay');
     expect(schedule).toContain("pinKind === 'marketplace'");

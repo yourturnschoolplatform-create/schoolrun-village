@@ -177,7 +177,7 @@ export function MatchChatDrawer({
             <h2 id="match-chat-title">{room.peerDisplayName}</h2>
             <p>Share a one-time household confirmation code to lock the match.</p>
           </div>
-          <button type="button" className="chat-room__list-link" onClick={onClose}>Close</button>
+          <button type="button" className="chat-room__list-link" onClick={onClose}>Chat list</button>
         </header>
 
         <button
