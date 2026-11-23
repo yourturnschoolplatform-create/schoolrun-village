@@ -173,19 +173,29 @@ export const listingsApi = {
       'id' | 'title' | 'author_id' | 'askAudCents' | 'askAudDisplay' | 'display_offer_label' | 'listingImages'
     >,
   ) => {
-    try {
-      const room = await rpc<ChatRoom>(client, 'get_or_create_listing_chat', {
-        p_listing_id: listingId,
+    const { data, error } = await client.rpc('get_or_create_listing_chat', {
+      p_listing_id: listingId,
+    });
+    if (error) {
+      const detail = [error.message, error.details, error.hint, error.code]
+        .filter(Boolean)
+        .join(' — ');
+      console.error('get_or_create_listing_chat', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        args: { p_listing_id: listingId },
       });
-      return listingSummary
-        ? withListingChatSummary(room, listingSummary)
-        : room;
-    } catch (error) {
-      throw new Error(friendlyListingContactError(
-        error instanceof Error ? error.message : String(error),
-        'chat',
-      ));
+      throw Object.assign(
+        new Error(friendlyListingContactError(detail, 'chat') || detail),
+        { cause: error },
+      );
     }
+    const room = data as ChatRoom;
+    return listingSummary
+      ? withListingChatSummary(room, listingSummary)
+      : room;
   },
   /**
    * toggle_listing_favorite(p_listing_id) — inserts or deletes listing_favorites

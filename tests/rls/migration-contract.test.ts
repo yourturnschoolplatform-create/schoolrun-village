@@ -795,4 +795,27 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
     expect(fix).toMatch(/set local search_path = pg_catalog/i);
   });
+
+  it('allows Request Match until school-local end of target_date', async () => {
+    const fix = (await readFile(resolve('db/migrations/0081_fix_instant_pickup_match_window.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/function public\.instant_pickup_match_deadline/i);
+    expect(fix).toMatch(/function public\.expire_stale_open_instant_pickup_requests/i);
+    expect(fix).toMatch(/create function public\.accept_instant_pickup_request\(p_request_id uuid\)/i);
+    expect(fix).toMatch(/instant_pickup_match_deadline\(request\)/);
+    expect(fix).toMatch(/expire_stale_open_instant_pickup_requests/);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
+  });
+
+  it('reasserts get_or_create_listing_chat for Market Chat 1:1', async () => {
+    const fix = (await readFile(resolve('db/migrations/0082_fix_get_or_create_listing_chat.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/create function public\.get_or_create_listing_chat\(p_listing_id uuid\)/i);
+    expect(fix).toMatch(/caller::text < listing\.author_id::text/);
+    expect(fix).toMatch(/grant execute on function public\.get_or_create_listing_chat/i);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(fix).not.toMatch(/pg_catalog\.least\(auth\.uid/);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
+  });
 });

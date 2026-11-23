@@ -76,5 +76,9 @@ describe('listing create payload', () => {
       .toBe('This is your own listing.');
     expect(friendlyListingContactError('authors cannot open marketplace chat with themselves', 'chat'))
       .toBe('This is your own listing.');
+    expect(friendlyListingContactError(
+      'Could not find the function public.get_or_create_listing_chat(p_listing_id) in the schema cache',
+      'chat',
+    )).toMatch(/could not find the function|schema cache/i);
   });
 });

@@ -112,7 +112,8 @@ export function friendlyListingContactError(
   raw: string | null | undefined,
   action: 'enquire' | 'chat' = 'enquire',
 ): string {
-  const text = (raw ?? '').toLowerCase();
+  const original = (raw ?? '').trim();
+  const text = original.toLowerCase();
   if (
     text.includes('own listing')
     || text.includes('their own listing')
@@ -121,7 +122,20 @@ export function friendlyListingContactError(
   ) {
     return 'This is your own listing.';
   }
-  if (text.includes('unavailable') || text.includes('42501')) {
+  if (
+    text.includes('could not find the function')
+    || text.includes('pgrst202')
+    || text.includes('schema cache')
+    || text.includes('404')
+  ) {
+    return original.length > 0 && original.length < 280
+      ? original
+      : 'Marketplace chat is updating. Refresh and try again in a moment.';
+  }
+  if (text.includes('42883') || text.includes('least(uuid') || text.includes('greatest(uuid')) {
+    return 'Marketplace chat needs a database update. Please try again after refresh.';
+  }
+  if (text.includes('unavailable') || text.includes('42501') || text.includes('membership')) {
     return 'That listing is not available for contact right now.';
   }
   if (text.includes('phone') || text.includes('email') || text.includes('photo') || text.includes('full name')) {
@@ -131,6 +145,9 @@ export function friendlyListingContactError(
     return action === 'chat'
       ? 'Chat could not open for that listing. Refresh and try again.'
       : 'That enquiry could not be sent. Refresh and try again.';
+  }
+  if (original.length > 0 && original.length < 280) {
+    return original;
   }
   return action === 'chat'
     ? 'Chat with that parent is not available right now. Try Enquire instead.'
