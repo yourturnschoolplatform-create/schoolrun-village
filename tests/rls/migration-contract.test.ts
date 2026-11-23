@@ -782,4 +782,17 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
     expect(fix).toMatch(/set local search_path = pg_catalog/i);
   });
+
+  it('keeps create_item_listing audit payload inside audit_logs_safe_payload_check', async () => {
+    const fix = (await readFile(resolve('db/migrations/0080_fix_create_item_listing_audit_log.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/create or replace function public\.create_item_listing/i);
+    expect(fix).toMatch(/insert into public\.audit_logs/i);
+    expect(fix).toMatch(/'listing\.created'/);
+    expect(fix).toMatch(/'outcome', 'created'/);
+    expect(fix).toMatch(/'reason_code', 'item_listing'/);
+    expect(fix).not.toMatch(/'area_label',\s*created\.area_label/);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
+  });
 });
