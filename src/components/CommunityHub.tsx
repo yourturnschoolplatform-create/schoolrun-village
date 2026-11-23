@@ -12,13 +12,16 @@ import { DiscussionShareButton } from './DiscussionShareButton';
 import { HotDealsBoard } from './HotDealsBoard';
 import { InstantPickupBoard } from './InstantPickupBoard';
 import { MarketplaceBoard } from './MarketplaceBoard';
+import { ParentDiscussionsPreview } from './ParentDiscussionsPreview';
 import { ParentTrustPanel } from './ParentTrustPanel';
 import { PartnerHub } from './PartnerHub';
 
 export type CommunityPanel = 'pickup' | 'market' | 'trust' | 'relay' | 'deals' | 'discussions';
 
+/** Discussions sits right after Instant Pickup so it is never buried on mobile. */
 const MODULE_TABS: Array<{ id: CommunityPanel; label: string }> = [
   { id: 'pickup', label: 'Instant Pickup' },
+  { id: 'discussions', label: 'Discussions' },
   { id: 'market', label: 'Marketplace' },
   { id: 'trust', label: 'Parent Trust' },
   { id: 'relay', label: 'Relay Share' },
@@ -224,12 +227,19 @@ export function CommunityHub({
         <h1 id="community-title">Your SchoolRun Village hub</h1>
         <p className="section-copy">
           SchoolRun Village guidelines: keep chat school-scoped, be kind at the gate,
-          and use in-app payment only for Sell and Hot Deals. Instant Pickup, Marketplace,
-          Parent Trust, Relay Share and Hot Deals stay with verified parents at your school.
+          and use in-app payment only for Sell and Hot Deals. Instant Pickup, Discussions,
+          Marketplace, Parent Trust, Relay Share and Hot Deals stay with verified parents at your school.
         </p>
       </div>
 
       <div className="community-banner-slider" aria-label="Community highlights">
+        <article className="community-banner-slide community-banner-slide--discussions">
+          <strong>Discussions</strong>
+          <p>Age-stage parenting tips and local school threads — stay connected between pickups.</p>
+          <button type="button" className="commercial-cta commercial-cta--compact" onClick={() => setPanel('discussions')}>
+            Browse Discussions
+          </button>
+        </article>
         <article className="community-banner-slide">
           <strong>Marketplace</strong>
           <p>Kids secondhand and paid Sell with Parent Trust Bands visible.</p>
@@ -267,17 +277,22 @@ export function CommunityHub({
             {tab.label}
           </button>
         ))}
-        <button
-          type="button"
-          role="tab"
-          aria-selected={panel === 'discussions'}
-          className={panel === 'discussions' ? 'community-panel-tab community-panel-tab--active' : 'community-panel-tab'}
-          data-community-panel="discussions"
-          onClick={() => setPanel('discussions')}
-        >
-          Discussions
-        </button>
       </div>
+
+      {panel !== 'discussions' ? (
+        <ParentDiscussionsPreview
+          client={client}
+          compact
+          onBrowse={() => {
+            setSelectedThreadId(null);
+            setPanel('discussions');
+          }}
+          onOpenThread={(threadId) => {
+            setSelectedThreadId(threadId);
+            setPanel('discussions');
+          }}
+        />
+      ) : null}
 
       {message && <p className="notice notice--red" role="alert">{message}</p>}
       {shareNotice ? <p className="notice notice--teal" role="status">{shareNotice}</p> : null}

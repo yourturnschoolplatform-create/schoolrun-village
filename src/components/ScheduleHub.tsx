@@ -21,6 +21,7 @@ import { CommunityHub } from './CommunityHub';
 import { InstantPickupBoard } from './InstantPickupBoard';
 import { MatchHub } from './MatchHub';
 import { PushEnableBanner } from './PushEnableBanner';
+import { ParentDiscussionsPreview } from './ParentDiscussionsPreview';
 import { QuickActions, type QuickActionFocus } from './QuickActions';
 import { normalizeScheduleNavView, ScheduleNav, type ScheduleNavView } from './ScheduleNav';
 import type { CommunityPanel } from './CommunityHub';
@@ -146,12 +147,24 @@ export function ScheduleHub({
     selectView('messages');
   }
 
+  function openDiscussions(threadId?: string | null) {
+    setCommunityPanel('discussions');
+    setDiscussionThreadId(threadId && /^[0-9a-f-]{36}$/i.test(threadId) ? threadId : null);
+    selectView('community');
+    if (typeof window === 'undefined') return;
+    window.requestAnimationFrame(() => {
+      document.getElementById('community-discussions-title')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   function selectQuickAction(next: ViewMode, focus?: QuickActionFocus) {
     const panelByFocus: Partial<Record<QuickActionFocus, CommunityPanel>> = {
       market: 'market',
       trust: 'trust',
       relay: 'relay',
       deals: 'deals',
+      discussions: 'discussions',
       instant: 'pickup',
     };
     if (focus && panelByFocus[focus] && next === 'community') {
@@ -164,6 +177,9 @@ export function ScheduleHub({
       setCommunityPanel('relay');
     } else if (focus === 'trust') {
       setCommunityPanel('trust');
+    } else if (focus === 'discussions') {
+      setCommunityPanel('discussions');
+      setDiscussionThreadId(null);
     }
     if (focus === 'instant') {
       openPickupCompose('need_help');
@@ -178,9 +194,11 @@ export function ScheduleHub({
           ? document.getElementById('hot-deals-title')
           : focus === 'trust'
             ? document.getElementById('parent-trust-title')
-            : focus === 'market' || focus === 'relay'
-              ? document.getElementById('marketplace-title')
-              : null;
+            : focus === 'discussions'
+              ? document.getElementById('community-discussions-title')
+              : focus === 'market' || focus === 'relay'
+                ? document.getElementById('marketplace-title')
+                : null;
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
@@ -566,6 +584,11 @@ export function ScheduleHub({
             composeOpen={pickupComposeOpen}
             onComposeOpenChange={setPickupComposeOpen}
             presetIntent={pickupPresetIntent}
+          />
+          <ParentDiscussionsPreview
+            client={client}
+            onBrowse={() => openDiscussions(null)}
+            onOpenThread={(threadId) => openDiscussions(threadId)}
           />
           <aside className="pattern-panel pattern-panel--friendly" aria-label="Household and admin">
             <div className="household-code household-code--compact">

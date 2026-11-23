@@ -1,6 +1,6 @@
 import type { ScheduleNavView } from './ScheduleNav';
 
-export type QuickActionFocus = 'instant' | 'market' | 'trust' | 'relay' | 'deals';
+export type QuickActionFocus = 'instant' | 'discussions' | 'market' | 'trust' | 'relay' | 'deals';
 
 const ACTIONS: Array<{
   id: string;
@@ -11,6 +11,7 @@ const ACTIONS: Array<{
   focus: QuickActionFocus;
 }> = [
   { id: 'instant', label: 'Instant Pickup', hint: 'School run / carpool', icon: '🚗', view: 'today', focus: 'instant' },
+  { id: 'discussions', label: 'Discussions', hint: 'Age-stage & school tips', icon: '💬', view: 'community', focus: 'discussions' },
   { id: 'market', label: 'Marketplace', hint: 'Kids secondhand & sell', icon: '🛒', view: 'community', focus: 'market' },
   { id: 'trust', label: 'Parent Trust', hint: 'Trust band & verify', icon: '🛡️', view: 'community', focus: 'trust' },
   { id: 'relay', label: 'Relay Share', hint: 'Free share & swap', icon: '🎁', view: 'community', focus: 'relay' },
@@ -18,7 +19,7 @@ const ACTIONS: Array<{
 ];
 
 /**
- * One-tap shortcuts for the five core SchoolRun Village modules.
+ * One-tap shortcuts for core SchoolRun Village modules (Discussions early for discoverability).
  * Mobile: strict 2-column grid with minmax(0,1fr) so right-column cards never clip.
  */
 export function QuickActions({

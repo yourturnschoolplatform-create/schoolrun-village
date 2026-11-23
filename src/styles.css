@@ -554,7 +554,7 @@ input::placeholder { color: #99a6a2; }
 }
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: .55rem;
   width: 100%;
   min-width: 0;
@@ -647,11 +647,139 @@ input::placeholder { color: #99a6a2; }
     padding: .65rem .55rem;
     box-shadow: 0 4px 12px rgba(15, 23, 42, .05);
   }
-  .quick-action[data-quick-action="deals"] {
-    grid-column: 1 / -1;
+  .quick-action[data-quick-action="deals"],
+  .quick-action[data-quick-action="relay"] {
+    grid-column: auto;
   }
   .quick-action__label { font-size: .68rem; }
   .quick-action__hint { font-size: .55rem; }
+}
+.parent-discussions-preview {
+  display: grid;
+  gap: .85rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: .25rem 0 1rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background:
+    linear-gradient(165deg, rgba(14, 165, 233, .08), rgba(255, 255, 255, .95) 42%),
+    var(--surface);
+  box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+.parent-discussions-preview--compact {
+  margin: 0 0 1rem;
+  padding: .9rem .95rem;
+}
+.parent-discussions-preview__intro {
+  display: grid;
+  gap: .75rem;
+  align-items: start;
+  min-width: 0;
+}
+.parent-discussions-preview__copy {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+}
+.parent-discussions-preview__copy h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.05rem;
+  font-weight: 850;
+  letter-spacing: -.02em;
+  overflow-wrap: anywhere;
+}
+.parent-discussions-preview__cta {
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+}
+.parent-discussions-preview__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.parent-discussions-preview__pill {
+  max-width: 100%;
+  min-height: 2.15rem;
+  padding: .4rem .7rem;
+  border: 1px solid #E2E8F0;
+  border-radius: .75rem;
+  background: #fff;
+  color: #0F172A;
+  cursor: pointer;
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 700;
+  text-align: left;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+.parent-discussions-preview__pill:hover {
+  border-color: #BAE6FD;
+  background: #F0F9FF;
+}
+.parent-discussions-preview__topics {
+  display: grid;
+  gap: .4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.parent-discussions-preview__topic {
+  display: grid;
+  gap: .15rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: .7rem .75rem;
+  border: 1px solid #E2E8F0;
+  border-radius: .85rem;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  box-sizing: border-box;
+}
+.parent-discussions-preview__topic:hover {
+  border-color: #BAE6FD;
+  background: #F8FBFF;
+}
+.parent-discussions-preview__topic-title {
+  color: #0F172A;
+  font-size: .9rem;
+  font-weight: 750;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.parent-discussions-preview__topic-meta {
+  color: #64748B;
+  font-size: .75rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.parent-discussions-preview__empty {
+  margin: 0;
+}
+@media (min-width: 560px) {
+  .parent-discussions-preview__intro {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+  .parent-discussions-preview__cta {
+    width: auto;
+    min-width: 11rem;
+  }
 }
 .today-panel {
   display: grid;
@@ -3795,22 +3923,37 @@ input::placeholder { color: #99a6a2; }
 .commercial-cta--compact { min-height: 2.45rem; padding: .5rem .85rem; font-size: .78rem; width: auto; }
 .community-banner-slider {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .65rem;
   margin: .35rem 0 1rem;
+  min-width: 0;
+  max-width: 100%;
+}
+@media (min-width: 900px) {
+  .community-banner-slider {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 .community-banner-slide {
   display: grid;
   gap: .45rem;
   align-content: start;
+  min-width: 0;
   padding: 1rem;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: #fff;
   box-shadow: var(--shadow-card);
+  box-sizing: border-box;
 }
-.community-banner-slide strong { color: var(--navy); font-size: .95rem; }
-.community-banner-slide p { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.45; }
+.community-banner-slide strong { color: var(--navy); font-size: .95rem; overflow-wrap: anywhere; }
+.community-banner-slide p { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.45; overflow-wrap: anywhere; }
+.community-banner-slide--discussions {
+  background:
+    linear-gradient(160deg, rgba(14, 165, 233, .14), rgba(30, 58, 138, .05)),
+    #fff;
+  border-color: #BAE6FD;
+}
 .community-banner-slide--deals,
 .community-banner-slide--partner {
   background:
@@ -3828,17 +3971,26 @@ input::placeholder { color: #99a6a2; }
   border-radius: 16px;
   background: #FAFAFA;
   box-shadow: var(--shadow-card);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .community-panel-tabs--modules {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-@media (min-width: 640px) {
+@media (min-width: 520px) {
+  .community-panel-tabs--modules {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 900px) {
   .community-panel-tabs--modules {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
 .community-panel-tab {
   min-height: 2.75rem;
+  min-width: 0;
   padding: .55rem .4rem;
   border: 0;
   border-radius: 12px;
@@ -3846,8 +3998,14 @@ input::placeholder { color: #99a6a2; }
   color: #64748B;
   cursor: pointer;
   font: inherit;
-  font-size: .82rem;
+  font-size: .78rem;
   font-weight: 800;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+.community-panel-tab[data-community-panel="discussions"]:not(.community-panel-tab--active) {
+  color: #0369A1;
+  background: rgba(14, 165, 233, .08);
 }
 .community-panel-tab--active {
   color: #fff;
