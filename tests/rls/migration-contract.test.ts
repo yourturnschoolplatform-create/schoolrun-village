@@ -723,6 +723,19 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(fix).toMatch(/set local search_path = pg_catalog/i);
   });
 
+  it('orders chat peer uuids without pg_catalog.least/greatest', async () => {
+    const fix = (await readFile(resolve('db/migrations/0077_fix_get_instant_pickup_chat_uuid_least.sql'), 'utf8'))
+      .replace(/\r\n/g, '\n');
+    expect(fix).toMatch(/create function public\.get_instant_pickup_chat\(p_request_id uuid\)/i);
+    expect(fix).toMatch(/when request\.requester_id::text < request\.matched_user_id::text/i);
+    expect(fix).toMatch(/create function public\.accept_instant_pickup_request\(p_request_id uuid\)/i);
+    expect(fix).toMatch(/when caller::text < request\.requester_id::text/i);
+    expect(fix).not.toMatch(/pg_catalog\.least\(/i);
+    expect(fix).not.toMatch(/pg_catalog\.greatest\(/i);
+    expect(fix).toMatch(/notify pgrst, 'reload schema'/i);
+    expect(fix).toMatch(/set local search_path = pg_catalog/i);
+  });
+
   it('adds neighbourhood marketplace suburb scope without storing live GPS', async () => {
     const neighbourhood = (await readFile(resolve('db/migrations/0073_marketplace_neighbourhood_scope.sql'), 'utf8'))
       .replace(/\r\n/g, '\n');
