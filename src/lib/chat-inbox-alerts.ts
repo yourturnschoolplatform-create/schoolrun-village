@@ -110,7 +110,10 @@ export function subscribeChatInboxAlerts(
         };
         const old = payload.old as { status?: string } | undefined;
         if (!row?.id) return;
-        if (row.status !== 'matched' || old?.status === 'matched') return;
+        // Prefer transition-to-matched. If Realtime omits OLD (no FULL replica identity),
+        // still toast once when status is matched and we are a party.
+        if (row.status !== 'matched') return;
+        if (old && typeof old.status === 'string' && old.status === 'matched') return;
         if (row.requester_id !== userId && row.matched_user_id !== userId) return;
 
         void refreshUnread();

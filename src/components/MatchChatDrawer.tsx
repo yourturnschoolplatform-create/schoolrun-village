@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { encodeHouseholdCodeCard, parseHouseholdCodeCard } from '../../shared/household-code-message';
 import { chatApi, type ChatMessage, type ChatRoom } from '../lib/chat-api';
-import { pushApi } from '../lib/push-api';
 import { scheduleApi } from '../lib/schedule-api';
 
 function formatClock(value: string): string {
@@ -93,9 +92,6 @@ export function MatchChatDrawer({
       setMessages((current) => current.map((message) => (
         message.id === optimisticId ? sent : message
       )));
-      const { data: sessionData } = await client.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (token) void pushApi.notifyChatPeer(token, room.id, body);
     } catch (err) {
       console.error('Failed to send chat message:', err);
       setMessages((current) => current.filter((message) => message.id !== optimisticId));
@@ -115,9 +111,6 @@ export function MatchChatDrawer({
       const card = encodeHouseholdCodeCard(created.code);
       const sent = await chatApi.send(client, room.id, card);
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
-      const { data: sessionData } = await client.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (token) void pushApi.notifyChatPeer(token, room.id, 'Household confirmation code');
       onToast?.('Confirmation code sent in chat.');
     } catch {
       setError('A confirmation code could not be created or sent right now.');

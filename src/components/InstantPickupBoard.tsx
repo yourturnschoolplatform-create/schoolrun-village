@@ -336,8 +336,7 @@ export function InstantPickupBoard({
       setSelectedMatch(null);
       setToast('Private match chat opened. You can send your confirmation code.');
       setMessage('Match requested. Share your household confirmation code in chat when ready.');
-      const token = sessionData.session.access_token;
-      if (token) void pushApi.notifyMatchPeer(token, id, room.id);
+      void pushApi.notifyMatchPeerFromClient(client, id, room.id);
       if (!uid) onOpenChat(room);
       await refresh();
     } catch (err) {

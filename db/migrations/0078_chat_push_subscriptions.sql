@@ -232,17 +232,26 @@ revoke all on function public.list_push_targets_for_pickup_peer(uuid)
   from public, anon, authenticated;
 grant execute on function public.list_push_targets_for_pickup_peer(uuid) to authenticated;
 
--- Ensure match board changes are realtime-visible for in-app toasts.
+-- Ensure chat + match board changes are realtime-visible for badge / toast / title.
 do $$
 begin
-  if exists (select 1 from pg_catalog.pg_publication where pubname = 'supabase_realtime')
-    and not exists (
+  if exists (select 1 from pg_catalog.pg_publication where pubname = 'supabase_realtime') then
+    if not exists (
+      select 1 from pg_catalog.pg_publication_tables
+      where pubname = 'supabase_realtime'
+        and schemaname = 'public'
+        and tablename = 'chat_messages'
+    ) then
+      execute 'alter publication supabase_realtime add table public.chat_messages';
+    end if;
+    if not exists (
       select 1 from pg_catalog.pg_publication_tables
       where pubname = 'supabase_realtime'
         and schemaname = 'public'
         and tablename = 'instant_pickup_requests'
     ) then
-    execute 'alter publication supabase_realtime add table public.instant_pickup_requests';
+      execute 'alter publication supabase_realtime add table public.instant_pickup_requests';
+    end if;
   end if;
 exception
   when others then

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { parseHouseholdCodeCard } from '../../shared/household-code-message';
 import { chatApi, type ChatMessage, type ChatRoom } from '../lib/chat-api';
-import { pushApi } from '../lib/push-api';
 import { scheduleApi } from '../lib/schedule-api';
 import { PushNotifyToggle } from './PushNotifyToggle';
 
@@ -170,9 +169,6 @@ function ChatRoomView({
       const sent = await chatApi.send(client, room.id, body);
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       setDraft('');
-      const { data: sessionData } = await client.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (token) void pushApi.notifyChatPeer(token, room.id, body);
     } catch {
       setError('That message could not be sent. Keep it phone-free and try again.');
     } finally {

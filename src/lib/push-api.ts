@@ -160,31 +160,37 @@ export const pushApi = {
   },
 
   /**
-   * Prefer Supabase Edge Function `send-chat-push`; fall back to Express `/api/push/*`.
+   * POST /functions/v1/send-chat-push
+   * Body: { kind: "chat", roomId, preview }
+   * Fire-and-forget — never throws into chat UX.
    */
-  notifyChatPeer: async (accessToken: string, roomId: string, preview: string): Promise<void> => {
+  notifyChatPeer: async (
+    accessToken: string,
+    roomId: string,
+    preview: string,
+  ): Promise<void> => {
     const body = {
       kind: 'chat' as const,
       roomId,
-      preview: preview.slice(0, 120),
+      preview: sanitizeChatPreview(preview),
     };
     const ok = await postSendChatPush(accessToken, body);
     if (ok) return;
-    try {
-      await fetch('/api/push/notify-chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ roomId, preview: body.preview }),
-      });
-    } catch {
-      /* best-effort */
-    }
+    await postExpressFallback('/api/push/notify-chat', accessToken, {
+      roomId,
+      preview: body.preview,
+    });
   },
 
-  notifyMatchPeer: async (accessToken: string, requestId: string, roomId: string | null): Promise<void> => {
+  /**
+   * POST /functions/v1/send-chat-push
+   * Body: { kind: "match", requestId, roomId? }
+   */
+  notifyMatchPeer: async (
+    accessToken: string,
+    requestId: string,
+    roomId: string | null,
+  ): Promise<void> => {
     const body = {
       kind: 'match' as const,
       requestId,
@@ -192,41 +198,125 @@ export const pushApi = {
     };
     const ok = await postSendChatPush(accessToken, body);
     if (ok) return;
-    try {
-      await fetch('/api/push/notify-match', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ requestId, roomId }),
-      });
-    } catch {
-      /* best-effort */
-    }
+    await postExpressFallback('/api/push/notify-match', accessToken, {
+      requestId,
+      roomId,
+    });
+  },
+
+  /** Resolve session from Supabase client, then notify chat peer (best-effort). */
+  notifyChatPeerFromClient: async (
+    client: SupabaseClient,
+    roomId: string,
+    preview: string,
+  ): Promise<void> => {
+    const token = await readAccessToken(client);
+    if (!token) return;
+    await pushApi.notifyChatPeer(token, roomId, preview);
+  },
+
+  /** Resolve session from Supabase client, then notify match peer (best-effort). */
+  notifyMatchPeerFromClient: async (
+    client: SupabaseClient,
+    requestId: string,
+    roomId: string | null,
+  ): Promise<void> => {
+    const token = await readAccessToken(client);
+    if (!token) return;
+    await pushApi.notifyMatchPeer(token, requestId, roomId);
   },
 };
 
-function readSupabaseFunctionsBase(): string | null {
+function sanitizeChatPreview(raw: string): string {
+  const text = (raw ?? '').trim();
+  if (!text) return 'New message';
+  // Never push the raw one-time household confirmation code payload.
+  if (/^HOUSEHOLD_CONFIRM_CODE::/i.test(text)) {
+    return 'Household confirmation code';
+  }
+  return text.slice(0, 120).replace(/\+?\d[\d\s()-]{7,}\d/g, '•••');
+}
+
+async function readAccessToken(client: SupabaseClient): Promise<string | null> {
   try {
-    const env = (import.meta as ImportMeta & {
-      env?: { VITE_SUPABASE_URL?: string; NEXT_PUBLIC_SUPABASE_URL?: string };
-    }).env;
-    const url = (env?.VITE_SUPABASE_URL || env?.NEXT_PUBLIC_SUPABASE_URL || '').trim().replace(/\/+$/, '');
-    return url ? `${url}/functions/v1` : null;
+    const { data } = await client.auth.getSession();
+    return data.session?.access_token?.trim() || null;
   } catch {
     return null;
   }
 }
 
+type MetaEnv = {
+  VITE_SUPABASE_URL?: string;
+  NEXT_PUBLIC_SUPABASE_URL?: string;
+  YOURTURN_SUPABASE_URL?: string;
+  VITE_SUPABASE_ANON_KEY?: string;
+  NEXT_PUBLIC_SUPABASE_ANON_KEY?: string;
+  YOURTURN_SUPABASE_ANON_KEY?: string;
+};
+
+function readMetaEnv(): MetaEnv {
+  try {
+    return ((import.meta as ImportMeta & { env?: MetaEnv }).env) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function readSupabaseFunctionsConfig(): { base: string; anonKey: string } | null {
+  const env = readMetaEnv();
+  const url = (
+    env.YOURTURN_SUPABASE_URL
+    || env.VITE_SUPABASE_URL
+    || env.NEXT_PUBLIC_SUPABASE_URL
+    || ''
+  ).trim().replace(/\/+$/, '');
+  const anonKey = (
+    env.YOURTURN_SUPABASE_ANON_KEY
+    || env.VITE_SUPABASE_ANON_KEY
+    || env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    || ''
+  ).replace(/\s/g, '');
+  if (!url) return null;
+  return { base: `${url}/functions/v1`, anonKey };
+}
+
 async function postSendChatPush(
   accessToken: string,
-  body: Record<string, unknown>,
+  body: { kind: 'chat' | 'match' } & Record<string, unknown>,
 ): Promise<boolean> {
-  const base = readSupabaseFunctionsBase();
-  if (!base) return false;
+  const config = readSupabaseFunctionsConfig();
+  if (!config) return false;
   try {
-    const response = await fetch(`${base}/send-chat-push`, {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    };
+    // Supabase gateway expects apikey alongside the user JWT.
+    if (config.anonKey) headers.apikey = config.anonKey;
+
+    const response = await fetch(`${config.base}/send-chat-push`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      console.error('send-chat-push', { status: response.status, kind: body.kind });
+    }
+    return response.ok;
+  } catch (error) {
+    console.error('send-chat-push', error instanceof Error ? error.message : 'network');
+    return false;
+  }
+}
+
+async function postExpressFallback(
+  path: string,
+  accessToken: string,
+  body: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await fetch(path, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -234,8 +324,7 @@ async function postSendChatPush(
       },
       body: JSON.stringify(body),
     });
-    return response.ok;
   } catch {
-    return false;
+    /* best-effort */
   }
 }

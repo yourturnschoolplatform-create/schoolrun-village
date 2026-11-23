@@ -763,6 +763,8 @@ describe('Day 1 through Day 4 RLS migration contract', () => {
     expect(push).toMatch(/function public\.delete_push_subscription/i);
     expect(push).toMatch(/function public\.list_push_targets_for_chat_peer/i);
     expect(push).toMatch(/function public\.list_push_targets_for_pickup_peer/i);
+    expect(push).toMatch(/alter publication supabase_realtime add table public\.chat_messages/i);
+    expect(push).toMatch(/alter publication supabase_realtime add table public\.instant_pickup_requests/i);
     expect(push).toMatch(/notify pgrst, 'reload schema'/i);
     expect(push).toMatch(/set local search_path = pg_catalog/i);
     expect(push).not.toMatch(

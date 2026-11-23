@@ -2,6 +2,8 @@
 
 Supabase Edge Function that delivers Karrot-style Web Push alerts for chat messages and pickup matches.
 
+Uses `@block65/webcrypto-web-push` (Web Crypto). Do **not** use Node `web-push` here — Deno lacks `crypto.ECDH`.
+
 ## Secrets
 
 Set in the Supabase project (Dashboard → Edge Functions → Secrets, or `supabase secrets set`):
@@ -14,6 +16,10 @@ Set in the Supabase project (Dashboard → Edge Functions → Secrets, or `supab
 | `SUPABASE_URL` | auto | Usually injected |
 | `SUPABASE_ANON_KEY` | auto | Usually injected |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | Deletes expired (404/410) rows in `push_subscriptions` |
+
+```bash
+supabase secrets set VAPID_PRIVATE_KEY="..." VITE_VAPID_PUBLIC_KEY="..."
+```
 
 ## Deploy
 

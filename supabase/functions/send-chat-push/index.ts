@@ -3,7 +3,7 @@
  *
  * Secrets (Deno.env):
  *   VAPID_PRIVATE_KEY
- *   VITE_VAPID_PUBLIC_KEY or VAPID_PUBLIC_KEY
+ *   VITE_VAPID_PUBLIC_KEY (or VAPID_PUBLIC_KEY)
  *   VAPID_SUBJECT (optional, default mailto:)
  *   SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
  *
@@ -13,9 +13,12 @@
  *
  * Caller must send Authorization: Bearer <user JWT>.
  * Expired endpoints (404/410) are removed from push_subscriptions.
+ *
+ * Uses @block65/webcrypto-web-push (Web Crypto) — Node's `web-push` package
+ * does not work on Supabase Edge / Deno (crypto.ECDH missing).
  */
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
-import webpush from "npm:web-push@4.0.0";
+import { buildPushPayload } from "npm:@block65/webcrypto-web-push@1.0.1";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -51,9 +54,12 @@ function env(name: string): string {
 }
 
 function readVapid(): { publicKey: string; privateKey: string; subject: string } | null {
-  const publicKey = env("VITE_VAPID_PUBLIC_KEY") || env("VAPID_PUBLIC_KEY");
-  const privateKey = env("VAPID_PRIVATE_KEY");
-  const subject = env("VAPID_SUBJECT") || "mailto:support@schoolrunvillage.local";
+  const publicKey = Deno.env.get("VITE_VAPID_PUBLIC_KEY")?.trim()
+    || Deno.env.get("VAPID_PUBLIC_KEY")?.trim()
+    || "";
+  const privateKey = Deno.env.get("VAPID_PRIVATE_KEY")?.trim() || "";
+  const subject = Deno.env.get("VAPID_SUBJECT")?.trim()
+    || "mailto:support@schoolrunvillage.local";
   if (!publicKey || !privateKey) return null;
   return { publicKey, privateKey, subject };
 }
@@ -167,8 +173,7 @@ Deno.serve(async (request) => {
     };
   }
 
-  webpush.setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
-
+  const messageData = JSON.stringify(payload);
   let sent = 0;
   const gone: string[] = [];
 
@@ -180,21 +185,41 @@ Deno.serve(async (request) => {
     ) return;
 
     try {
-      await webpush.sendNotification(
+      const requestInit = await buildPushPayload(
+        {
+          data: messageData,
+          options: { ttl: 60 * 60, urgency: "high" },
+        },
         {
           endpoint: target.endpoint,
+          expirationTime: null,
           keys: { p256dh: target.p256dh, auth: target.auth },
         },
-        JSON.stringify(payload),
-        { TTL: 60 * 60 },
+        {
+          subject: vapid.subject,
+          publicKey: vapid.publicKey,
+          privateKey: vapid.privateKey,
+        },
       );
-      sent += 1;
+
+      const response = await fetch(target.endpoint, requestInit);
+      if (response.status === 404 || response.status === 410) {
+        gone.push(target.endpoint);
+        return;
+      }
+      if (response.ok || response.status === 201) {
+        sent += 1;
+        return;
+      }
+      console.error("webpush_send_failed", response.status);
     } catch (error) {
       const status = typeof error === "object" && error && "statusCode" in error
         ? Number((error as { statusCode?: unknown }).statusCode)
         : 0;
       if (status === 404 || status === 410) {
         gone.push(target.endpoint);
+      } else {
+        console.error("webpush_send_error", status || "unknown");
       }
     }
   }));

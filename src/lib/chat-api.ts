@@ -1,4 +1,5 @@
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
+import { pushApi } from './push-api';
 
 export type ChatSchedulePin = {
   patternId: string;
@@ -148,8 +149,16 @@ export const chatApi = {
       p_before: before ?? null,
       p_limit: 50,
     }),
-  send: (client: SupabaseClient, roomId: string, body: string) =>
-    rpc<ChatMessage>(client, 'send_chat_message', { p_room_id: roomId, p_body: body }),
+  send: async (client: SupabaseClient, roomId: string, body: string) => {
+    const sent = await rpc<ChatMessage>(client, 'send_chat_message', {
+      p_room_id: roomId,
+      p_body: body,
+    });
+    // After a successful send: notify peer via Edge Function send-chat-push.
+    // Never blocks or fails the chat UX (Realtime badge/toast still independent).
+    void pushApi.notifyChatPeerFromClient(client, roomId, body);
+    return sent;
+  },
   markRead: (client: SupabaseClient, roomId: string) =>
     rpc<{ roomId: string; lastReadAt: string }>(client, 'mark_chat_room_read', { p_room_id: roomId }),
   /**
