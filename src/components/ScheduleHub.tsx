@@ -71,6 +71,8 @@ export function ScheduleHub({
   const [newHouseholdCode, setNewHouseholdCode] = useState<string | null>(null);
   const [householdCodeInput, setHouseholdCodeInput] = useState('');
   const [communityPanel, setCommunityPanel] = useState<CommunityPanel>('market');
+  const [discussionThreadId, setDiscussionThreadId] = useState<string | null>(null);
+  const [discussionPostId, setDiscussionPostId] = useState<string | null>(null);
   const [householdOpen, setHouseholdOpen] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [pickupComposeOpen, setPickupComposeOpen] = useState(false);
@@ -223,7 +225,8 @@ export function ScheduleHub({
     applyUnreadDocumentTitle(messagesUnread);
   }, [messagesUnread]);
 
-  // Deep link from Web Push: /messages, /messages?openChat=<id>, /?view=messages|calendar, /?openChat=<id>
+  // Deep link from Web Push / Share:
+  // /?view=messages&openChat=<id>, /?view=community&panel=discussions&thread=<id>
   // Legacy ?view=calendar redirects cleanly to Today.
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -231,10 +234,28 @@ export function ScheduleHub({
     const path = window.location.pathname.replace(/\/+$/, '') || '/';
     const openChat = params.get('openChat') || params.get('room');
     const nextView = params.get('view');
+    const panel = params.get('panel');
+    const thread = params.get('thread');
+    const post = params.get('post');
     const wantsMessages = path === '/messages' || nextView === 'messages';
 
     if (openChat && /^[0-9a-f-]{36}$/i.test(openChat)) {
       void openChatById(openChat);
+    } else if (nextView === 'community' || panel === 'discussions') {
+      if (panel === 'discussions' || panel === 'market' || panel === 'pickup'
+        || panel === 'trust' || panel === 'relay' || panel === 'deals') {
+        setCommunityPanel(panel);
+      } else {
+        setCommunityPanel('discussions');
+      }
+      if (thread && /^[0-9a-f-]{36}$/i.test(thread)) {
+        setDiscussionThreadId(thread);
+        setCommunityPanel('discussions');
+      }
+      if (post && /^[0-9a-f-]{36}$/i.test(post)) {
+        setDiscussionPostId(post);
+      }
+      selectView('community');
     } else if (wantsMessages) {
       selectView('messages');
     } else if (nextView) {
@@ -247,6 +268,9 @@ export function ScheduleHub({
     params.delete('room');
     params.delete('view');
     params.delete('chatKind');
+    params.delete('panel');
+    params.delete('thread');
+    params.delete('post');
     const qs = params.toString();
     const next = `/${qs ? `?${qs}` : ''}${window.location.hash}`;
     window.history.replaceState({}, document.title, next || '/');
@@ -480,6 +504,8 @@ export function ScheduleHub({
           client={client}
           userId={userId}
           initialPanel={communityPanel}
+          initialThreadId={discussionThreadId}
+          initialPostId={discussionPostId}
           viewerSuburb={registeredSuburb || null}
           onBack={() => selectView('today')}
           onOpenChat={openChatRoom}

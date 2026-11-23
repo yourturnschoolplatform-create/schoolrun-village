@@ -8,6 +8,7 @@ import {
   type CommunityThread,
 } from '../lib/community-api';
 import { chatApi, withThreadChatSummary, type ChatRoom } from '../lib/chat-api';
+import { DiscussionShareButton } from './DiscussionShareButton';
 import { HotDealsBoard } from './HotDealsBoard';
 import { InstantPickupBoard } from './InstantPickupBoard';
 import { MarketplaceBoard } from './MarketplaceBoard';
@@ -34,6 +35,8 @@ export function CommunityHub({
   onBack,
   onOpenChat,
   initialPanel = 'market',
+  initialThreadId = null,
+  initialPostId = null,
   viewerSuburb = null,
 }: {
   client: SupabaseClient;
@@ -41,12 +44,16 @@ export function CommunityHub({
   onBack: () => void;
   onOpenChat?: (room: ChatRoom) => void;
   initialPanel?: CommunityPanel;
+  /** Deep-link into a discussion thread (from Share URLs). */
+  initialThreadId?: string | null;
+  initialPostId?: string | null;
   viewerSuburb?: string | null;
 }) {
   const [panel, setPanel] = useState<CommunityPanel>(initialPanel);
   const [partnerOpen, setPartnerOpen] = useState(false);
   const [threads, setThreads] = useState<CommunityThread[]>([]);
-  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(initialThreadId);
+  const [focusPostId] = useState<string | null>(initialPostId);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [commentsByPost, setCommentsByPost] = useState<Record<string, CommunityComment[]>>({});
   const [title, setTitle] = useState('');
@@ -55,10 +62,24 @@ export function CommunityHub({
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
 
   useEffect(() => {
     setPanel(initialPanel);
   }, [initialPanel]);
+
+  useEffect(() => {
+    if (initialThreadId && /^[0-9a-f-]{36}$/i.test(initialThreadId)) {
+      setPanel('discussions');
+      setSelectedThreadId(initialThreadId);
+    }
+  }, [initialThreadId]);
+
+  useEffect(() => {
+    if (!shareNotice) return;
+    const timer = window.setTimeout(() => setShareNotice(null), 2800);
+    return () => window.clearTimeout(timer);
+  }, [shareNotice]);
 
   const refreshThreads = useCallback(async () => {
     try {
@@ -88,6 +109,12 @@ export function CommunityHub({
   useEffect(() => {
     if (selectedThreadId) void refreshThread(selectedThreadId);
   }, [refreshThread, selectedThreadId]);
+
+  useEffect(() => {
+    if (!focusPostId || !posts.some((post) => post.id === focusPostId)) return;
+    const node = document.getElementById(`discussion-post-${focusPostId}`);
+    node?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [focusPostId, posts]);
 
   async function createThread(event: FormEvent) {
     event.preventDefault();
@@ -244,6 +271,7 @@ export function CommunityHub({
       </div>
 
       {message && <p className="notice notice--red" role="alert">{message}</p>}
+      {shareNotice ? <p className="notice notice--teal" role="status">{shareNotice}</p> : null}
 
       {panel === 'pickup' ? (
         <InstantPickupBoard
@@ -337,6 +365,13 @@ export function CommunityHub({
                     >
                       Open thread
                     </button>
+                    <DiscussionShareButton
+                      threadId={thread.id}
+                      threadTitle={thread.title}
+                      excerpt={thread.title}
+                      kind="thread"
+                      onFeedback={setShareNotice}
+                    />
                   </div>
                 </li>
               ))}
@@ -349,13 +384,23 @@ export function CommunityHub({
               aria-labelledby="thread-posts-title"
             >
               <div className="discussion-detail__head">
-                <button
-                  type="button"
-                  className="text-button"
-                  onClick={() => setSelectedThreadId(null)}
-                >
-                  Back to threads
-                </button>
+                <div className="discussion-detail__head-row">
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() => setSelectedThreadId(null)}
+                  >
+                    Back to threads
+                  </button>
+                  <DiscussionShareButton
+                    threadId={selectedThread.id}
+                    threadTitle={selectedThread.title}
+                    excerpt={posts[0]?.body ?? selectedThread.title}
+                    kind="thread"
+                    compact
+                    onFeedback={setShareNotice}
+                  />
+                </div>
                 <p className="eyebrow">Discussion</p>
                 <h2 id="thread-posts-title" className="section-heading">{selectedThread.title}</h2>
                 <small className="feed-card__byline">
@@ -367,7 +412,7 @@ export function CommunityHub({
 
               <ul className="feed-list discussion-detail__posts">
                 {posts.map((post) => (
-                  <li key={post.id} className="feed-card">
+                  <li key={post.id} className="feed-card" id={`discussion-post-${post.id}`}>
                     <div className="feed-card__top">
                       <strong>{post.author_display_name}</strong>
                       <span className="feed-card__status">{statusLabelEnglish(post.status)}</span>
@@ -382,19 +427,41 @@ export function CommunityHub({
                       >
                         {post.liked_by_me ? 'Unlike' : 'Like'} ({post.like_count})
                       </button>
+                      <DiscussionShareButton
+                        threadId={selectedThread.id}
+                        threadTitle={selectedThread.title}
+                        excerpt={post.body}
+                        postId={post.id}
+                        kind="post"
+                        onFeedback={setShareNotice}
+                      />
                     </div>
                     <ul className="feed-card__comments">
                       {(commentsByPost[post.id] ?? []).map((comment) => (
-                        <li key={comment.id}>
-                          <span>{comment.author_display_name}: {comment.body}</span>
-                          <button
-                            className="text-button"
-                            type="button"
-                            disabled={busy}
-                            onClick={() => void toggleLike('comment', comment.id)}
-                          >
-                            {comment.liked_by_me ? 'Unlike' : 'Like'} ({comment.like_count})
-                          </button>
+                        <li key={comment.id} className="feed-card__comment-row">
+                          <span className="feed-card__comment-copy">
+                            {comment.author_display_name}: {comment.body}
+                          </span>
+                          <div className="feed-card__comment-actions">
+                            <button
+                              className="text-button"
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void toggleLike('comment', comment.id)}
+                            >
+                              {comment.liked_by_me ? 'Unlike' : 'Like'} ({comment.like_count})
+                            </button>
+                            <DiscussionShareButton
+                              threadId={selectedThread.id}
+                              threadTitle={selectedThread.title}
+                              excerpt={comment.body}
+                              postId={post.id}
+                              kind="comment"
+                              compact
+                              label="Share"
+                              onFeedback={setShareNotice}
+                            />
+                          </div>
                         </li>
                       ))}
                     </ul>

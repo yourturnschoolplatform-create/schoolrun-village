@@ -3426,13 +3426,116 @@ input::placeholder { color: #99a6a2; }
 .discussion-detail {
   position: relative;
   padding-bottom: 5.5rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 .discussion-detail__head {
   display: grid;
   gap: .25rem;
   margin-bottom: .75rem;
+  min-width: 0;
 }
-.discussion-detail__head .section-heading { margin: 0; }
+.discussion-detail__head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .35rem .75rem;
+  min-width: 0;
+}
+.discussion-detail__head .section-heading {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.feed-card__comment-row {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+  padding: .45rem 0;
+  border-top: 1px solid #F1F5F9;
+}
+.feed-card__comment-copy {
+  min-width: 0;
+  color: #334155;
+  font-size: .86rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.feed-card__comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem .65rem;
+  min-width: 0;
+}
+.discussion-share {
+  position: relative;
+  display: inline-grid;
+  min-width: 0;
+  max-width: 100%;
+}
+.discussion-share--compact {
+  justify-items: end;
+}
+.discussion-share__trigger {
+  min-width: 0;
+}
+.discussion-share__sheet {
+  position: absolute;
+  right: 0;
+  top: calc(100% + .35rem);
+  z-index: 40;
+  display: grid;
+  gap: .45rem;
+  width: min(16.5rem, calc(100vw - 1.5rem));
+  max-width: calc(100vw - 1.5rem);
+  padding: .75rem;
+  border: 1px solid #E2E8F0;
+  border-radius: .95rem;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .16);
+  box-sizing: border-box;
+}
+.discussion-share__sheet-title {
+  margin: 0;
+  color: #0F172A;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.discussion-share__channels {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+}
+.discussion-share__channel {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: .65rem .75rem;
+  border: 1px solid #E2E8F0;
+  border-radius: .7rem;
+  background: #F8FAFC;
+  color: #0F172A;
+  cursor: pointer;
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+.discussion-share__channel:hover {
+  border-color: #FFD8C2;
+  background: #FFF7F0;
+}
+.discussion-share__close {
+  justify-self: start;
+}
 .discussion-detail__bar {
   position: sticky;
   bottom: 0;
