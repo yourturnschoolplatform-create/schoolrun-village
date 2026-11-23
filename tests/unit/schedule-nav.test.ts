@@ -21,7 +21,10 @@ describe('Schedule dashboard navigation', () => {
     expect(nav).toContain('messagesUnread');
     expect(hub).toContain('messagesUnread={messagesUnread}');
     expect(hub).toContain('inbox-toast');
+    expect(hub).toContain('inbox-toast-layer');
+    expect(hub).toContain('PushEnableBanner');
     expect(hub).toContain('subscribeChatInboxAlerts');
+    expect(hub).toContain('onActiveMatchRoomChange');
     expect(nav.indexOf('schedule-tab-matches')).toBeLessThan(nav.indexOf('schedule-tab-messages'));
     expect(nav.indexOf('schedule-tab-messages')).toBeLessThan(nav.indexOf('schedule-tab-community'));
 

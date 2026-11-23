@@ -119,12 +119,19 @@ export function createPushRouter(): Router {
       const result = await client.rpc('list_push_targets_for_chat_peer', { p_room_id: roomId });
       if (result.error) throw new Error('unavailable');
       const targets = asTargets(result.data);
+      const title = typeof request.body?.title === 'string' && request.body.title.trim()
+        ? request.body.title.trim().slice(0, 80)
+        : 'New message';
+      const context = typeof request.body?.context === 'string'
+        ? request.body.context.trim().slice(0, 80)
+        : null;
       const { sent, gone } = await sendToTargets(targets, {
-        title: 'New message',
+        title,
         body: preview,
         roomId,
         kind: 'chat',
-        url: `/messages?openChat=${roomId}`,
+        context,
+        url: `/?view=messages&openChat=${roomId}`,
       });
       if (gone.length > 0) {
         try {
@@ -161,7 +168,10 @@ export function createPushRouter(): Router {
         roomId: openRoom,
         requestId,
         kind: 'match',
-        url: openRoom ? `/messages?openChat=${openRoom}` : '/messages',
+        context: 'Instant Pickup',
+        url: openRoom
+          ? `/?view=messages&openChat=${openRoom}&chatKind=match`
+          : '/?view=messages',
       });
       if (gone.length > 0) {
         try {

@@ -149,14 +149,19 @@ export const chatApi = {
       p_before: before ?? null,
       p_limit: 50,
     }),
-  send: async (client: SupabaseClient, roomId: string, body: string) => {
+  send: async (
+    client: SupabaseClient,
+    roomId: string,
+    body: string,
+    options?: { title?: string | null; context?: string | null },
+  ) => {
     const sent = await rpc<ChatMessage>(client, 'send_chat_message', {
       p_room_id: roomId,
       p_body: body,
     });
     // After a successful send: notify peer via Edge Function send-chat-push.
     // Never blocks or fails the chat UX (Realtime badge/toast still independent).
-    void pushApi.notifyChatPeerFromClient(client, roomId, body);
+    void pushApi.notifyChatPeerFromClient(client, roomId, body, options);
     return sent;
   },
   markRead: (client: SupabaseClient, roomId: string) =>

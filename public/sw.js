@@ -1,6 +1,6 @@
 /* YourTurn PWA: static shell cache + Web Push for chat/match alerts.
    Never cache APIs, auth, or Supabase data. */
-const CACHE_NAME = 'yourturn-shell-v2';
+const CACHE_NAME = 'yourturn-shell-v3';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/icons/icon.svg', '/icons/maskable.svg'];
 
 self.addEventListener('install', (event) => {
@@ -47,70 +47,110 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-self.addEventListener('push', (event) => {
-  let data = {
-    title: 'SchoolRun Village',
-    body: 'You have a new update.',
-    url: '/messages',
-    roomId: null,
-  };
-  try {
-    if (event.data) {
-      const parsed = event.data.json();
-      data = {
-        title: typeof parsed.title === 'string' ? parsed.title.slice(0, 80) : data.title,
-        body: typeof parsed.body === 'string' ? parsed.body.slice(0, 160) : data.body,
-        url: typeof parsed.url === 'string' ? parsed.url : data.url,
-        roomId: typeof parsed.roomId === 'string' ? parsed.roomId : null,
-      };
+function isUuid(value) {
+  return typeof value === 'string'
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+/** Build SPA deep-link into a specific 1:1 room (Karrot-style). */
+function chatDeepLink(roomId, kind) {
+  if (isUuid(roomId)) {
+    const params = new URLSearchParams({
+      view: 'messages',
+      openChat: roomId,
+    });
+    if (kind === 'match' || kind === 'marketplace' || kind === 'instant_pickup') {
+      params.set('chatKind', kind);
     }
+    return `/?${params.toString()}`;
+  }
+  return '/?view=messages';
+}
+
+function parsePushPayload(event) {
+  const fallback = {
+    title: 'SchoolRun Village',
+    body: 'You have a new message.',
+    roomId: null,
+    kind: 'chat',
+    context: null,
+    url: '/?view=messages',
+  };
+  if (!event.data) return fallback;
+  try {
+    const parsed = event.data.json();
+    const roomId = isUuid(parsed.roomId) ? parsed.roomId : null;
+    const kind = typeof parsed.kind === 'string' ? parsed.kind : 'chat';
+    const context = typeof parsed.context === 'string' ? parsed.context.slice(0, 80) : null;
+    const title = typeof parsed.title === 'string' && parsed.title.trim()
+      ? parsed.title.trim().slice(0, 80)
+      : (kind === 'match' ? 'Pickup match' : 'New message');
+    let body = typeof parsed.body === 'string' ? parsed.body.trim().slice(0, 160) : fallback.body;
+    if (context && body && !body.includes(context)) {
+      body = `${context} · ${body}`.slice(0, 160);
+    }
+    const url = typeof parsed.url === 'string' && parsed.url.trim()
+      ? parsed.url.trim()
+      : chatDeepLink(roomId, kind);
+    return { title, body, roomId, kind, context, url };
   } catch {
     try {
       const text = event.data?.text();
-      if (text) data.body = text.slice(0, 160);
+      if (text) return { ...fallback, body: text.slice(0, 160) };
     } catch {
       /* keep defaults */
     }
+    return fallback;
   }
+}
 
-  // SPA has no /messages router — map to ?view=messages / ?openChat=<roomId>.
-  const targetUrl = data.roomId
-    ? `/messages?openChat=${encodeURIComponent(data.roomId)}`
-    : (data.url && data.url !== '/messages' ? data.url : '/messages');
+self.addEventListener('push', (event) => {
+  const data = parsePushPayload(event);
+  const targetUrl = data.roomId ? chatDeepLink(data.roomId, data.kind) : data.url;
 
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: '/icons/icon.svg',
       badge: '/icons/icon.svg',
-      data: { url: targetUrl, roomId: data.roomId },
-      tag: data.roomId ? `chat-${data.roomId}` : `notify-${Date.now()}`,
+      data: {
+        url: targetUrl,
+        roomId: data.roomId,
+        kind: data.kind,
+        context: data.context,
+        openChat: data.roomId,
+      },
+      tag: data.roomId ? `chat-${data.roomId}` : `notify-${data.kind}-${Date.now()}`,
       renotify: true,
+      requireInteraction: false,
     }),
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = (event.notification.data && event.notification.data.url)
-    || '/messages';
+  const payload = event.notification.data || {};
+  const roomId = isUuid(payload.roomId) ? payload.roomId
+    : (isUuid(payload.openChat) ? payload.openChat : null);
+  const kind = typeof payload.kind === 'string' ? payload.kind : 'chat';
+  const target = roomId
+    ? chatDeepLink(roomId, kind)
+    : (typeof payload.url === 'string' && payload.url.trim() ? payload.url.trim() : '/?view=messages');
 
   event.waitUntil((async () => {
     const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of allClients) {
-      if ('focus' in client) {
-        await client.focus();
-        if ('navigate' in client) {
-          try {
-            await client.navigate(target);
-            return;
-          } catch {
-            /* fall through */
-          }
-        }
-        client.postMessage({ type: 'open-chat', url: target });
-        return;
-      }
+      if (!('focus' in client)) continue;
+      await client.focus();
+      // Prefer postMessage so the SPA opens the exact room without a full reload.
+      client.postMessage({
+        type: 'open-chat',
+        url: target,
+        roomId,
+        kind,
+        openChat: roomId,
+      });
+      return;
     }
     await self.clients.openWindow(target);
   })());

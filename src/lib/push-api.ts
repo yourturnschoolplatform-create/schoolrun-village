@@ -160,25 +160,82 @@ export const pushApi = {
   },
 
   /**
+   * When permission is already granted, ensure the browser subscription exists
+   * and is upserted into push_subscriptions (login / chat entry sync).
+   * Does not call Notification.requestPermission (no gesture required).
+   */
+  syncSubscription: async (
+    client: SupabaseClient,
+    vapidPublicKey?: string | null,
+  ): Promise<boolean> => {
+    if (!pushSupported()) return false;
+    if (Notification.permission !== 'granted') return false;
+    const key = (await resolveVapidPublicKey(vapidPublicKey))?.trim() ?? '';
+    if (!key) return false;
+    const registration = await activeRegistration();
+    if (!registration) return false;
+
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      try {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(key),
+        });
+      } catch {
+        return false;
+      }
+    }
+
+    const json = subscription.toJSON();
+    const endpoint = json.endpoint?.trim() ?? '';
+    const p256dh = json.keys?.p256dh?.trim() ?? '';
+    const auth = json.keys?.auth?.trim() ?? '';
+    if (!endpoint || !p256dh || !auth) return false;
+
+    const { error } = await client.rpc('upsert_push_subscription', {
+      p_endpoint: endpoint,
+      p_p256dh: p256dh,
+      p_auth: auth,
+      p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 512) : null,
+    });
+    if (error) {
+      console.error('upsert_push_subscription', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
+      return false;
+    }
+    return true;
+  },
+
+  /**
    * POST /functions/v1/send-chat-push
-   * Body: { kind: "chat", roomId, preview }
+   * Body: { kind: "chat", roomId, preview, title?, context? }
    * Fire-and-forget — never throws into chat UX.
    */
   notifyChatPeer: async (
     accessToken: string,
     roomId: string,
     preview: string,
+    options?: { title?: string | null; context?: string | null },
   ): Promise<void> => {
     const body = {
       kind: 'chat' as const,
       roomId,
       preview: sanitizeChatPreview(preview),
+      title: options?.title?.trim()?.slice(0, 80) || undefined,
+      context: options?.context?.trim()?.slice(0, 80) || undefined,
     };
     const ok = await postSendChatPush(accessToken, body);
     if (ok) return;
     await postExpressFallback('/api/push/notify-chat', accessToken, {
       roomId,
       preview: body.preview,
+      title: body.title,
+      context: body.context,
     });
   },
 
@@ -195,12 +252,14 @@ export const pushApi = {
       kind: 'match' as const,
       requestId,
       roomId,
+      context: 'Instant Pickup',
     };
     const ok = await postSendChatPush(accessToken, body);
     if (ok) return;
     await postExpressFallback('/api/push/notify-match', accessToken, {
       requestId,
       roomId,
+      context: 'Instant Pickup',
     });
   },
 
@@ -209,10 +268,11 @@ export const pushApi = {
     client: SupabaseClient,
     roomId: string,
     preview: string,
+    options?: { title?: string | null; context?: string | null },
   ): Promise<void> => {
     const token = await readAccessToken(client);
     if (!token) return;
-    await pushApi.notifyChatPeer(token, roomId, preview);
+    await pushApi.notifyChatPeer(token, roomId, preview, options);
   },
 
   /** Resolve session from Supabase client, then notify match peer (best-effort). */

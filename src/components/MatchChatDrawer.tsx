@@ -14,6 +14,7 @@ import {
 import { encodeHouseholdCodeCard, parseHouseholdCodeCard } from '../../shared/household-code-message';
 import type { SchoolRunDirection, ScheduleIntent } from '../../shared/schedules';
 import { chatApi, type ChatMessage, type ChatRoom } from '../lib/chat-api';
+import { roomContextLabel } from '../lib/chat-inbox-alerts';
 import { scheduleApi } from '../lib/schedule-api';
 
 export type MatchPickupSummary = {
@@ -161,7 +162,9 @@ export function MatchChatDrawer({
     setMessages((current) => [...current, optimistic]);
     if (options?.clearDraft !== false) setDraft('');
     try {
-      const sent = await chatApi.send(client, room.id, body);
+      const sent = await chatApi.send(client, room.id, body, {
+        context: roomContextLabel(room) || 'Instant Pickup',
+      });
       setMessages((current) => current.map((message) => (
         message.id === optimisticId ? sent : message
       )));
@@ -197,7 +200,9 @@ export function MatchChatDrawer({
     try {
       const created = await scheduleApi.createHouseholdCode(client);
       const card = encodeHouseholdCodeCard(created.code);
-      const sent = await chatApi.send(client, room.id, card);
+      const sent = await chatApi.send(client, room.id, card, {
+        context: roomContextLabel(room) || 'Instant Pickup',
+      });
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       onToast?.('Confirmation code sent in chat.');
       window.requestAnimationFrame(() => scrollToLatest('smooth'));

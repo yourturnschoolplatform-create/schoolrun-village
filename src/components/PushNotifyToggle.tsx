@@ -20,11 +20,16 @@ export function PushNotifyToggle({
   const platform = pushApi.platformNote();
 
   const refresh = useCallback(async () => {
-    setState(await pushApi.permissionState());
+    const permission = await pushApi.permissionState();
+    setState(permission);
     setNote(pushApi.platformNote());
     const key = await resolveVapidPublicKey(vapidProp);
     setVapidReady(Boolean(key));
-  }, [vapidProp]);
+    if (permission === 'granted' || permission === 'subscribed') {
+      await pushApi.syncSubscription(client, vapidProp);
+      setState(await pushApi.permissionState());
+    }
+  }, [client, vapidProp]);
 
   useEffect(() => { void refresh(); }, [refresh]);
 

@@ -40,7 +40,35 @@ type NotifyBody = {
   preview?: unknown;
   title?: unknown;
   body?: unknown;
+  context?: unknown;
 };
+
+function chatDeepLink(roomId: string | null, kind: string): string {
+  if (roomId && isUuid(roomId)) {
+    return `/?view=messages&openChat=${roomId}&chatKind=${encodeURIComponent(kind)}`;
+  }
+  return "/?view=messages";
+}
+
+async function callerDisplayName(
+  admin: ReturnType<typeof createClient>,
+  userClient: ReturnType<typeof createClient>,
+): Promise<string | null> {
+  try {
+    const { data } = await userClient.auth.getUser();
+    const userId = data.user?.id;
+    if (!userId) return null;
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("display_name")
+      .eq("id", userId)
+      .maybeSingle();
+    const name = typeof profile?.display_name === "string" ? profile.display_name.trim() : "";
+    return name || null;
+  } catch {
+    return null;
+  }
+}
 
 function json(status: number, payload: Record<string, unknown>): Response {
   return new Response(JSON.stringify(payload), {
@@ -129,6 +157,9 @@ Deno.serve(async (request) => {
   let targets: PushTarget[] = [];
   let payload: Record<string, unknown>;
 
+  const senderName = await callerDisplayName(admin, userClient);
+  const context = typeof body.context === "string" ? body.context.trim().slice(0, 80) : "";
+
   if (kind === "chat") {
     if (!isUuid(body.roomId)) return json(400, { error: "invalid_room_id" });
     const roomId = body.roomId;
@@ -141,12 +172,16 @@ Deno.serve(async (request) => {
       return json(403, { error: "chat_push_unavailable" });
     }
     targets = asTargets(data);
+    const title = typeof body.title === "string" && body.title.trim()
+      ? body.title.trim().slice(0, 80)
+      : (senderName || "New message");
     payload = {
-      title: typeof body.title === "string" ? body.title.slice(0, 80) : "New message",
+      title,
       body: preview,
       roomId,
       kind: "chat",
-      url: `/messages?openChat=${roomId}`,
+      context: context || null,
+      url: chatDeepLink(roomId, "chat"),
     };
   } else {
     if (!isUuid(body.requestId)) return json(400, { error: "invalid_request_id" });
@@ -164,12 +199,15 @@ Deno.serve(async (request) => {
     const openRoom = roomId
       || (typeof bag.chatRoomId === "string" && isUuid(bag.chatRoomId) ? bag.chatRoomId : null);
     payload = {
-      title: typeof body.title === "string" ? body.title.slice(0, 80) : "Pickup match",
+      title: typeof body.title === "string" && body.title.trim()
+        ? body.title.trim().slice(0, 80)
+        : "Pickup match",
       body: safePreview(body.body ?? body.preview, "Your instant pickup was matched. Open chat when ready."),
       roomId: openRoom,
       requestId,
       kind: "match",
-      url: openRoom ? `/messages?openChat=${openRoom}` : "/messages",
+      context: context || "Instant Pickup",
+      url: chatDeepLink(openRoom, "match"),
     };
   }
 

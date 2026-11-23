@@ -17,6 +17,7 @@ import {
 } from '../../shared/au-location';
 import type { SchoolRunDirection, ScheduleIntent } from '../../shared/schedules';
 import { chatApi, type ChatMessage, type ChatRoom } from '../lib/chat-api';
+import { roomContextLabel } from '../lib/chat-inbox-alerts';
 import { scheduleApi } from '../lib/schedule-api';
 import { PushNotifyToggle } from './PushNotifyToggle';
 
@@ -270,7 +271,9 @@ export function ChatRoomView({
     setBusy(true);
     setError(null);
     try {
-      const sent = await chatApi.send(client, room.id, body);
+      const sent = await chatApi.send(client, room.id, body, {
+        context: roomContextLabel(room),
+      });
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       if (options?.clearDraft !== false) setDraft('');
       window.requestAnimationFrame(() => {
@@ -316,7 +319,9 @@ export function ChatRoomView({
     try {
       const created = await scheduleApi.createHouseholdCode(client);
       const card = encodeHouseholdCodeCard(created.code);
-      const sent = await chatApi.send(client, room.id, card);
+      const sent = await chatApi.send(client, room.id, card, {
+        context: roomContextLabel(room),
+      });
       setMessages((current) => (current.some((message) => message.id === sent.id) ? current : [...current, sent]));
       window.requestAnimationFrame(() => scrollToLatest('smooth'));
     } catch {

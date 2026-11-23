@@ -90,6 +90,7 @@ export function InstantPickupBoard({
   defaultSuburb = '',
   defaultSchoolName = '',
   onOpenChat,
+  onActiveMatchRoomChange,
   composeOpen = false,
   onComposeOpenChange,
   presetIntent = null,
@@ -100,6 +101,8 @@ export function InstantPickupBoard({
   /** Registered school display name for quick-select chips. */
   defaultSchoolName?: string;
   onOpenChat: (room: ChatRoom) => void;
+  /** Keeps inbox toast suppressed while the match chat overlay is open. */
+  onActiveMatchRoomChange?: (roomId: string | null) => void;
   composeOpen?: boolean;
   onComposeOpenChange?: (open: boolean) => void;
   presetIntent?: ScheduleIntent | null;
@@ -117,6 +120,11 @@ export function InstantPickupBoard({
   const [toast, setToast] = useState<string | null>(null);
   const [matchRoom, setMatchRoom] = useState<ChatRoom | null>(null);
   const [matchPickupSummary, setMatchPickupSummary] = useState<MatchPickupSummary | null>(null);
+
+  useEffect(() => {
+    onActiveMatchRoomChange?.(matchRoom?.id ?? null);
+    return () => { onActiveMatchRoomChange?.(null); };
+  }, [matchRoom?.id, onActiveMatchRoomChange]);
   const [selectedMatch, setSelectedMatch] = useState<InstantPickupRequest | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [composeStep, setComposeStep] = useState<1 | 2 | 3>(1);

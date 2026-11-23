@@ -18,6 +18,7 @@ import { ListingChatOverlay } from './ListingChatOverlay';
 import { CommunityHub } from './CommunityHub';
 import { InstantPickupBoard } from './InstantPickupBoard';
 import { MatchHub } from './MatchHub';
+import { PushEnableBanner } from './PushEnableBanner';
 import { QuickActions, type QuickActionFocus } from './QuickActions';
 import { ScheduleNav, type ScheduleNavView } from './ScheduleNav';
 import type { CommunityPanel } from './CommunityHub';
@@ -99,6 +100,7 @@ export function ScheduleHub({
   const [inboxToast, setInboxToast] = useState<InboxToast | null>(null);
   const viewRef = useRef<ViewMode>('today');
   const viewingRoomIdRef = useRef<string | null>(null);
+  const matchOverlayRoomIdRef = useRef<string | null>(null);
   const [overview, setOverview] = useState<ScheduleOverview | null>(null);
   const [form, setForm] = useState<PatternForm>(() => initialForm());
   const [editing, setEditing] = useState<SchedulePattern | null>(null);
@@ -165,12 +167,13 @@ export function ScheduleHub({
     openChatRoom(room, { forceMessages: true });
   }
 
-  async function openChatById(roomId: string) {
+  /** Open a specific room from push / in-app banner (always land in Messages 1:1). */
+  async function openChatById(roomId: string, options?: { forceMessages?: boolean }) {
     try {
       const rooms = await chatApi.listRooms(client);
       const match = rooms.find((room) => room.id === roomId);
       if (match) {
-        openChatRoom(match);
+        openChatRoom(match, { forceMessages: options?.forceMessages !== false });
         return;
       }
     } catch {
@@ -251,8 +254,7 @@ export function ScheduleHub({
           setInboxToast((current) => (current?.id === toast.id ? null : current));
         }, 5600);
       },
-      getActiveRoomId: () => viewingRoomIdRef.current,
-      isMessagesView: () => viewRef.current === 'messages' || Boolean(viewingRoomIdRef.current),
+      getActiveRoomId: () => viewingRoomIdRef.current || matchOverlayRoomIdRef.current,
     });
     return stop;
   }, [client, userId]);
@@ -289,15 +291,33 @@ export function ScheduleHub({
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
     const onMessage = (event: MessageEvent) => {
-      const data = event.data as { type?: string; url?: string } | null;
-      if (!data || data.type !== 'open-chat' || typeof data.url !== 'string') return;
+      const data = event.data as {
+        type?: string;
+        url?: string;
+        roomId?: string | null;
+        openChat?: string | null;
+      } | null;
+      if (!data || data.type !== 'open-chat') return;
+
+      const directRoom = typeof data.roomId === 'string' && data.roomId
+        ? data.roomId
+        : (typeof data.openChat === 'string' ? data.openChat : null);
+      if (directRoom && /^[0-9a-f-]{36}$/i.test(directRoom)) {
+        setInboxToast(null);
+        void openChatById(directRoom, { forceMessages: true });
+        return;
+      }
+
+      if (typeof data.url !== 'string') {
+        selectView('messages');
+        return;
+      }
       try {
         const target = new URL(data.url, window.location.origin);
         const roomId = target.searchParams.get('openChat');
-        const path = target.pathname.replace(/\/+$/, '') || '/';
-        if (roomId) void openChatById(roomId);
-        else if (path === '/messages' || target.searchParams.get('view') === 'messages') {
-          selectView('messages');
+        if (roomId && /^[0-9a-f-]{36}$/i.test(roomId)) {
+          setInboxToast(null);
+          void openChatById(roomId, { forceMessages: true });
         } else {
           selectView('messages');
         }
@@ -463,6 +483,7 @@ export function ScheduleHub({
       <QuickActions onSelect={selectQuickAction} />
       {/* Locked 5-tab primary navigation. */}
       <ScheduleNav view={view} onSelect={selectView} messagesUnread={messagesUnread} />
+      <PushEnableBanner client={client} />
       {(view === 'today' || view === 'calendar') && (
         <button className="text-button schedule-nav__export" type="button" onClick={() => void exportIcs()} disabled={busy}>
           Export confirmed trips (.ics)
@@ -470,22 +491,35 @@ export function ScheduleHub({
       )}
 
       {inboxToast ? (
-        <button
-          type="button"
-          className="inbox-toast"
-          onClick={() => {
-            const roomId = inboxToast.roomId;
-            setInboxToast(null);
-            if (roomId) void openChatById(roomId);
-            else selectView('messages');
-          }}
-        >
-          <span className="inbox-toast__eyebrow">
-            {inboxToast.kind === 'match' ? 'Pickup match' : 'New message'}
-          </span>
-          <strong>{inboxToast.title}</strong>
-          <span>{inboxToast.body}</span>
-        </button>
+        <div className="inbox-toast-layer" role="status" aria-live="polite">
+          <button
+            type="button"
+            className="inbox-toast"
+            onClick={() => {
+              const roomId = inboxToast.roomId;
+              setInboxToast(null);
+              if (roomId) void openChatById(roomId, { forceMessages: true });
+              else selectView('messages');
+            }}
+          >
+            <span className="inbox-toast__eyebrow">
+              {inboxToast.kind === 'match' ? 'Pickup match' : 'New message'}
+            </span>
+            <strong>{inboxToast.title}</strong>
+            {inboxToast.context ? (
+              <span className="inbox-toast__context">{inboxToast.context}</span>
+            ) : null}
+            <span className="inbox-toast__body">{inboxToast.body}</span>
+          </button>
+          <button
+            type="button"
+            className="inbox-toast__dismiss"
+            aria-label="Dismiss notification"
+            onClick={() => setInboxToast(null)}
+          >
+            ×
+          </button>
+        </div>
       ) : null}
 
       {view === 'today' ? (
@@ -582,6 +616,9 @@ export function ScheduleHub({
             defaultSuburb={registeredSuburb}
             defaultSchoolName={(overview?.schoolDisplayName ?? '').trim() || undefined}
             onOpenChat={openChatRoom}
+            onActiveMatchRoomChange={(roomId) => {
+              matchOverlayRoomIdRef.current = roomId;
+            }}
             composeOpen={pickupComposeOpen}
             onComposeOpenChange={setPickupComposeOpen}
             presetIntent={pickupPresetIntent}
