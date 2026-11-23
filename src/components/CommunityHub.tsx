@@ -268,7 +268,7 @@ export function CommunityHub({
           <strong>Partner Hub</strong>
           <p>Local merchants: launch a goods deal, tutoring pack or sponsorship.</p>
           <button type="button" className="commercial-cta commercial-cta--compact" onClick={() => setPartnerOpen(true)}>
-            Become a Partner
+            Become Partner
           </button>
         </article>
       </div>
