@@ -21,8 +21,10 @@ import { CommunityHub } from './CommunityHub';
 import { InstantPickupBoard } from './InstantPickupBoard';
 import { MatchHub } from './MatchHub';
 import { PushEnableBanner } from './PushEnableBanner';
+import { CareCreditsPill } from './CareCreditsPill';
 import { ParentDiscussionsPreview } from './ParentDiscussionsPreview';
 import { QuickActions, type QuickActionFocus } from './QuickActions';
+import type { CareCreditWallet } from '../../shared/care-credits';
 import { normalizeScheduleNavView, ScheduleNav, type ScheduleNavView } from './ScheduleNav';
 import type { CommunityPanel } from './CommunityHub';
 
@@ -76,6 +78,7 @@ export function ScheduleHub({
   const [discussionPostId, setDiscussionPostId] = useState<string | null>(null);
   const [marketplaceListingId, setMarketplaceListingId] = useState<string | null>(null);
   const [hotDealId, setHotDealId] = useState<string | null>(null);
+  const [careWallet, setCareWallet] = useState<CareCreditWallet | null>(null);
   const [householdOpen, setHouseholdOpen] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [pickupComposeOpen, setPickupComposeOpen] = useState(false);
@@ -501,6 +504,9 @@ export function ScheduleHub({
           <p className="eyebrow">{registeredSuburb ? `${registeredSuburb} VIC` : 'SchoolRun Village'}</p>
           <h1 id="schedule-title">Need a pickup today, or can you help?</h1>
           <p>One clear action — ask for help or offer a seat. Suburb only, phone-free.</p>
+          <div className="care-credits-today">
+            <CareCreditsPill client={client} wallet={careWallet} />
+          </div>
           <div className="home-hero-actions min-w-0 max-w-full w-full" role="group" aria-label="Today actions">
             <button
               type="button"
@@ -594,6 +600,7 @@ export function ScheduleHub({
             composeOpen={pickupComposeOpen}
             onComposeOpenChange={setPickupComposeOpen}
             presetIntent={pickupPresetIntent}
+            onCareWalletChange={setCareWallet}
           />
           <ParentDiscussionsPreview
             client={client}

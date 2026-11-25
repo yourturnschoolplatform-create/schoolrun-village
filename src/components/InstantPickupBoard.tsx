@@ -17,8 +17,15 @@ import type { ChatRoom } from '../lib/chat-api';
 import { instantPickupApi, type InstantPickupRequest } from '../lib/instant-pickup-api';
 import { pushApi } from '../lib/push-api';
 import { getSchoolsInSuburb } from '../utils/auLocationService';
+import {
+  DEFAULT_CARE_WALLET,
+  feeWaiverProgressCopy,
+  type CareCreditWallet,
+} from '../../shared/care-credits';
+import { careCreditsApi } from '../lib/care-credits-api';
 import { MatchChatDrawer, type MatchPickupSummary } from './MatchChatDrawer';
 import { ParentTrustBadge } from './ParentTrustBadge';
+import { SchoolInviteCareBanner } from './SchoolInviteCareBanner';
 
 function toMatchPickupSummary(item: InstantPickupRequest): MatchPickupSummary {
   return {
@@ -94,6 +101,7 @@ export function InstantPickupBoard({
   composeOpen = false,
   onComposeOpenChange,
   presetIntent = null,
+  onCareWalletChange,
 }: {
   client: SupabaseClient;
   userId?: string;
@@ -106,6 +114,7 @@ export function InstantPickupBoard({
   composeOpen?: boolean;
   onComposeOpenChange?: (open: boolean) => void;
   presetIntent?: ScheduleIntent | null;
+  onCareWalletChange?: (wallet: CareCreditWallet) => void;
 }) {
   const [items, setItems] = useState<InstantPickupRequest[]>([]);
   const [intent, setIntent] = useState<ScheduleIntent>('need_help');
@@ -118,6 +127,8 @@ export function InstantPickupBoard({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [rewardToast, setRewardToast] = useState<string | null>(null);
+  const [careWallet, setCareWallet] = useState<CareCreditWallet>(DEFAULT_CARE_WALLET);
   const [matchRoom, setMatchRoom] = useState<ChatRoom | null>(null);
   const [matchPickupSummary, setMatchPickupSummary] = useState<MatchPickupSummary | null>(null);
 
@@ -125,6 +136,22 @@ export function InstantPickupBoard({
     onActiveMatchRoomChange?.(matchRoom?.id ?? null);
     return () => { onActiveMatchRoomChange?.(null); };
   }, [matchRoom?.id, onActiveMatchRoomChange]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void careCreditsApi.getWallet(client).then((wallet) => {
+      if (cancelled) return;
+      setCareWallet(wallet);
+      onCareWalletChange?.(wallet);
+    });
+    return () => { cancelled = true; };
+  }, [client, onCareWalletChange]);
+
+  useEffect(() => {
+    if (!rewardToast) return;
+    const timer = window.setTimeout(() => setRewardToast(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [rewardToast]);
   const [selectedMatch, setSelectedMatch] = useState<InstantPickupRequest | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [composeStep, setComposeStep] = useState<1 | 2 | 3>(1);
@@ -495,9 +522,31 @@ export function InstantPickupBoard({
     try {
       await instantPickupApi.checkIn(client, checkInItem.id, confirm);
       await refresh();
-      setMessage(confirm
-        ? 'Final check-in confirmed. Your school-run match stays active.'
-        : 'Match released back to the school board.');
+      if (!confirm) {
+        setMessage('Match released back to the school board.');
+        return;
+      }
+      setMessage('Final check-in confirmed. Your school-run match stays active.');
+      try {
+        const settlement = await careCreditsApi.settleInstantPickup(client, checkInItem.id);
+        const wallet = await careCreditsApi.getWallet(client);
+        setCareWallet(wallet);
+        onCareWalletChange?.(wallet);
+        if (settlement.earnedCareCredit && settlement.earnedCareCredit > 0) {
+          setRewardToast(
+            `+1 Care Credit earned · ${feeWaiverProgressCopy(wallet)}`,
+          );
+        } else if (settlement.usedSosPass) {
+          setRewardToast('Priority SOS Pass used for this Instant Pickup.');
+        } else {
+          setRewardToast(`Care Credits updated · balance ${wallet.careCredits}.`);
+        }
+      } catch {
+        const wallet = await careCreditsApi.getWallet(client);
+        setCareWallet(wallet);
+        onCareWalletChange?.(wallet);
+        setRewardToast(`Care Credits balance: ${wallet.careCredits}.`);
+      }
     } catch {
       setMessage('Final check-in could not be saved right now.');
     } finally {
@@ -522,9 +571,17 @@ export function InstantPickupBoard({
         <p className="section-copy">Suburb only — no phones or addresses. Request Match opens a private chat.</p>
       </div>
 
+      <p className="care-credits-board-strip" role="status">
+        <strong>{careWallet.careCredits} Care Credits</strong>
+        <span>{feeWaiverProgressCopy(careWallet)}</span>
+        {careWallet.prioritySosPasses > 0 ? (
+          <span>{careWallet.prioritySosPasses} Priority SOS Pass{careWallet.prioritySosPasses === 1 ? '' : 'es'}</span>
+        ) : null}
+      </p>
+
       <div className="instant-policy-badges" aria-label="Instant pickup policies">
         <span className="instant-policy-badge" title={nonPaymentNoticeForTrade('pickup_dropoff')}>
-          🆓 Free Handover
+          Free Handover
         </span>
         <button
           type="button"
@@ -559,6 +616,12 @@ export function InstantPickupBoard({
 
       {message && <p className="notice notice--teal" role="status">{message}</p>}
       {toast && <p className="notice notice--teal match-toast" role="status">{toast}</p>}
+      {rewardToast ? (
+        <aside className="care-reward-toast" role="status" aria-live="polite">
+          <p className="eyebrow">Village Helper reward</p>
+          <strong>{rewardToast}</strong>
+        </aside>
+      ) : null}
       {checkInItem && (
         <aside className="instant-board__checkin" role="dialog" aria-labelledby="instant-checkin-title">
           <p className="eyebrow">Final check-in</p>
@@ -566,6 +629,7 @@ export function InstantPickupBoard({
           <p>
             Pickup is at {checkInItem.pickupAt ? formatClock(checkInItem.pickupAt) : 'the scheduled time'}.
             Confirm to keep the match, or cancel to return it to the board.
+            Providers earn +1 Care Credit when this confirmation completes.
           </p>
           <button type="button" className="text-button" onClick={() => setPolicyOpen(true)}>
             View no-show trust policy ℹ️
@@ -612,7 +676,7 @@ export function InstantPickupBoard({
                       className={intent === 'need_help' ? 'segmented-toggle__btn segmented-toggle__btn--navy' : 'segmented-toggle__btn'}
                       onClick={() => { setIntent('need_help'); setComposeStep(2); }}
                     >
-                      🙋‍♂️ I need help
+                      I need help
                     </button>
                     <button
                       type="button"
@@ -621,9 +685,18 @@ export function InstantPickupBoard({
                       className={intent === 'can_help' ? 'segmented-toggle__btn segmented-toggle__btn--coral' : 'segmented-toggle__btn'}
                       onClick={() => { setIntent('can_help'); setComposeStep(2); }}
                     >
-                      🤝 I can help
+                      I can help
                     </button>
                   </div>
+                  <p className="field-help">
+                    {intent === 'can_help'
+                      ? 'Offering a ride earns +1 Care Credit when the match is confirmed.'
+                      : careWallet.careCredits > 0
+                        ? 'Requesting a ride uses 1 Care Credit when the match is confirmed.'
+                        : careWallet.prioritySosPasses > 0
+                          ? 'You have no Care Credits left — a Priority SOS Pass will cover this request on completion.'
+                          : 'You have 0 Care Credits. Offer a ride to earn credits, or wait for a Priority SOS Pass.'}
+                  </p>
                 </div>
               ) : null}
 
@@ -802,6 +875,11 @@ export function InstantPickupBoard({
         </div>
       ) : null}
 
+      <SchoolInviteCareBanner
+        careCredits={careWallet.careCredits}
+        onFeedback={(text) => setToast(text)}
+      />
+
       <ul className="feed-list">
         {items.length === 0 && (
           <li className="section-copy">No open instant requests for your school right now.</li>
@@ -840,6 +918,17 @@ export function InstantPickupBoard({
                 ? ` · matched with ${item.matchedDisplayName}`
                 : ''}
             </small>
+            {item.status === 'open' ? (
+              <p className="care-credit-chip">
+                {item.intent === 'can_help'
+                  ? 'Earn +1 Care Credit'
+                  : careWallet.careCredits > 0
+                    ? 'Uses 1 Care Credit on completion'
+                    : careWallet.prioritySosPasses > 0
+                      ? 'Uses 1 Priority SOS Pass on completion'
+                      : 'Offer a ride to earn credits, or unlock a Priority SOS Pass'}
+              </p>
+            ) : null}
             <div className="feed-card__actions" onClick={(event) => event.stopPropagation()}>
               {!item.mine && item.status === 'open' && (
                 <button

@@ -18,6 +18,7 @@ import {
   type SelectedSchoolDetails,
 } from './components/LocationBasedSchoolSelect';
 import { FALLBACK_SCHOOL_LOCATION, LocationChip } from './components/LocationChip';
+import { CareCreditsPill } from './components/CareCreditsPill';
 import { MyTrustChip } from './components/MyTrustChip';
 import { ScheduleHub } from './components/ScheduleHub';
 import { AdminModerationPanel } from './components/AdminModerationPanel';
@@ -125,9 +126,10 @@ function AppHeader({
         ) : null}
         {verificationPending ? (
           <span className="status-pill status-pill--amber" data-verification-pending="true">
-            ⏳ Pending Verification
+            Pending Verification
           </span>
         ) : null}
+        {showSchoolLocation && trustClient ? <CareCreditsPill client={trustClient} compact /> : null}
         {showSchoolLocation && trustClient ? <MyTrustChip client={trustClient} /> : null}
         {signedIn && onSignOut ? (
           <button type="button" className="topbar__sign-out" onClick={onSignOut}>Sign out</button>
